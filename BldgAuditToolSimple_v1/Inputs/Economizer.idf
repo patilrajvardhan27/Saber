@@ -1,0 +1,89 @@
+!-Generator IDFEditor 1.53
+!-Option SortedOrder
+
+!-NOTE: All comments with '!-' are ignored by the IDFEditor and are generated automatically.
+!-      Use '!' comments if they need to be retained when using the IDFEditor.
+
+
+!-   ===========  ALL OBJECTS IN CLASS: CONTROLLER:OUTDOORAIR ===========
+
+Controller:OutdoorAir,
+    OA Controller,           !- Name
+    MA relief node,          !- Relief Air Outlet Node Name
+    Node 0,                  !- Return Air Node Name
+    Node 3,                  !- Mixed Air Node Name
+    Node 25,                 !- Actuator Node Name
+    autosize,                !- Minimum Outdoor Air Flow Rate {m3/s}
+    autosize,                !- Maximum Outdoor Air Flow Rate {m3/s}
+    DifferentialDryBulb,     !- Economizer Control Type
+    ModulateFlow,            !- Economizer Control Action Type
+    ,                        !- Economizer Maximum Limit Dry-Bulb Temperature {C}
+    ,                        !- Economizer Maximum Limit Enthalpy {J/kg}
+    ,                        !- Economizer Maximum Limit Dewpoint Temperature {C}
+    ,                        !- Electronic Enthalpy Limit Curve Name
+    10,                      !- Economizer Minimum Limit Dry-Bulb Temperature {C}
+    NoLockout,               !- Lockout Type
+    FixedMinimum,            !- Minimum Limit Type
+    ,                        !- Minimum Outdoor Air Schedule Name
+    ,                        !- Minimum Fraction of Outdoor Air Schedule Name
+    ,                        !- Maximum Fraction of Outdoor Air Schedule Name
+    ,                        !- Mechanical Ventilation Controller Name
+    ,                        !- Time of Day Economizer Control Schedule Name
+    No,                      !- High Humidity Control
+    ,                        !- Humidistat Control Zone Name
+    1,                       !- High Humidity Outdoor Air Flow Ratio
+    Yes,                     !- Control High Indoor Humidity Based on Outdoor Humidity Ratio
+    BypassWhenWithinEconomizerLimits;  !- Heat Recovery Bypass Control Type
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:CONTROLLERLIST ===========
+
+AirLoopHVAC:ControllerList,
+    OA Controllers,          !- Name
+    Controller:OutdoorAir,   !- Controller 1 Object Type
+    OA Controller;           !- Controller 1 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:OUTDOORAIRSYSTEM:EQUIPMENTLIST ===========
+
+AirLoopHVAC:OutdoorAirSystem:EquipmentList,
+    OA Equipment,            !- Name
+    OutdoorAir:Mixer,        !- Component 1 Object Type
+    OAM Box;                 !- Component 1 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:OUTDOORAIRSYSTEM ===========
+
+AirLoopHVAC:OutdoorAirSystem,
+    OA System,               !- Name
+    OA Controllers,          !- Controller List Name
+    OA Equipment;            !- Outdoor Air Equipment List Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTDOORAIR:MIXER ===========
+
+OutdoorAir:Mixer,
+    OAM Box,                 !- Name
+    Node 3,                  !- Mixed Air Node Name
+    Node 25,                 !- Outdoor Air Stream Node Name
+    MA relief node,          !- Relief Air Stream Node Name
+    Node 0;                  !- Return Air Stream Node Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTPUT:VARIABLE ===========
+
+Output:Variable,
+    *,                       !- Key Value
+    Air System Outdoor Air Economizer Status,  !- Variable Name
+    Hourly;                  !- Reporting Frequency
+
+Output:Variable,
+    *,                       !- Key Value
+    Air System Outdoor Air Flow Fraction,  !- Variable Name
+    Hourly;                  !- Reporting Frequency
+
+Output:Variable,
+    *,                       !- Key Value
+    Air System Outdoor Air Heat Recovery Bypass Minimum Outdoor Air Mixed Air Temperature,  !- Variable Name
+    Hourly;                  !- Reporting Frequency
+

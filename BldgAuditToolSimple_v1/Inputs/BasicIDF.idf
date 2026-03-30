@@ -1,0 +1,1345 @@
+!-Generator IDFEditor 1.53
+!-Option SortedOrder
+
+!-NOTE: All comments with '!-' are ignored by the IDFEditor and are generated automatically.
+!-      Use '!' comments if they need to be retained when using the IDFEditor.
+
+
+!-   ===========  ALL OBJECTS IN CLASS: VERSION ===========
+
+Version,
+    22.2;                    !- Version Identifier
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SIMULATIONCONTROL ===========
+
+SimulationControl,
+    Yes,                     !- Do Zone Sizing Calculation
+    Yes,                     !- Do System Sizing Calculation
+    Yes,                     !- Do Plant Sizing Calculation
+    No,                      !- Run Simulation for Sizing Periods
+    Yes,                     !- Run Simulation for Weather File Run Periods
+    ,                        !- Do HVAC Sizing Simulation for Sizing Periods
+    ;                        !- Maximum Number of HVAC Sizing Simulation Passes
+
+
+!-   ===========  ALL OBJECTS IN CLASS: PERFORMANCEPRECISIONTRADEOFFS ===========
+
+PerformancePrecisionTradeoffs,
+    No,                      !- Use Coil Direct Solutions
+    CarrollMRT,              !- Zone Radiant Exchange Algorithm
+    ,                        !- Override Mode
+    ,                        !- MaxZoneTempDiff
+    ,                        !- MaxAllowedDelTemp
+    No;                      !- Use Representative Surfaces for Calculations
+
+
+!-   ===========  ALL OBJECTS IN CLASS: BUILDING ===========
+
+Building,
+    Building 1,              !- Name
+    ,                        !- North Axis {deg}
+    Suburbs,                 !- Terrain
+    ,                        !- Loads Convergence Tolerance Value {W}
+    ,                        !- Temperature Convergence Tolerance Value {deltaC}
+    ,                        !- Solar Distribution
+    ,                        !- Maximum Number of Warmup Days
+    ;                        !- Minimum Number of Warmup Days
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SHADOWCALCULATION ===========
+
+ShadowCalculation,
+    PolygonClipping,         !- Shading Calculation Method
+    Periodic,                !- Shading Calculation Update Frequency Method
+    20,                      !- Shading Calculation Update Frequency
+    200,                     !- Maximum Figures in Shadow Overlap Calculations
+    SutherlandHodgman,       !- Polygon Clipping Algorithm
+    512,                     !- Pixel Counting Resolution
+    SimpleSkyDiffuseModeling,!- Sky Diffuse Modeling Algorithm
+    No,                      !- Output External Shading Calculation Results
+    No,                      !- Disable Self-Shading Within Shading Zone Groups
+    No;                      !- Disable Self-Shading From Shading Zone Groups to Other Zones
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SURFACECONVECTIONALGORITHM:INSIDE ===========
+
+SurfaceConvectionAlgorithm:Inside,
+    TARP;                    !- Algorithm
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SURFACECONVECTIONALGORITHM:OUTSIDE ===========
+
+SurfaceConvectionAlgorithm:Outside,
+    DOE-2;                   !- Algorithm
+
+
+!-   ===========  ALL OBJECTS IN CLASS: TIMESTEP ===========
+
+Timestep,
+    1;                       !- Number of Timesteps per Hour
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SITE:LOCATION ===========
+
+Site:Location,
+    Denver-Aurora-Buckley.AFB_CO_USA WMO=724695,  !- Name
+    39.72,                   !- Latitude {deg}
+    -104.75,                 !- Longitude {deg}
+    -7.00,                   !- Time Zone {hr}
+    1726.00;                 !- Elevation {m}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SIZINGPERIOD:DESIGNDAY ===========
+
+SizingPeriod:DesignDay,
+    Denver-Aurora-Buckley.AFB_CO_USA Ann Htg 99.6% Condns DB,  !- Name
+    12,                      !- Month
+    21,                      !- Day of Month
+    WinterDesignDay,         !- Day Type
+    -17.9,                   !- Maximum Dry-Bulb Temperature {C}
+    0.0,                     !- Daily Dry-Bulb Temperature Range {deltaC}
+    DefaultMultipliers,      !- Dry-Bulb Temperature Range Modifier Type
+    ,                        !- Dry-Bulb Temperature Range Modifier Day Schedule Name
+    Wetbulb,                 !- Humidity Condition Type
+    -17.9,                   !- Wetbulb or DewPoint at Maximum Dry-Bulb {C}
+    ,                        !- Humidity Condition Day Schedule Name
+    ,                        !- Humidity Ratio at Maximum Dry-Bulb {kgWater/kgDryAir}
+    ,                        !- Enthalpy at Maximum Dry-Bulb {J/kg}
+    ,                        !- Daily Wet-Bulb Temperature Range {deltaC}
+    82237.,                  !- Barometric Pressure {Pa}
+    2.5,                     !- Wind Speed {m/s}
+    180,                     !- Wind Direction {deg}
+    No,                      !- Rain Indicator
+    No,                      !- Snow Indicator
+    No,                      !- Daylight Saving Time Indicator
+    ASHRAEClearSky,          !- Solar Model Indicator
+    ,                        !- Beam Solar Day Schedule Name
+    ,                        !- Diffuse Solar Day Schedule Name
+    ,                        !- ASHRAE Clear Sky Optical Depth for Beam Irradiance (taub) {dimensionless}
+    ,                        !- ASHRAE Clear Sky Optical Depth for Diffuse Irradiance (taud) {dimensionless}
+    0.00;                    !- Sky Clearness
+
+SizingPeriod:DesignDay,
+    Denver-Aurora-Buckley.AFB_CO_USA Ann Clg .4% Condns DB=>MWB,  !- Name
+    7,                       !- Month
+    21,                      !- Day of Month
+    SummerDesignDay,         !- Day Type
+    33.9,                    !- Maximum Dry-Bulb Temperature {C}
+    14.8,                    !- Daily Dry-Bulb Temperature Range {deltaC}
+    DefaultMultipliers,      !- Dry-Bulb Temperature Range Modifier Type
+    ,                        !- Dry-Bulb Temperature Range Modifier Day Schedule Name
+    Wetbulb,                 !- Humidity Condition Type
+    15,                      !- Wetbulb or DewPoint at Maximum Dry-Bulb {C}
+    ,                        !- Humidity Condition Day Schedule Name
+    ,                        !- Humidity Ratio at Maximum Dry-Bulb {kgWater/kgDryAir}
+    ,                        !- Enthalpy at Maximum Dry-Bulb {J/kg}
+    ,                        !- Daily Wet-Bulb Temperature Range {deltaC}
+    82237.,                  !- Barometric Pressure {Pa}
+    3.6,                     !- Wind Speed {m/s}
+    30,                      !- Wind Direction {deg}
+    No,                      !- Rain Indicator
+    No,                      !- Snow Indicator
+    No,                      !- Daylight Saving Time Indicator
+    ASHRAETau,               !- Solar Model Indicator
+    ,                        !- Beam Solar Day Schedule Name
+    ,                        !- Diffuse Solar Day Schedule Name
+    0.423,                   !- ASHRAE Clear Sky Optical Depth for Beam Irradiance (taub) {dimensionless}
+    2.020;                   !- ASHRAE Clear Sky Optical Depth for Diffuse Irradiance (taud) {dimensionless}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: RUNPERIOD ===========
+
+RunPeriod,
+    Run Period 1,            !- Name
+    1,                       !- Begin Month
+    1,                       !- Begin Day of Month
+    2007,                    !- Begin Year
+    12,                      !- End Month
+    31,                      !- End Day of Month
+    2007,                    !- End Year
+    Monday,                  !- Day of Week for Start Day
+    No,                      !- Use Weather File Holidays and Special Days
+    No,                      !- Use Weather File Daylight Saving Period
+    No,                      !- Apply Weekend Holiday Rule
+    Yes,                     !- Use Weather File Rain Indicators
+    Yes;                     !- Use Weather File Snow Indicators
+
+
+!-   ===========  ALL OBJECTS IN CLASS: MATERIAL ===========
+
+Material,
+    asphalt or fiberglass shingles,  !- Name
+    Rough,                   !- Roughness
+    0.00635,                 !- Thickness {m}
+    0.162714,                !- Conductivity {W/m-K}
+    1121.4,                  !- Density {kg/m3}
+    1465.45,                 !- Specific Heat {J/kg-K}
+    0.91,                    !- Thermal Absorptance
+    0.85,                    !- Solar Absorptance
+    0.85;                    !- Visible Absorptance
+
+Material,
+    ceiling loosefill ins,   !- Name
+    Rough,                   !- Roughness
+    0.169333333333333,       !- Thickness {m}
+    0.96526,                 !- Conductivity {W/m-K}
+    16.02,                   !- Density {kg/m3}
+    1046.75,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    ceiling stud and cavity, !- Name
+    Rough,                   !- Roughness
+    0.1397,                  !- Thickness {m}
+    0.0854834525204053,      !- Conductivity {W/m-K}
+    65.682,                  !- Density {kg/m3}
+    1177.46609756098,        !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    concrete 4.0 in.,        !- Name
+    Rough,                   !- Roughness
+    0.1016,                  !- Thickness {m}
+    1.803125,                !- Conductivity {W/m-K}
+    2242.8,                  !- Density {kg/m3}
+    837.4,                   !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    door material,           !- Name
+    Rough,                   !- Roughness
+    0.04445,                 !- Thickness {m}
+    0.0612266553480475,      !- Conductivity {W/m-K}
+    512.64,                  !- Density {kg/m3}
+    1214.23,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    floor covering,          !- Name
+    Rough,                   !- Roughness
+    0.0127,                  !- Thickness {m}
+    0.0433443509615385,      !- Conductivity {W/m-K}
+    54.468,                  !- Density {kg/m3}
+    1339.84,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.9,                     !- Solar Absorptance
+    0.9;                     !- Visible Absorptance
+
+Material,
+    floor covering 1,        !- Name
+    Rough,                   !- Roughness
+    0.0127,                  !- Thickness {m}
+    0.0433443509615385,      !- Conductivity {W/m-K}
+    54.468,                  !- Density {kg/m3}
+    1339.84,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.6,                     !- Solar Absorptance
+    0.6;                     !- Visible Absorptance
+
+Material,
+    slab rigid ins,          !- Name
+    Rough,                   !- Roughness
+    0.5129784,               !- Thickness {m}
+    2.9127,                  !- Conductivity {W/m-K}
+    32.04,                   !- Density {kg/m3}
+    1214.23,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    floor stud and cavity,   !- Name
+    Rough,                   !- Roughness
+    0.1397,                  !- Thickness {m}
+    1.75129287332205,        !- Conductivity {W/m-K}
+    37.004876748,            !- Density {kg/m3}
+    1207.88064650997,        !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    furniture material living space 1,  !- Name
+    Rough,                   !- Roughness
+    0.1524,                  !- Thickness {m}
+    0.1154577,               !- Conductivity {W/m-K}
+    640.8,                   !- Density {kg/m3}
+    1214.23,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.6,                     !- Solar Absorptance
+    0.6;                     !- Visible Absorptance
+
+Material,
+    gypsum board,            !- Name
+    Rough,                   !- Roughness
+    0.0127,                  !- Thickness {m}
+    0.1602906,               !- Conductivity {W/m-K}
+    801,                     !- Density {kg/m3}
+    837.4,                   !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.6,                     !- Solar Absorptance
+    0.6;                     !- Visible Absorptance
+
+Material,
+    osb sheathing 0.5 in.,   !- Name
+    Rough,                   !- Roughness
+    0.0127,                  !- Thickness {m}
+    0.1154577,               !- Conductivity {W/m-K}
+    512.64,                  !- Density {kg/m3}
+    1214.23,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.6,                     !- Solar Absorptance
+    0.6;                     !- Visible Absorptance
+
+Material,
+    osb sheathing 0.5 in. 1, !- Name
+    Rough,                   !- Roughness
+    0.0127,                  !- Thickness {m}
+    0.1154577,               !- Conductivity {W/m-K}
+    512.64,                  !- Density {kg/m3}
+    1214.23,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    osb sheathing 0.75 in.,  !- Name
+    Rough,                   !- Roughness
+    0.01905,                 !- Thickness {m}
+    0.1154577,               !- Conductivity {W/m-K}
+    512.64,                  !- Density {kg/m3}
+    1214.23,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    roof rigid ins,          !- Name
+    Rough,                   !- Roughness
+    0.166539335,             !- Thickness {m}
+    0.9072,                  !- Conductivity {W/m-K}
+    32.04,                   !- Density {kg/m3}
+    1214.23,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    vinyl siding,            !- Name
+    Rough,                   !- Roughness
+    0.009525,                !- Thickness {m}
+    0.089435,                !- Conductivity {W/m-K}
+    177.822,                 !- Density {kg/m3}
+    1046.75,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.75,                    !- Solar Absorptance
+    0.75;                    !- Visible Absorptance
+
+Material,
+    wall rigid ins,          !- Name
+    Rough,                   !- Roughness
+    0.5129784,               !- Thickness {m}
+    2.9126,                  !- Conductivity {W/m-K}
+    32.04,                   !- Density {kg/m3}
+    1214.23,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    wall stud and cavity,    !- Name
+    Rough,                   !- Roughness
+    0.1397,                  !- Thickness {m}
+    0.0946238998928483,      !- Conductivity {W/m-K}
+    139.0536,                !- Density {kg/m3}
+    1170.23755760369,        !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    wall stud and cavity 1,  !- Name
+    Rough,                   !- Roughness
+    0.1397,                  !- Thickness {m}
+    1.533169900148,          !- Conductivity {W/m-K}
+    139.0536,                !- Density {kg/m3}
+    1170.23755760369,        !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.6,                     !- Solar Absorptance
+    0.6;                     !- Visible Absorptance
+
+Material,
+    wall stud and cavity 2,  !- Name
+    Rough,                   !- Roughness
+    0.0889,                  !- Thickness {m}
+    0.380278417457636,       !- Conductivity {W/m-K}
+    52.34794524,             !- Density {kg/m3}
+    1209.88641434781,        !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    wall stud and cavity 3,  !- Name
+    Rough,                   !- Roughness
+    0.0889,                  !- Thickness {m}
+    0.391763531157105,       !- Conductivity {W/m-K}
+    83.034082224,            !- Density {kg/m3}
+    1211.67419087611,        !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    wood siding,             !- Name
+    Rough,                   !- Roughness
+    0.0254,                  !- Thickness {m}
+    0.1024175,               !- Conductivity {W/m-K}
+    544.68,                  !- Density {kg/m3}
+    1172.36,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    wood siding 1,           !- Name
+    Rough,                   !- Roughness
+    0.0254,                  !- Thickness {m}
+    0.1024175,               !- Conductivity {W/m-K}
+    544.68,                  !- Density {kg/m3}
+    1172.36,                 !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    brick veneer,            !- Name
+    Rough,                   !- Roughness
+    0.1016,                  !- Thickness {m}
+    0.793375,                !- Conductivity {W/m-K}
+    1762.2,                  !- Density {kg/m3}
+    795.53,                  !- Specific Heat {J/kg-K}
+    0.96,                    !- Thermal Absorptance
+    0.88,                    !- Solar Absorptance
+    0.88;                    !- Visible Absorptance
+
+Material,
+    concrete block,          !- Name
+    Rough,                   !- Roughness
+    0.2032,                  !- Thickness {m}
+    0.19316781759191,        !- Conductivity {W/m-K}
+    1794.8808,               !- Density {kg/m3}
+    846.010182077829,        !- Specific Heat {J/kg-K}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+Material,
+    Soil-1in,                !- Name
+    Rough,                   !- Roughness
+    0.0254,                  !- Thickness {m}
+    1.731,                   !- Conductivity {W/m-K}
+    1842.3,                  !- Density {kg/m3}
+    418.70000000000005;      !- Specific Heat {J/kg-K}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: MATERIAL:NOMASS ===========
+
+Material:NoMass,
+    Adiabatic,               !- Name
+    Rough,                   !- Roughness
+    176.1,                   !- Thermal Resistance {m2-K/W}
+    0.9,                     !- Thermal Absorptance
+    0.7,                     !- Solar Absorptance
+    0.7;                     !- Visible Absorptance
+
+
+!-   ===========  ALL OBJECTS IN CLASS: WINDOWMATERIAL:SIMPLEGLAZINGSYSTEM ===========
+
+WindowMaterial:SimpleGlazingSystem,
+    WindowMaterial,          !- Name
+    2.78222,                 !- U-Factor {W/m2-K}
+    0.56;                    !- Solar Heat Gain Coefficient
+
+WindowMaterial:SimpleGlazingSystem,
+    Double Pane Clear,       !- Name
+    2.78222,                 !- U-Factor {W/m2-K}
+    0.56;                    !- Solar Heat Gain Coefficient
+
+WindowMaterial:SimpleGlazingSystem,
+    Low e Double Pane Medium SHGC Air filled,  !- Name
+    2.101,                   !- U-Factor {W/m2-K}
+    0.3;                     !- Solar Heat Gain Coefficient
+
+WindowMaterial:SimpleGlazingSystem,
+    Low e Double Pane Medium SHGC Argon filled,  !- Name
+    1.9827,                  !- U-Factor {W/m2-K}
+    0.44;                    !- Solar Heat Gain Coefficient
+
+WindowMaterial:SimpleGlazingSystem,
+    Low e Double Pane Medium SHGC Air filled Insulated,  !- Name
+    1.703,                   !- U-Factor {W/m2-K}
+    0.46;                    !- Solar Heat Gain Coefficient
+
+WindowMaterial:SimpleGlazingSystem,
+    Low e Double Pane Medium SHGC Argon filled Insulated,  !- Name
+    1.533,                   !- U-Factor {W/m2-K}
+    0.46;                    !- Solar Heat Gain Coefficient
+
+WindowMaterial:SimpleGlazingSystem,
+    Low e Triple Pane Low SHGC Air filled,  !- Name
+    1.647,                   !- U-Factor {W/m2-K}
+    0.26;                    !- Solar Heat Gain Coefficient
+
+WindowMaterial:SimpleGlazingSystem,
+    Low e Triple Pane Low SHGC Argon filled,  !- Name
+    1.533,                   !- U-Factor {W/m2-K}
+    0.26;                    !- Solar Heat Gain Coefficient
+
+WindowMaterial:SimpleGlazingSystem,
+    Low e Triple Pane Low SHGC Air filled Insulated,  !- Name
+    1.079,                   !- U-Factor {W/m2-K}
+    0.27;                    !- Solar Heat Gain Coefficient
+
+WindowMaterial:SimpleGlazingSystem,
+    Low e Triple Pane Low SHGC Argon filled Insulated,  !- Name
+    0.9653,                  !- U-Factor {W/m2-K}
+    0.27;                    !- Solar Heat Gain Coefficient
+
+WindowMaterial:SimpleGlazingSystem,
+    Single Pane Clear,       !- Name
+    1.16,                    !- U-Factor {W/m2-K}
+    0.76;                    !- Solar Heat Gain Coefficient
+
+
+!-   ===========  ALL OBJECTS IN CLASS: CONSTRUCTION ===========
+
+Construction,
+    AdiabaticConst,          !- Name
+    Adiabatic;               !- Outside Layer
+
+Construction,
+    AdiabaticFloorConstruction,  !- Name
+    floor stud and cavity,   !- Outside Layer
+    slab rigid ins,          !- Layer 2
+    osb sheathing 0.75 in.,  !- Layer 3
+    floor covering 1;        !- Layer 4
+
+Construction,
+    AdiabaticWallConstruction,  !- Name
+    wood siding,             !- Outside Layer
+    wall rigid ins,          !- Layer 2
+    wall stud and cavity 2,  !- Layer 3
+    gypsum board;            !- Layer 4
+
+Construction,
+    AdiabaticWallConstruction 1,  !- Name
+    wood siding 1,           !- Outside Layer
+    wall rigid ins,          !- Layer 2
+    wall stud and cavity 2,  !- Layer 3
+    gypsum board;            !- Layer 4
+
+Construction,
+    Door,                    !- Name
+    door material;           !- Outside Layer
+
+Construction,
+    Floor construction,      !- Name
+    ceiling loosefill ins,   !- Outside Layer
+    ceiling stud and cavity, !- Layer 2
+    gypsum board;            !- Layer 3
+
+Construction,
+    Floor construction Reversed,  !- Name
+    gypsum board,            !- Outside Layer
+    ceiling stud and cavity, !- Layer 2
+    ceiling loosefill ins;   !- Layer 3
+
+Construction,
+    furniture construction living space 1,  !- Name
+    furniture material living space 1;  !- Outside Layer
+
+Construction,
+    PartitionWallConstruction,  !- Name
+    gypsum board,            !- Outside Layer
+    wall stud and cavity 3,  !- Layer 2
+    gypsum board;            !- Layer 3
+
+Construction,
+    Roof construction - Asphalt Shingles,  !- Name
+    asphalt or fiberglass shingles,  !- Outside Layer
+    roof rigid ins,          !- Layer 2
+    osb sheathing 0.5 in.;   !- Layer 3
+
+Construction,
+    Slab construction,       !- Name
+    concrete 4.0 in.,        !- Outside Layer
+    slab rigid ins,          !- Layer 2
+    floor covering;          !- Layer 3
+
+Construction,
+    WindowConstruction,      !- Name
+    WindowMaterial;          !- Outside Layer
+
+Construction,
+    Wall construction - 2x4 insulated wood stud with vinyl siding,  !- Name
+    vinyl siding,            !- Outside Layer
+    osb sheathing 0.5 in. 1, !- Layer 2
+    wall rigid ins,          !- Layer 3
+    wall stud and cavity,    !- Layer 4
+    gypsum board;            !- Layer 5
+
+Construction,
+    Wall construction - 2x4 insulated wood stud with brick finish,  !- Name
+    brick veneer,            !- Outside Layer
+    osb sheathing 0.5 in. 1, !- Layer 2
+    wall stud and cavity,    !- Layer 3
+    wall rigid ins,          !- Layer 4
+    gypsum board;            !- Layer 5
+
+Construction,
+    Wall construction - Insulated 8in. Concrete,  !- Name
+    vinyl siding,            !- Outside Layer
+    wall rigid ins,          !- Layer 2
+    osb sheathing 0.5 in. 1, !- Layer 3
+    concrete block,          !- Layer 4
+    gypsum board;            !- Layer 5
+
+Construction,
+    CrawlSpaceGrndFloorConst,!- Name
+    Soil-1in;                !- Outside Layer
+
+
+!-   ===========  ALL OBJECTS IN CLASS: GLOBALGEOMETRYRULES ===========
+
+GlobalGeometryRules,
+    UpperLeftCorner,         !- Starting Vertex Position
+    Counterclockwise,        !- Vertex Entry Direction
+    Relative,                !- Coordinate System
+    Relative,                !- Daylighting Reference Point Coordinate System
+    Relative;                !- Rectangular Surface Coordinate System
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SPACE ===========
+
+Space,
+    attic - vented 1,        !- Name
+    attic - vented,          !- Zone Name
+    ,                        !- Ceiling Height {m}
+    ,                        !- Volume {m3}
+    ,                        !- Floor Area {m2}
+    ;                        !- Space Type
+
+Space,
+    living space 1,          !- Name
+    living space,            !- Zone Name
+    ,                        !- Ceiling Height {m}
+    ,                        !- Volume {m3}
+    ,                        !- Floor Area {m2}
+    ;                        !- Space Type
+
+Space,
+    airloop ret air space,   !- Name
+    airloop ret air zone,    !- Zone Name
+    ,                        !- Ceiling Height {m}
+    ,                        !- Volume {m3}
+    ,                        !- Floor Area {m2}
+    Plenum Space Type;       !- Space Type
+
+Space,
+    foundation space 1,      !- Name
+    foundation space,        !- Zone Name
+    ,                        !- Ceiling Height {m}
+    ,                        !- Volume {m3}
+    ,                        !- Floor Area {m2}
+    ;                        !- Space Type
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SPACELIST ===========
+
+SpaceList,
+    Plenum Space Type,       !- Name
+    airloop ret air space;   !- Space 1 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ZONE ===========
+
+Zone,
+    living space,            !- Name
+    ,                        !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    ,                        !- Type
+    1,                       !- Multiplier
+    ,                        !- Ceiling Height {m}
+    autocalculate,           !- Volume {m3}
+    ,                        !- Floor Area {m2}
+    ,                        !- Zone Inside Convection Algorithm
+    ,                        !- Zone Outside Convection Algorithm
+    Yes;                     !- Part of Total Floor Area
+
+Zone,
+    attic - vented,          !- Name
+    ,                        !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    ,                        !- Type
+    1,                       !- Multiplier
+    ,                        !- Ceiling Height {m}
+    autocalculate,           !- Volume {m3}
+    ,                        !- Floor Area {m2}
+    ,                        !- Zone Inside Convection Algorithm
+    ,                        !- Zone Outside Convection Algorithm
+    Yes;                     !- Part of Total Floor Area
+
+Zone,
+    foundation space,        !- Name
+    ,                        !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    ,                        !- Type
+    1,                       !- Multiplier
+    ,                        !- Ceiling Height {m}
+    autocalculate,           !- Volume {m3}
+    ,                        !- Floor Area {m2}
+    ,                        !- Zone Inside Convection Algorithm
+    ,                        !- Zone Outside Convection Algorithm
+    Yes;                     !- Part of Total Floor Area
+
+
+!-   ===========  ALL OBJECTS IN CLASS: BUILDINGSURFACE:DETAILED ===========
+
+BuildingSurface:Detailed,
+    Surface 1,               !- Name
+    Floor,                   !- Surface Type
+    AdiabaticConst,          !- Construction Name
+    airloop ret air zone,    !- Zone Name
+    airloop ret air space,   !- Space Name
+    Adiabatic,               !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,                   !- Sun Exposure
+    NoWind,                  !- Wind Exposure
+    ,                        !- View Factor to Ground
+    ,                        !- Number of Vertices
+    0,                       !- Vertex 1 X-coordinate {m}
+    0,                       !- Vertex 1 Y-coordinate {m}
+    0,                       !- Vertex 1 Z-coordinate {m}
+    0,                       !- Vertex 2 X-coordinate {m}
+    1,                       !- Vertex 2 Y-coordinate {m}
+    0,                       !- Vertex 2 Z-coordinate {m}
+    1,                       !- Vertex 3 X-coordinate {m}
+    1,                       !- Vertex 3 Y-coordinate {m}
+    0,                       !- Vertex 3 Z-coordinate {m}
+    1,                       !- Vertex 4 X-coordinate {m}
+    0,                       !- Vertex 4 Y-coordinate {m}
+    0;                       !- Vertex 4 Z-coordinate {m}
+
+BuildingSurface:Detailed,
+    Surface 2,               !- Name
+    Wall,                    !- Surface Type
+    AdiabaticConst,          !- Construction Name
+    airloop ret air zone,    !- Zone Name
+    airloop ret air space,   !- Space Name
+    Adiabatic,               !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,                   !- Sun Exposure
+    NoWind,                  !- Wind Exposure
+    ,                        !- View Factor to Ground
+    ,                        !- Number of Vertices
+    0,                       !- Vertex 1 X-coordinate {m}
+    1,                       !- Vertex 1 Y-coordinate {m}
+    1,                       !- Vertex 1 Z-coordinate {m}
+    0,                       !- Vertex 2 X-coordinate {m}
+    1,                       !- Vertex 2 Y-coordinate {m}
+    0,                       !- Vertex 2 Z-coordinate {m}
+    0,                       !- Vertex 3 X-coordinate {m}
+    0,                       !- Vertex 3 Y-coordinate {m}
+    0,                       !- Vertex 3 Z-coordinate {m}
+    0,                       !- Vertex 4 X-coordinate {m}
+    0,                       !- Vertex 4 Y-coordinate {m}
+    1;                       !- Vertex 4 Z-coordinate {m}
+
+BuildingSurface:Detailed,
+    Surface 3,               !- Name
+    Wall,                    !- Surface Type
+    AdiabaticConst,          !- Construction Name
+    airloop ret air zone,    !- Zone Name
+    airloop ret air space,   !- Space Name
+    Adiabatic,               !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,                   !- Sun Exposure
+    NoWind,                  !- Wind Exposure
+    ,                        !- View Factor to Ground
+    ,                        !- Number of Vertices
+    1,                       !- Vertex 1 X-coordinate {m}
+    1,                       !- Vertex 1 Y-coordinate {m}
+    1,                       !- Vertex 1 Z-coordinate {m}
+    1,                       !- Vertex 2 X-coordinate {m}
+    1,                       !- Vertex 2 Y-coordinate {m}
+    0,                       !- Vertex 2 Z-coordinate {m}
+    0,                       !- Vertex 3 X-coordinate {m}
+    1,                       !- Vertex 3 Y-coordinate {m}
+    0,                       !- Vertex 3 Z-coordinate {m}
+    0,                       !- Vertex 4 X-coordinate {m}
+    1,                       !- Vertex 4 Y-coordinate {m}
+    1;                       !- Vertex 4 Z-coordinate {m}
+
+BuildingSurface:Detailed,
+    Surface 4,               !- Name
+    Wall,                    !- Surface Type
+    AdiabaticConst,          !- Construction Name
+    airloop ret air zone,    !- Zone Name
+    airloop ret air space,   !- Space Name
+    Adiabatic,               !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,                   !- Sun Exposure
+    NoWind,                  !- Wind Exposure
+    ,                        !- View Factor to Ground
+    ,                        !- Number of Vertices
+    1,                       !- Vertex 1 X-coordinate {m}
+    0,                       !- Vertex 1 Y-coordinate {m}
+    1,                       !- Vertex 1 Z-coordinate {m}
+    1,                       !- Vertex 2 X-coordinate {m}
+    0,                       !- Vertex 2 Y-coordinate {m}
+    0,                       !- Vertex 2 Z-coordinate {m}
+    1,                       !- Vertex 3 X-coordinate {m}
+    1,                       !- Vertex 3 Y-coordinate {m}
+    0,                       !- Vertex 3 Z-coordinate {m}
+    1,                       !- Vertex 4 X-coordinate {m}
+    1,                       !- Vertex 4 Y-coordinate {m}
+    1;                       !- Vertex 4 Z-coordinate {m}
+
+BuildingSurface:Detailed,
+    Surface 5,               !- Name
+    Wall,                    !- Surface Type
+    AdiabaticConst,          !- Construction Name
+    airloop ret air zone,    !- Zone Name
+    airloop ret air space,   !- Space Name
+    Adiabatic,               !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,                   !- Sun Exposure
+    NoWind,                  !- Wind Exposure
+    ,                        !- View Factor to Ground
+    ,                        !- Number of Vertices
+    0,                       !- Vertex 1 X-coordinate {m}
+    0,                       !- Vertex 1 Y-coordinate {m}
+    1,                       !- Vertex 1 Z-coordinate {m}
+    0,                       !- Vertex 2 X-coordinate {m}
+    0,                       !- Vertex 2 Y-coordinate {m}
+    0,                       !- Vertex 2 Z-coordinate {m}
+    1,                       !- Vertex 3 X-coordinate {m}
+    0,                       !- Vertex 3 Y-coordinate {m}
+    0,                       !- Vertex 3 Z-coordinate {m}
+    1,                       !- Vertex 4 X-coordinate {m}
+    0,                       !- Vertex 4 Y-coordinate {m}
+    1;                       !- Vertex 4 Z-coordinate {m}
+
+BuildingSurface:Detailed,
+    Surface 6,               !- Name
+    Ceiling,                 !- Surface Type
+    AdiabaticConst,          !- Construction Name
+    airloop ret air zone,    !- Zone Name
+    airloop ret air space,   !- Space Name
+    Adiabatic,               !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,                   !- Sun Exposure
+    NoWind,                  !- Wind Exposure
+    ,                        !- View Factor to Ground
+    ,                        !- Number of Vertices
+    1,                       !- Vertex 1 X-coordinate {m}
+    0,                       !- Vertex 1 Y-coordinate {m}
+    1,                       !- Vertex 1 Z-coordinate {m}
+    1,                       !- Vertex 2 X-coordinate {m}
+    1,                       !- Vertex 2 Y-coordinate {m}
+    1,                       !- Vertex 2 Z-coordinate {m}
+    0,                       !- Vertex 3 X-coordinate {m}
+    1,                       !- Vertex 3 Y-coordinate {m}
+    1,                       !- Vertex 3 Z-coordinate {m}
+    0,                       !- Vertex 4 X-coordinate {m}
+    0,                       !- Vertex 4 Y-coordinate {m}
+    1;                       !- Vertex 4 Z-coordinate {m}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: INTERNALMASS ===========
+
+InternalMass,
+    furniture mass living space 1,  !- Name
+    furniture construction living space 1,  !- Construction Name
+    living space,            !- Zone or ZoneList Name
+    living space 1,          !- Space or SpaceList Name
+    64.2145812480001;        !- Surface Area {m2}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: PEOPLE ===========
+
+People,
+    occupants,               !- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    occupants schedule,      !- Number of People Schedule Name
+    People,                  !- Number of People Calculation Method
+    3,                       !- Number of People
+    ,                        !- People per Floor Area {person/m2}
+    ,                        !- Floor Area per Person {m2/person}
+    0.314170909090909,       !- Fraction Radiant
+    0.563030303030303,       !- Sensible Heat Fraction
+    occupants activity schedule,  !- Activity Level Schedule Name
+    0,                       !- Carbon Dioxide Generation Rate {m3/s-W}
+    No,                      !- Enable ASHRAE 55 Comfort Warnings
+    ZoneAveraged;            !- Mean Radiant Temperature Calculation Type
+
+
+!-   ===========  ALL OBJECTS IN CLASS: LIGHTS ===========
+
+Lights,
+    interior lighting,       !- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    interior lighting schedule,  !- Schedule Name
+    LightingLevel,           !- Design Level Calculation Method
+    ,                        !- Lighting Level {W}
+    ,                        !- Watts per Zone Floor Area {W/m2}
+    ,                        !- Watts per Person {W/person}
+    0,                       !- Return Air Fraction
+    0.6,                     !- Fraction Radiant
+    0.2,                     !- Fraction Visible
+    1,                       !- Fraction Replaceable
+    interior lighting;       !- End-Use Subcategory
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ELECTRICEQUIPMENT ===========
+
+ElectricEquipment,
+    clothes dryer,           !- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    clothes dryer,           !- Schedule Name
+    EquipmentLevel,          !- Design Level Calculation Method
+    0,                       !- Design Level {W}
+    ,                        !- Watts per Zone Floor Area {W/m2}
+    ,                        !- Watts per Person {W/person}
+    0.015,                   !- Fraction Latent
+    0.081,                   !- Fraction Radiant
+    0.85,                    !- Fraction Lost
+    clothes dryer;           !- End-Use Subcategory
+
+ElectricEquipment,
+    clothes washer,          !- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    clothes washer,          !- Schedule Name
+    EquipmentLevel,          !- Design Level Calculation Method
+    0,                       !- Design Level {W}
+    ,                        !- Watts per Zone Floor Area {W/m2}
+    ,                        !- Watts per Person {W/person}
+    0.03,                    !- Fraction Latent
+    0.162,                   !- Fraction Radiant
+    0.7,                     !- Fraction Lost
+    clothes washer;          !- End-Use Subcategory
+
+ElectricEquipment,
+    cooking range,           !- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    cooking range,           !- Schedule Name
+    EquipmentLevel,          !- Design Level Calculation Method
+    0,                       !- Design Level {W}
+    ,                        !- Watts per Zone Floor Area {W/m2}
+    ,                        !- Watts per Person {W/person}
+    0.0799999999999999,      !- Fraction Latent
+    0.432,                   !- Fraction Radiant
+    0.2,                     !- Fraction Lost
+    cooking range;           !- End-Use Subcategory
+
+ElectricEquipment,
+    dishwasher,              !- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    dishwasher,              !- Schedule Name
+    EquipmentLevel,          !- Design Level Calculation Method
+    0,                       !- Design Level {W}
+    ,                        !- Watts per Zone Floor Area {W/m2}
+    ,                        !- Watts per Person {W/person}
+    0.3,                     !- Fraction Latent
+    0.18,                    !- Fraction Radiant
+    0.4,                     !- Fraction Lost
+    dishwasher;              !- End-Use Subcategory
+
+ElectricEquipment,
+    fridge,                  !- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    fridge,                  !- Schedule Name
+    EquipmentLevel,          !- Design Level Calculation Method
+    0,                       !- Design Level {W}
+    ,                        !- Watts per Zone Floor Area {W/m2}
+    ,                        !- Watts per Person {W/person}
+    0,                       !- Fraction Latent
+    0.6,                     !- Fraction Radiant
+    0,                       !- Fraction Lost
+    fridge;                  !- End-Use Subcategory
+
+ElectricEquipment,
+    mech vent house fan,     !- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    Always On Discrete,      !- Schedule Name
+    EquipmentLevel,          !- Design Level Calculation Method
+    0,                       !- Design Level {W}
+    ,                        !- Watts per Zone Floor Area {W/m2}
+    ,                        !- Watts per Person {W/person}
+    0,                       !- Fraction Latent
+    0,                       !- Fraction Radiant
+    1,                       !- Fraction Lost
+    mech vent;               !- End-Use Subcategory
+
+ElectricEquipment,
+    mech vent house fan cfis,!- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    Always On Discrete,      !- Schedule Name
+    EquipmentLevel,          !- Design Level Calculation Method
+    0,                       !- Design Level {W}
+    ,                        !- Watts per Zone Floor Area {W/m2}
+    ,                        !- Watts per Person {W/person}
+    0,                       !- Fraction Latent
+    0,                       !- Fraction Radiant
+    0,                       !- Fraction Lost
+    mech vent;               !- End-Use Subcategory
+
+ElectricEquipment,
+    misc plug loads,         !- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    misc plug loads schedule,!- Schedule Name
+    EquipmentLevel,          !- Design Level Calculation Method
+    0,                       !- Design Level {W}
+    ,                        !- Watts per Zone Floor Area {W/m2}
+    ,                        !- Watts per Person {W/person}
+    0.045,                   !- Fraction Latent
+    0.513,                   !- Fraction Radiant
+    0.1,                     !- Fraction Lost
+    misc plug loads;         !- End-Use Subcategory
+
+ElectricEquipment,
+    misc tv,                 !- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    misc tv schedule,        !- Schedule Name
+    EquipmentLevel,          !- Design Level Calculation Method
+    0,                       !- Design Level {W}
+    ,                        !- Watts per Zone Floor Area {W/m2}
+    ,                        !- Watts per Person {W/person}
+    0,                       !- Fraction Latent
+    0.6,                     !- Fraction Radiant
+    0,                       !- Fraction Lost
+    misc tv;                 !- End-Use Subcategory
+
+ElectricEquipment,
+    whole house fan,         !- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    Always On Discrete,      !- Schedule Name
+    EquipmentLevel,          !- Design Level Calculation Method
+    0,                       !- Design Level {W}
+    ,                        !- Watts per Zone Floor Area {W/m2}
+    ,                        !- Watts per Person {W/person}
+    0,                       !- Fraction Latent
+    0,                       !- Fraction Radiant
+    1,                       !- Fraction Lost
+    whole house fan;         !- End-Use Subcategory
+
+ElectricEquipment,
+    office equipment,        !- Name
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    office eqp schedule,     !- Schedule Name
+    EquipmentLevel,          !- Design Level Calculation Method
+    0,                       !- Design Level {W}
+    ,                        !- Watts per Zone Floor Area {W/m2}
+    ,                        !- Watts per Person {W/person}
+    0.045,                   !- Fraction Latent
+    0.513,                   !- Fraction Radiant
+    0.1,                     !- Fraction Lost
+    office equipment;        !- End-Use Subcategory
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OTHEREQUIPMENT ===========
+
+OtherEquipment,
+    cooking range 1,         !- Name
+    NaturalGas,              !- Fuel Type
+    living space 1,          !- Zone or ZoneList or Space or SpaceList Name
+    cooking range,           !- Schedule Name
+    EquipmentLevel,          !- Design Level Calculation Method
+    0,                       !- Design Level {W}
+    ,                        !- Power per Zone Floor Area {W/m2}
+    ,                        !- Power per Person {W/person}
+    0.161847255712269,       !- Fraction Latent
+    0.382891646572639,       !- Fraction Radiant
+    0.2,                     !- Fraction Lost
+    ,                        !- Carbon Dioxide Generation Rate {m3/s-W}
+    cooking range;           !- End-Use Subcategory
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ZONEINFILTRATION:EFFECTIVELEAKAGEAREA ===========
+
+ZoneInfiltration:EffectiveLeakageArea,
+    infil|attic - vented 1,  !- Name
+    living space,            !- Zone or Space Name
+    Always On Discrete,      !- Schedule Name
+    1,                       !- Effective Air Leakage Area {cm2}
+    0.000547101581173952,    !- Stack Coefficient
+    4.39122755852747e-05;    !- Wind Coefficient
+
+
+!-   ===========  ALL OBJECTS IN CLASS: EXTERIOR:LIGHTS ===========
+
+Exterior:Lights,
+    exterior lighting,       !- Name
+    exterior lighting schedule,  !- Schedule Name
+    42.7692265668747,        !- Design Level {W}
+    ,                        !- Control Option
+    exterior lighting;       !- End-Use Subcategory
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SIZING:ZONE ===========
+
+Sizing:Zone,
+    living space,            !- Zone or ZoneList Name
+    SupplyAirTemperature,    !- Zone Cooling Design Supply Air Temperature Input Method
+    12,                      !- Zone Cooling Design Supply Air Temperature {C}
+    ,                        !- Zone Cooling Design Supply Air Temperature Difference {deltaC}
+    SupplyAirTemperature,    !- Zone Heating Design Supply Air Temperature Input Method
+    50,                      !- Zone Heating Design Supply Air Temperature {C}
+    ,                        !- Zone Heating Design Supply Air Temperature Difference {deltaC}
+    0.008,                   !- Zone Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
+    0.008,                   !- Zone Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
+    ,                        !- Design Specification Outdoor Air Object Name
+    ,                        !- Zone Heating Sizing Factor
+    ,                        !- Zone Cooling Sizing Factor
+    DesignDay,               !- Cooling Design Air Flow Method
+    ,                        !- Cooling Design Air Flow Rate {m3/s}
+    0.000762,                !- Cooling Minimum Air Flow per Zone Floor Area {m3/s-m2}
+    ,                        !- Cooling Minimum Air Flow {m3/s}
+    ,                        !- Cooling Minimum Air Flow Fraction
+    DesignDay,               !- Heating Design Air Flow Method
+    ,                        !- Heating Design Air Flow Rate {m3/s}
+    0.002032,                !- Heating Maximum Air Flow per Zone Floor Area {m3/s-m2}
+    0.1415762,               !- Heating Maximum Air Flow {m3/s}
+    0.3,                     !- Heating Maximum Air Flow Fraction
+    ,                        !- Design Specification Zone Air Distribution Object Name
+    ,                        !- Account for Dedicated Outdoor Air System
+    ,                        !- Dedicated Outdoor Air System Control Strategy
+    ,                        !- Dedicated Outdoor Air Low Setpoint Temperature for Design {C}
+    ,                        !- Dedicated Outdoor Air High Setpoint Temperature for Design {C}
+    Sensible Load Only No Latent Load,  !- Zone Load Sizing Method
+    HumidityRatioDifference, !- Zone Latent Cooling Design Supply Air Humidity Ratio Input Method
+    ,                        !- Zone Dehumidification Design Supply Air Humidity Ratio {kgWater/kgDryAir}
+    0.005,                   !- Zone Cooling Design Supply Air Humidity Ratio Difference {kgWater/kgDryAir}
+    HumidityRatioDifference, !- Zone Latent Heating Design Supply Air Humidity Ratio Input Method
+    ,                        !- Zone Humidification Design Supply Air Humidity Ratio {kgWater/kgDryAir}
+    0.005;                   !- Zone Humidification Design Supply Air Humidity Ratio Difference {kgWater/kgDryAir}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SIZING:PLANT ===========
+
+Sizing:Plant,
+    dhw loop,                !- Plant or Condenser Loop Name
+    Heating,                 !- Loop Type
+    52.6666666666667,        !- Design Loop Exit Temperature {C}
+    5.55555555555556,        !- Loop Design Temperature Difference {deltaC}
+    NonCoincident,           !- Sizing Option
+    1,                       !- Zone Timesteps in Averaging Window
+    None;                    !- Coincident Sizing Factor Mode
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ZONECONTROL:THERMOSTAT ===========
+
+ZoneControl:Thermostat,
+    Zone Thermostat_unit1,   !- Name
+    living space,            !- Zone or ZoneList Name
+    living space Thermostat Schedule,  !- Control Type Schedule Name
+    ThermostatSetpoint:DualSetpoint,  !- Control 1 Object Type
+    thermostat_living Dual SP Control;  !- Control 1 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: THERMOSTATSETPOINT:DUALSETPOINT ===========
+
+ThermostatSetpoint:DualSetpoint,
+    thermostat_living Dual SP Control,  !- Name
+    heating setpoint,        !- Heating Setpoint Temperature Schedule Name
+    cooling setpoint;        !- Cooling Setpoint Temperature Schedule Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ENERGYMANAGEMENTSYSTEM:INTERNALVARIABLE ===========
+
+EnergyManagementSystem:InternalVariable,
+    furnace_airloop_max_sup_fan_mfr,  !- Name
+    furnace supply fan,      !- Internal Data Index Key Name
+    Fan Maximum Mass Flow Rate;  !- Internal Data Type
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTPUT:VARIABLEDICTIONARY ===========
+
+Output:VariableDictionary,
+    IDF;                     !- Key Field
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTPUT:TABLE:SUMMARYREPORTS ===========
+
+Output:Table:SummaryReports,
+    AllSummary,              !- Report 1 Name
+    AllMonthly;              !- Report 2 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTPUT:TABLE:MONTHLY ===========
+
+Output:Table:Monthly,
+    OutputTableMonth,        !- Name
+    2,                       !- Digits After Decimal
+    Facility Total Building Electricity Demand Rate,  !- Variable or Meter 1 Name
+    Maximum;                 !- Aggregation Type for Variable or Meter 1
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTPUTCONTROL:TABLE:STYLE ===========
+
+OutputControl:Table:Style,
+    CommaAndHTML,            !- Column Separator
+    JtoKWH;                  !- Unit Conversion
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTPUT:VARIABLE ===========
+
+Output:Variable,
+    *,                       !- Key Value
+    Facility Total Electricity Demand Rate,  !- Variable Name
+    Hourly;                  !- Reporting Frequency
+
+Output:Variable,
+    *,                       !- Key Value
+    Zone Air Temperature,    !- Variable Name
+    Hourly;                  !- Reporting Frequency
+
+Output:Variable,
+    *,                       !- Key Value
+    Zone Thermal Comfort ASHRAE 55 Simple Model Summer or Winter Clothes Not Comfortable Time,  !- Variable Name
+    Hourly;                  !- Reporting Frequency
+
+Output:Variable,
+    *,                       !- Key Value
+    Zone Mean Air Humidity Ratio,  !- Variable Name
+    Hourly;                  !- Reporting Frequency
+
+Output:Variable,
+    *,                       !- Key Value
+    Zone Air Relative Humidity,  !- Variable Name
+    Hourly;                  !- Reporting Frequency
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTPUT:METER:METERFILEONLY ===========
+
+Output:Meter:MeterFileOnly,
+    Electricity:Facility,    !- Key Name
+    Monthly;                 !- Reporting Frequency
+
+Output:Meter:MeterFileOnly,
+    NaturalGas:Facility,     !- Key Name
+    Monthly;                 !- Reporting Frequency
+
+Output:Meter:MeterFileOnly,
+    InteriorEquipment:Electricity,  !- Key Name
+    Monthly;                 !- Reporting Frequency
+
+Output:Meter:MeterFileOnly,
+    InteriorLights:Electricity,  !- Key Name
+    Monthly;                 !- Reporting Frequency
+
+Output:Meter:MeterFileOnly,
+    ExteriorLights:Electricity,  !- Key Name
+    Monthly;                 !- Reporting Frequency
+
+Output:Meter:MeterFileOnly,
+    Fans:Electricity,        !- Key Name
+    Monthly;                 !- Reporting Frequency
+
+Output:Meter:MeterFileOnly,
+    Heating:NaturalGas,      !- Key Name
+    Monthly;                 !- Reporting Frequency
+
+Output:Meter:MeterFileOnly,
+    Heating:Electricity,     !- Key Name
+    Monthly;                 !- Reporting Frequency
+
+Output:Meter:MeterFileOnly,
+    Cooling:Electricity,     !- Key Name
+    Monthly;                 !- Reporting Frequency
+
+Output:Meter:MeterFileOnly,
+    WaterSystems:NaturalGas, !- Key Name
+    Monthly;                 !- Reporting Frequency
+
+Output:Meter:MeterFileOnly,
+    WaterSystems:Electricity,!- Key Name
+    Monthly;                 !- Reporting Frequency
+
+Output:Meter:MeterFileOnly,
+    Pumps:Electricity,       !- Key Name
+    Monthly;                 !- Reporting Frequency
+
+Output:Meter:MeterFileOnly,
+    InteriorEquipment:NaturalGas,  !- Key Name
+    Monthly;                 !- Reporting Frequency
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTPUTCONTROL:FILES ===========
+
+OutputControl:Files,
+    Yes,                     !- Output CSV
+    No,                      !- Output MTR
+    Yes,                     !- Output ESO
+    No,                      !- Output EIO
+    Yes,                     !- Output Tabular
+    Yes,                     !- Output SQLite
+    Yes,                     !- Output JSON
+    No,                      !- Output AUDIT
+    Yes,                     !- Output Zone Sizing
+    Yes,                     !- Output System Sizing
+    Yes,                     !- Output DXF
+    No,                      !- Output BND
+    Yes,                     !- Output RDD
+    Yes,                     !- Output MDD
+    No,                      !- Output MTD
+    Yes,                     !- Output END
+    No,                      !- Output SHD
+    Yes,                     !- Output DFS
+    Yes,                     !- Output GLHE
+    Yes,                     !- Output DelightIn
+    Yes,                     !- Output DelightELdmp
+    Yes,                     !- Output DelightDFdmp
+    Yes,                     !- Output EDD
+    Yes,                     !- Output DBG
+    No,                      !- Output PerfLog
+    Yes,                     !- Output SLN
+    Yes,                     !- Output SCI
+    Yes,                     !- Output WRL
+    Yes,                     !- Output Screen
+    Yes,                     !- Output ExtShd
+    Yes;                     !- Output Tarcog
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTPUT:JSON ===========
+
+Output:JSON,
+    TimeSeriesAndTabular,    !- Option Type
+    No,                      !- Output JSON
+    No,                      !- Output CBOR
+    Yes;                     !- Output MessagePack
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTPUT:DIAGNOSTICS ===========
+
+Output:Diagnostics,
+    DisplayAdvancedReportVariables,  !- Key 1
+    ReportDuringWarmup,      !- Key 2
+    DisplayExtraWarnings;    !- Key 3
+

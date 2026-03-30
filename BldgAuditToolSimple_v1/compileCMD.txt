@@ -1,0 +1,1 @@
+pyinstaller --onefile --exclude PyQt6 --distpath "C:\Users\phani\OneDrive - UCB-O365\Phani_Vadali\Work\EnergyModels\BuildingAuditTool\BldgAuditToolLiteExe" --workpath "C:\Users\phani\OneDrive - UCB-O365\Phani_Vadali\Work\EnergyModels\BuildingAuditTool\BldgAuditToolSimple_v1\Build_Files" ShowGUI.py

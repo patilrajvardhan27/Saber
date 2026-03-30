@@ -1,0 +1,10 @@
+﻿InsulationName,Rvalue_IP,Thickness_inch,Lifetime,Costpersft,FixedCost
+Uninsulated,0.00001,3.5,999,0.001,0
+R7 Fiberglass,7,3.5,999,2.36,0
+R11 Fiberglass,11,3.5,999,2.4,0
+R13 Fiberglass,13,3.5,999,2.54,0
+R15 Fiberglass,15,3.5,999,2.6,0
+R19 Fiberglass,19,5.5,999,2.65,0
+R21 Fiberglass,21,5.5,999,2.71,0
+R23 Spray Foam,23,3.5,999,4.07,0
+R36 Spray Foam,36,5.5,999,5.69,0

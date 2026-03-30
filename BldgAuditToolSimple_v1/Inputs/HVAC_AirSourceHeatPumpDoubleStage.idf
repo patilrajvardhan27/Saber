@@ -1,0 +1,767 @@
+!-Generator IDFEditor 1.53
+!-Option SortedOrder
+
+!-NOTE: All comments with '!-' are ignored by the IDFEditor and are generated automatically.
+!-      Use '!' comments if they need to be retained when using the IDFEditor.
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ZONE ===========
+
+Zone,
+    airloop ret air zone,    !- Name
+    ,                        !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    ,                        !- Type
+    1,                       !- Multiplier
+    ,                        !- Ceiling Height {m}
+    1,                       !- Volume {m3}
+    ,                        !- Floor Area {m2}
+    ,                        !- Zone Inside Convection Algorithm
+    ,                        !- Zone Outside Convection Algorithm
+    No;                      !- Part of Total Floor Area
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SIZING:SYSTEM ===========
+
+Sizing:System,
+    air source heat pump airloop,  !- AirLoop Name
+    Sensible,                !- Type of Load to Size On
+    Autosize,                !- Design Outdoor Air Flow Rate {m3/s}
+    0.3,                     !- Central Heating Maximum System Air Flow Ratio
+    7,                       !- Preheat Design Temperature {C}
+    0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
+    12.8,                    !- Precool Design Temperature {C}
+    0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
+    12.8,                    !- Central Cooling Design Supply Air Temperature {C}
+    16.7,                    !- Central Heating Design Supply Air Temperature {C}
+    NonCoincident,           !- Type of Zone Sum to Use
+    Yes,                     !- 100% Outdoor Air in Cooling
+    Yes,                     !- 100% Outdoor Air in Heating
+    0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
+    0.008,                   !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0,                       !- Cooling Supply Air Flow Rate {m3/s}
+    0.0099676501,            !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    1,                       !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    3.9475456e-05,           !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0,                       !- Heating Supply Air Flow Rate {m3/s}
+    0.0099676501,            !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    1,                       !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    1,                       !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    3.1588213e-05,           !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1,                       !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    Autosize,                !- Cooling Design Capacity {W}
+    234.7,                   !- Cooling Design Capacity Per Floor Area {W/m2}
+    1,                       !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    Autosize,                !- Heating Design Capacity {W}
+    157,                     !- Heating Design Capacity Per Floor Area {W/m2}
+    1,                       !- Fraction of Autosized Heating Design Capacity
+    OnOff,                   !- Central Cooling Capacity Control Method
+    Autosize;                !- Occupant Diversity
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRTERMINAL:SINGLEDUCT:CONSTANTVOLUME:NOREHEAT ===========
+
+AirTerminal:SingleDuct:ConstantVolume:NoReheat,
+    air source heat pump terminal,  !- Name
+    Always On Discrete,      !- Availability Schedule Name
+    Node 9,                  !- Air Inlet Node Name
+    Node 7,                  !- Air Outlet Node Name
+    0.2940232571136;         !- Maximum Air Flow Rate {m3/s}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ZONEHVAC:AIRDISTRIBUTIONUNIT ===========
+
+ZoneHVAC:AirDistributionUnit,
+    ADU air source heat pump terminal,  !- Name
+    Node 7,                  !- Air Distribution Unit Outlet Node Name
+    AirTerminal:SingleDuct:ConstantVolume:NoReheat,  !- Air Terminal Object Type
+    air source heat pump terminal;  !- Air Terminal Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ZONEHVAC:EQUIPMENTLIST ===========
+
+ZoneHVAC:EquipmentList,
+    living space Equipment List,  !- Name
+    SequentialLoad,          !- Load Distribution Scheme
+    ZoneHVAC:AirDistributionUnit,  !- Zone Equipment 1 Object Type
+    ADU air source heat pump terminal,  !- Zone Equipment 1 Name
+    1,                       !- Zone Equipment 1 Cooling Sequence
+    1,                       !- Zone Equipment 1 Heating or No-Load Sequence
+    Sequential Fraction Schedule 1,  !- Zone Equipment 1 Sequential Cooling Fraction Schedule Name
+    Sequential Fraction Schedule;  !- Zone Equipment 1 Sequential Heating Fraction Schedule Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ZONEHVAC:EQUIPMENTCONNECTIONS ===========
+
+ZoneHVAC:EquipmentConnections,
+    living space,            !- Zone Name
+    living space Equipment List,  !- Zone Conditioning Equipment List Name
+    living space Inlet Node List,  !- Zone Air Inlet Node or NodeList Name
+    ,                        !- Zone Air Exhaust Node or NodeList Name
+    Node 1,                  !- Zone Air Node Name
+    living space Return Node List;  !- Zone Return Air Node or NodeList Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: FAN:SYSTEMMODEL ===========
+
+Fan:SystemModel,
+    air source heat pump supply fan,  !- Name
+    Always On Discrete,      !- Availability Schedule Name
+    Node 3,                  !- Air Inlet Node Name
+    air source heat pump unitary system Fan - Cooling Coil Node,  !- Air Outlet Node Name
+    autosize,                !- Design Maximum Air Flow Rate {m3/s}
+    Discrete,                !- Speed Control Method
+    0.2,                     !- Electric Power Minimum Flow Rate Fraction
+    595.93500092512,         !- Design Pressure Rise {Pa}
+    1,                       !- Motor Efficiency
+    1,                       !- Motor In Air Stream Fraction
+    Autosize,                !- Design Electric Power Consumption {W}
+    TotalEfficiencyAndPressure,  !- Design Power Sizing Method
+    840,                     !- Electric Power Per Unit Flow Rate {W/(m3/s)}
+    1.66667,                 !- Electric Power Per Unit Flow Rate Per Unit Pressure {W/((m3/s)-Pa)}
+    0.75,                    !- Fan Total Efficiency
+    ,                        !- Electric Power Function of Flow Fraction Curve Name
+    ,                        !- Night Ventilation Mode Pressure Rise {Pa}
+    ,                        !- Night Ventilation Mode Flow Fraction
+    ,                        !- Motor Loss Zone Name
+    0,                       !- Motor Loss Radiative Fraction
+    supply fan,              !- End-Use Subcategory
+    4,                       !- Number of Speeds
+    0.58042,                 !- Speed 1 Flow Fraction
+    0.19553,                 !- Speed 1 Electric Power Fraction
+    0.72552,                 !- Speed 2 Flow Fraction
+    0.3819,                  !- Speed 2 Electric Power Fraction
+    0.86,                    !- Speed 3 Flow Fraction
+    0.63606,                 !- Speed 3 Electric Power Fraction
+    1,                       !- Speed n Flow Fraction
+    1;                       !- Speed n Electric Power Fraction
+
+
+!-   ===========  ALL OBJECTS IN CLASS: COIL:COOLING:DX:MULTISPEED ===========
+
+Coil:Cooling:DX:MultiSpeed,
+    air source heat pump clg coil,  !- Name
+    Always On Discrete,      !- Availability Schedule Name
+    air source heat pump unitary system Fan - Cooling Coil Node,  !- Air Inlet Node Name
+    air source heat pump unitary system Cooling Coil - Heating Coil Node,  !- Air Outlet Node Name
+    ,                        !- Condenser Air Inlet Node Name
+    AirCooled,               !- Condenser Type
+    -25,                     !- Minimum Outdoor Dry-Bulb Temperature for Compressor Operation {C}
+    ,                        !- Supply Water Storage Tank Name
+    ,                        !- Condensate Collection Water Storage Tank Name
+    No,                      !- Apply Part Load Fraction to Speeds Greater than 1
+    No,                      !- Apply Latent Degradation to Speeds Greater than 1
+    50,                      !- Crankcase Heater Capacity {W}
+    10,                      !- Maximum Outdoor Dry-Bulb Temperature for Crankcase Heater Operation {C}
+    0,                       !- Basin Heater Capacity {W/K}
+    2,                       !- Basin Heater Setpoint Temperature {C}
+    ,                        !- Basin Heater Operating Schedule Name
+    Electricity,             !- Fuel Type
+    2,                       !- Number of Speeds
+    autosize,                !- Speed 1 Gross Rated Total Cooling Capacity {W}
+    0.721851215622469,       !- Speed 1 Gross Rated Sensible Heat Ratio
+    4.33748100327361,        !- Speed 1 Gross Rated Cooling COP {W/W}
+    autosize,                !- Speed 1 Rated Air Flow Rate {m3/s}
+    773.3,                   !- 2017 Speed 1 Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
+    934.4,                   !- 2023 Speed 1 Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
+    Cool-CAP-fT1,            !- Speed 1 Total Cooling Capacity Function of Temperature Curve Name
+    Cool-CAP-fFF1,           !- Speed 1 Total Cooling Capacity Function of Flow Fraction Curve Name
+    Cool-EIR-fT1,            !- Speed 1 Energy Input Ratio Function of Temperature Curve Name
+    Cool-EIR-fFF1,           !- Speed 1 Energy Input Ratio Function of Flow Fraction Curve Name
+    Cool-PLF-fPLR1,          !- Speed 1 Part Load Fraction Correlation Curve Name
+    1000,                    !- Speed 1 Nominal Time for Condensate Removal to Begin {s}
+    1.5,                     !- Speed 1 Ratio of Initial Moisture Evaporation Rate and Steady State Latent Capacity {dimensionless}
+    3,                       !- Speed 1 Maximum Cycling Rate {cycles/hr}
+    45,                      !- Speed 1 Latent Capacity Time Constant {s}
+    0.2,                     !- Speed 1 Rated Waste Heat Fraction of Power Input {dimensionless}
+    ConstantBiquadratic,     !- Speed 1 Waste Heat Function of Temperature Curve Name
+    0.9,                     !- Speed 1 Evaporative Condenser Effectiveness {dimensionless}
+    AutoSize,                !- Speed 1 Evaporative Condenser Air Flow Rate {m3/s}
+    AutoSize,                !- Speed 1 Rated Evaporative Condenser Pump Power Consumption {W}
+    autosize,                !- Speed 2 Gross Rated Total Cooling Capacity {W}
+    0.7336359532,            !- Speed 2 Gross Rated Sensible Heat Ratio
+    3.99889061764155,        !- Speed 2 Gross Rated Cooling COP {W/W}
+    autosize,                !- Speed 2 Rated Air Flow Rate {m3/s}
+    773.3,                   !- 2017 Speed 2 Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
+    934.4,                   !- 2023 Speed 2 Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
+    Cool-CAP-fT2,            !- Speed 2 Total Cooling Capacity Function of Temperature Curve Name
+    Cool-CAP-fFF2,           !- Speed 2 Total Cooling Capacity Function of Flow Fraction Curve Name
+    Cool-EIR-fT2,            !- Speed 2 Energy Input Ratio Function of Temperature Curve Name
+    Cool-EIR-fFF2,           !- Speed 2 Energy Input Ratio Function of Flow Fraction Curve Name
+    Cool-PLF-fPLR2,          !- Speed 2 Part Load Fraction Correlation Curve Name
+    1000,                    !- Speed 2 Nominal Time for Condensate Removal to Begin {s}
+    1.5,                     !- Speed 2 Ratio of Initial Moisture Evaporation Rate and steady state Latent Capacity {dimensionless}
+    3,                       !- Speed 2 Maximum Cycling Rate {cycles/hr}
+    45,                      !- Speed 2 Latent Capacity Time Constant {s}
+    0.2,                     !- Speed 2 Rated Waste Heat Fraction of Power Input {dimensionless}
+    ConstantBiquadratic,     !- Speed 2 Waste Heat Function of Temperature Curve Name
+    0.9,                     !- Speed 2 Evaporative Condenser Effectiveness {dimensionless}
+    AutoSize,                !- Speed 2 Evaporative Condenser Air Flow Rate {m3/s}
+    AutoSize,                !- Speed 2 Rated Evaporative Condenser Pump Power Consumption {W}
+    ,                        !- Speed 3 Gross Rated Total Cooling Capacity {W}
+    ,                        !- Speed 3 Gross Rated Sensible Heat Ratio
+    ,                        !- Speed 3 Gross Rated Cooling COP {W/W}
+    ,                        !- Speed 3 Rated Air Flow Rate {m3/s}
+    ,                        !- 2017 Speed 3 Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
+    ,                        !- 2023 Speed 3 Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
+    ,                        !- Speed 3 Total Cooling Capacity Function of Temperature Curve Name
+    ,                        !- Speed 3 Total Cooling Capacity Function of Flow Fraction Curve Name
+    ,                        !- Speed 3 Energy Input Ratio Function of Temperature Curve Name
+    ,                        !- Speed 3 Energy Input Ratio Function of Flow Fraction Curve Name
+    ,                        !- Speed 3 Part Load Fraction Correlation Curve Name
+    ,                        !- Speed 3 Nominal Time for Condensate Removal to Begin {s}
+    ,                        !- Speed 3 Ratio of Initial Moisture Evaporation Rate and steady state Latent Capacity {dimensionless}
+    ,                        !- Speed 3 Maximum Cycling Rate {cycles/hr}
+    ,                        !- Speed 3 Latent Capacity Time Constant {s}
+    ,                        !- Speed 3 Rated Waste Heat Fraction of Power Input {dimensionless}
+    ,                        !- Speed 3 Waste Heat Function of Temperature Curve Name
+    ,                        !- Speed 3 Evaporative Condenser Effectiveness {dimensionless}
+    ,                        !- Speed 3 Evaporative Condenser Air Flow Rate {m3/s}
+    ,                        !- Speed 3 Rated Evaporative Condenser Pump Power Consumption {W}
+    ,                        !- Speed 4 Gross Rated Total Cooling Capacity {W}
+    ,                        !- Speed 4 Gross Rated Sensible Heat Ratio
+    ,                        !- Speed 4 Gross Rated Cooling COP {W/W}
+    ,                        !- Speed 4 Rated Air Flow Rate {m3/s}
+    ,                        !- 2017 Speed 4 Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
+    ,                        !- 2023 Speed 4 Rated Evaporator Fan Power Per Volume Flow Rate {W/(m3/s)}
+    ,                        !- Speed 4 Total Cooling Capacity Function of Temperature Curve Name
+    ,                        !- Speed 4 Total Cooling Capacity Function of Flow Fraction Curve Name
+    ,                        !- Speed 4 Energy Input Ratio Function of Temperature Curve Name
+    ,                        !- Speed 4 Energy Input Ratio Function of Flow Fraction Curve Name
+    ,                        !- Speed 4 Part Load Fraction Correlation Curve Name
+    ,                        !- Speed 4 Nominal Time for Condensate Removal to Begin {s}
+    ,                        !- Speed 4 Ratio of Initial Moisture Evaporation Rate and steady state Latent Capacity {dimensionless}
+    ,                        !- Speed 4 Maximum Cycling Rate {cycles/hr}
+    ,                        !- Speed 4 Latent Capacity Time Constant {s}
+    ,                        !- Speed 4 Rated Waste Heat Fraction of Power Input {dimensionless}
+    ;                        !- Speed 4 Waste Heat Function of Temperature Curve Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: COIL:HEATING:ELECTRIC ===========
+
+Coil:Heating:Electric,
+    air source heat pump backup htg coil,  !- Name
+    Always On Discrete,      !- Availability Schedule Name
+    1,                       !- Efficiency
+    autosize,                !- Nominal Capacity {W}
+    air source heat pump unitary system Heating Coil - Supplemental Coil Node,  !- Air Inlet Node Name
+    Node 4;                  !- Air Outlet Node Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: COIL:HEATING:DX:MULTISPEED ===========
+
+Coil:Heating:DX:MultiSpeed,
+    air source heat pump htg coil,  !- Name
+    Always On Discrete,      !- Availability Schedule Name
+    air source heat pump unitary system Cooling Coil - Heating Coil Node,  !- Air Inlet Node Name
+    air source heat pump unitary system Heating Coil - Supplemental Coil Node,  !- Air Outlet Node Name
+    -40,                     !- Minimum Outdoor Dry-Bulb Temperature for Compressor Operation {C}
+    ,                        !- Outdoor Dry-Bulb Temperature to Turn On Compressor {C}
+    50,                      !- Crankcase Heater Capacity {W}
+    10,                      !- Maximum Outdoor Dry-Bulb Temperature for Crankcase Heater Operation {C}
+    Defrosteir,              !- Defrost Energy Input Ratio Function of Temperature Curve Name
+    4.44444444444444,        !- Maximum Outdoor Dry-Bulb Temperature for Defrost Operation {C}
+    ReverseCycle,            !- Defrost Strategy
+    Timed,                   !- Defrost Control
+    0.058333,                !- Defrost Time Period Fraction
+    AutoSize,                !- Resistive Defrost Heater Capacity {W}
+    No,                      !- Apply Part Load Fraction to Speeds Greater than 1
+    Electricity,             !- Fuel Type
+    4,                       !- Region number for Calculating HSPF
+    2,                       !- Number of Speeds
+    autosize,                !- Speed 1 Gross Rated Heating Capacity {W}
+    4.28089606848226,        !- Speed 1 Gross Rated Heating COP {W/W}
+    autosize,                !- Speed 1 Rated Air Flow Rate {m3/s}
+    773.3,                   !- 2017 Speed 1 Rated Supply Air Fan Power Per Volume Flow Rate {W/(m3/s)}
+    934.4,                   !- 2023 Speed 1 Rated Supply Air Fan Power Per Volume Flow Rate {W/(m3/s)}
+    Heat-CAP-fT1,            !- Speed 1 Heating Capacity Function of Temperature Curve Name
+    Heat-CAP-fFF1,           !- Speed 1 Heating Capacity Function of Flow Fraction Curve Name
+    Heat-EIR-fT1,            !- Speed 1 Energy Input Ratio Function of Temperature Curve Name
+    Heat-EIR-fFF1,           !- Speed 1 Energy Input Ratio Function of Flow Fraction Curve Name
+    Heat-PLF-fPLR1,          !- Speed 1 Part Load Fraction Correlation Curve Name
+    0.2,                     !- Speed 1 Rated Waste Heat Fraction of Power Input {dimensionless}
+    ConstantBiquadratic 1,   !- Speed 1 Waste Heat Function of Temperature Curve Name
+    autosize,                !- Speed 2 Gross Rated Heating Capacity {W}
+    3.77110967015852,        !- Speed 2 Gross Rated Heating COP {W/W}
+    autosize,                !- Speed 2 Rated Air Flow Rate {m3/s}
+    773.3,                   !- 2017 Speed 2 Rated Supply Air Fan Power Per Volume Flow Rate {W/(m3/s)}
+    934.4,                   !- 2023 Speed 2 Rated Supply Air Fan Power Per Volume Flow Rate {W/(m3/s)}
+    Heat-CAP-fT2,            !- Speed 2 Heating Capacity Function of Temperature Curve Name
+    Heat-CAP-fFF2,           !- Speed 2 Heating Capacity Function of Flow Fraction Curve Name
+    Heat-EIR-fT2,            !- Speed 2 Energy Input Ratio Function of Temperature Curve Name
+    Heat-EIR-fFF2,           !- Speed 2 Energy Input Ratio Function of Flow Fraction Curve Name
+    Heat-PLF-fPLR2,          !- Speed 2 Part Load Fraction Correlation Curve Name
+    0.2,                     !- Speed 2 Rated Waste Heat Fraction of Power Input {dimensionless}
+    ConstantBiquadratic 1,   !- Speed 2 Waste Heat Function of Temperature Curve Name
+    ,                        !- Speed 3 Gross Rated Heating Capacity {W}
+    ;                        !- Speed 3 Gross Rated Heating COP {W/W}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:UNITARYSYSTEM ===========
+
+AirLoopHVAC:UnitarySystem,
+    air source heat pump unitary system,  !- Name
+    Load,                    !- Control Type
+    living space,            !- Controlling Zone or Thermostat Location
+    None,                    !- Dehumidification Control Type
+    Always On Discrete,      !- Availability Schedule Name
+    Node 3,                  !- Air Inlet Node Name
+    Node 4,                  !- Air Outlet Node Name
+    Fan:SystemModel,         !- Supply Fan Object Type
+    air source heat pump supply fan,  !- Supply Fan Name
+    BlowThrough,             !- Fan Placement
+    auto fan schedule,       !- Supply Air Fan Operating Mode Schedule Name
+    Coil:Heating:DX:MultiSpeed,  !- Heating Coil Object Type
+    air source heat pump htg coil,  !- Heating Coil Name
+    1,                       !- DX Heating Coil Sizing Ratio
+    Coil:Cooling:DX:MultiSpeed,  !- Cooling Coil Object Type
+    air source heat pump clg coil,  !- Cooling Coil Name
+    No,                      !- Use DOAS DX Cooling Coil
+    2,                       !- Minimum Supply Air Temperature {C}
+    SensibleOnlyLoadControl, !- Latent Load Control
+    Coil:Heating:Electric,   !- Supplemental Heating Coil Object Type
+    air source heat pump backup htg coil,  !- Supplemental Heating Coil Name
+    SupplyAirFlowRate,       !- Cooling Supply Air Flow Rate Method
+    autosize,                !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit of Capacity {m3/s-W}
+    SupplyAirFlowRate,       !- Heating Supply Air Flow Rate Method
+    autosize,                !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit of Capacity {m3/s-W}
+    ,                        !- No Load Supply Air Flow Rate Method
+    0,                       !- No Load Supply Air Flow Rate {m3/s}
+    ,                        !- No Load Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- No Load Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- No Load Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- No Load Supply Air Flow Rate Per Unit of Capacity During Cooling Operation {m3/s-W}
+    ,                        !- No Load Supply Air Flow Rate Per Unit of Capacity During Heating Operation {m3/s-W}
+    93.3333333333333,        !- Maximum Supply Air Temperature {C}
+    4.44444444444444,        !- Maximum Outdoor Dry-Bulb Temperature for Supplemental Heater Operation {C}
+    ,                        !- Outdoor Dry-Bulb Temperature Sensor Node Name
+    2.5,                     !- Maximum Cycling Rate {cycles/hr}
+    60,                      !- Heat Pump Time Constant {s}
+    0.01,                    !- Fraction of On-Cycle Power Use
+    60,                      !- Heat Pump Fan Delay Time {s}
+    0,                       !- Ancillary On-Cycle Electric Power {W}
+    0,                       !- Ancillary Off-Cycle Electric Power {W}
+    ,                        !- Design Heat Recovery Water Flow Rate {m3/s}
+    ,                        !- Maximum Temperature for Heat Recovery {C}
+    ,                        !- Heat Recovery Water Inlet Node Name
+    ,                        !- Heat Recovery Water Outlet Node Name
+    UnitarySystemPerformance:Multispeed,  !- Design Specification Multispeed Object Type
+    Unitary System Performance Multispeed 1;  !- Design Specification Multispeed Object Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: UNITARYSYSTEMPERFORMANCE:MULTISPEED ===========
+
+UnitarySystemPerformance:Multispeed,
+    Unitary System Performance Multispeed 1,  !- Name
+    2,                       !- Number of Speeds for Heating
+    2,                       !- Number of Speeds for Cooling
+    No,                      !- Single Mode Operation
+    ,                        !- No Load Supply Air Flow Rate Ratio
+    0.8,                     !- Heating Speed 1 Supply Air Flow Ratio
+    0.86,                    !- Cooling Speed 1 Supply Air Flow Ratio
+    1,                       !- Heating Speed 2 Supply Air Flow Ratio
+    1;                       !- Cooling Speed 2 Supply Air Flow Ratio
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC ===========
+
+AirLoopHVAC,
+    air source heat pump airloop,  !- Name
+    ,                        !- Controller List Name
+    air source heat pump airloopAvailability Manager List,  !- Availability Manager List Name
+    autosize,                !- Design Supply Air Flow Rate {m3/s}
+    air source heat pump airloop Supply Branches,  !- Branch List Name
+    ,                        !- Connector List Name
+    Node 3,                  !- Supply Side Inlet Node Name
+    Node 6,                  !- Demand Side Outlet Node Name
+    air source heat pump airloop Demand Inlet Nodes,  !- Demand Side Inlet Node Names
+    air source heat pump airloop Supply Outlet Nodes,  !- Supply Side Outlet Node Names
+    1;                       !- Design Return Air Flow Fraction of Supply Air Flow
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:ZONESPLITTER ===========
+
+AirLoopHVAC:ZoneSplitter,
+    air source heat pump zone splitter,  !- Name
+    Node 5,                  !- Inlet Node Name
+    Node 9;                  !- Outlet 1 Node Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:SUPPLYPATH ===========
+
+AirLoopHVAC:SupplyPath,
+    air source heat pump airloop Node 5 Supply Path,  !- Name
+    Node 5,                  !- Supply Air Path Inlet Node Name
+    AirLoopHVAC:ZoneSplitter,!- Component 1 Object Type
+    air source heat pump zone splitter;  !- Component 1 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:ZONEMIXER ===========
+
+AirLoopHVAC:ZoneMixer,
+    air source heat pump zone mixer,  !- Name
+    Node 6,                  !- Outlet Node Name
+    Node 24;                 !- Inlet 1 Node Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:RETURNPLENUM ===========
+
+AirLoopHVAC:ReturnPlenum,
+    Air Loop HVAC Return Plenum 1,  !- Name
+    airloop ret air zone,    !- Zone Name
+    Node 22,                 !- Zone Node Name
+    Node 24,                 !- Outlet Node Name
+    ,                        !- Induced Air Outlet Node or NodeList Name
+    Node 8;                  !- Inlet 1 Node Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:RETURNPATH ===========
+
+AirLoopHVAC:ReturnPath,
+    air source heat pump airloop Return Path,  !- Name
+    Node 6,                  !- Return Air Path Outlet Node Name
+    AirLoopHVAC:ReturnPlenum,!- Component 1 Object Type
+    Air Loop HVAC Return Plenum 1,  !- Component 1 Name
+    AirLoopHVAC:ZoneMixer,   !- Component 2 Object Type
+    air source heat pump zone mixer;  !- Component 2 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: BRANCH ===========
+
+Branch,
+    air source heat pump airloop Main Branch,  !- Name
+    ,                        !- Pressure Drop Curve Name
+    AirLoopHVAC:UnitarySystem,  !- Component 1 Object Type
+    air source heat pump unitary system,  !- Component 1 Name
+    Node 3,                  !- Component 1 Inlet Node Name
+    Node 4;                  !- Component 1 Outlet Node Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: BRANCHLIST ===========
+
+BranchList,
+    air source heat pump airloop Supply Branches,  !- Name
+    air source heat pump airloop Main Branch;  !- Branch 1 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: NODELIST ===========
+
+NodeList,
+    living space Inlet Node List,  !- Name
+    Node 7;                  !- Node 1 Name
+
+NodeList,
+    living space Return Node List,  !- Name
+    Node 8;                  !- Node 1 Name
+
+NodeList,
+    air source heat pump airloop Supply Outlet Nodes,  !- Name
+    Node 4;                  !- Node 1 Name
+
+NodeList,
+    air source heat pump airloop Demand Inlet Nodes,  !- Name
+    Node 5;                  !- Node 1 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTDOORAIR:NODE ===========
+
+OutdoorAir:Node,
+    Model Outdoor Air Node;  !- Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AVAILABILITYMANAGER:SCHEDULED ===========
+
+AvailabilityManager:Scheduled,
+    air source heat pump airloop Availability Manager,  !- Name
+    Always On Discrete;      !- Schedule Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AVAILABILITYMANAGERASSIGNMENTLIST ===========
+
+AvailabilityManagerAssignmentList,
+    air source heat pump airloopAvailability Manager List,  !- Name
+    AvailabilityManager:Scheduled,  !- Availability Manager 1 Object Type
+    air source heat pump airloop Availability Manager;  !- Availability Manager 1 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: CURVE:QUADRATIC ===========
+
+Curve:Quadratic,
+    Heat-CAP-fFF1,           !- Name
+    0.741466907,             !- Coefficient1 Constant
+    0.378645444,             !- Coefficient2 x
+    -0.119754733,            !- Coefficient3 x**2
+    0,                       !- Minimum Value of x
+    2,                       !- Maximum Value of x
+    0,                       !- Minimum Curve Output
+    2;                       !- Maximum Curve Output
+
+Curve:Quadratic,
+    Heat-EIR-fFF1,           !- Name
+    2.153618211,             !- Coefficient1 Constant
+    -1.737190609,            !- Coefficient2 x
+    0.584269478,             !- Coefficient3 x**2
+    0,                       !- Minimum Value of x
+    2,                       !- Maximum Value of x
+    0,                       !- Minimum Curve Output
+    2;                       !- Maximum Curve Output
+
+Curve:Quadratic,
+    Heat-PLF-fPLR1,          !- Name
+    0.89,                    !- Coefficient1 Constant
+    0.11,                    !- Coefficient2 x
+    0,                       !- Coefficient3 x**2
+    0,                       !- Minimum Value of x
+    1,                       !- Maximum Value of x
+    0.7,                     !- Minimum Curve Output
+    1;                       !- Maximum Curve Output
+
+Curve:Quadratic,
+    Heat-CAP-fFF2,           !- Name
+    0.76634609,              !- Coefficient1 Constant
+    0.32840943,              !- Coefficient2 x
+    -0.094701495,            !- Coefficient3 x**2
+    0,                       !- Minimum Value of x
+    2,                       !- Maximum Value of x
+    0,                       !- Minimum Curve Output
+    2;                       !- Maximum Curve Output
+
+Curve:Quadratic,
+    Heat-EIR-fFF2,           !- Name
+    2.001041353,             !- Coefficient1 Constant
+    -1.58869128,             !- Coefficient2 x
+    0.587593517,             !- Coefficient3 x**2
+    0,                       !- Minimum Value of x
+    2,                       !- Maximum Value of x
+    0,                       !- Minimum Curve Output
+    2;                       !- Maximum Curve Output
+
+Curve:Quadratic,
+    Heat-PLF-fPLR2,          !- Name
+    0.89,                    !- Coefficient1 Constant
+    0.11,                    !- Coefficient2 x
+    0,                       !- Coefficient3 x**2
+    0,                       !- Minimum Value of x
+    1,                       !- Maximum Value of x
+    0.7,                     !- Minimum Curve Output
+    1;                       !- Maximum Curve Output
+
+Curve:Quadratic,
+    Cool-CAP-fFF1,           !- Name
+    0.655239515,             !- Coefficient1 Constant
+    0.511655216,             !- Coefficient2 x
+    -0.166894731,            !- Coefficient3 x**2
+    0,                       !- Minimum Value of x
+    2,                       !- Maximum Value of x
+    0,                       !- Minimum Curve Output
+    2;                       !- Maximum Curve Output
+
+Curve:Quadratic,
+    Cool-EIR-fFF1,           !- Name
+    1.639108268,             !- Coefficient1 Constant
+    -0.998953996,            !- Coefficient2 x
+    0.359845728,             !- Coefficient3 x**2
+    0,                       !- Minimum Value of x
+    2,                       !- Maximum Value of x
+    0,                       !- Minimum Curve Output
+    2;                       !- Maximum Curve Output
+
+Curve:Quadratic,
+    Cool-PLF-fPLR1,          !- Name
+    0.89,                    !- Coefficient1 Constant
+    0.11,                    !- Coefficient2 x
+    0,                       !- Coefficient3 x**2
+    0,                       !- Minimum Value of x
+    1,                       !- Maximum Value of x
+    0.7,                     !- Minimum Curve Output
+    1;                       !- Maximum Curve Output
+
+Curve:Quadratic,
+    Cool-CAP-fFF2,           !- Name
+    0.618281092,             !- Coefficient1 Constant
+    0.569060264,             !- Coefficient2 x
+    -0.187341356,            !- Coefficient3 x**2
+    0,                       !- Minimum Value of x
+    2,                       !- Maximum Value of x
+    0,                       !- Minimum Curve Output
+    2;                       !- Maximum Curve Output
+
+Curve:Quadratic,
+    Cool-EIR-fFF2,           !- Name
+    1.570774717,             !- Coefficient1 Constant
+    -0.914152018,            !- Coefficient2 x
+    0.343377302,             !- Coefficient3 x**2
+    0,                       !- Minimum Value of x
+    2,                       !- Maximum Value of x
+    0,                       !- Minimum Curve Output
+    2;                       !- Maximum Curve Output
+
+Curve:Quadratic,
+    Cool-PLF-fPLR2,          !- Name
+    0.89,                    !- Coefficient1 Constant
+    0.11,                    !- Coefficient2 x
+    0,                       !- Coefficient3 x**2
+    0,                       !- Minimum Value of x
+    1,                       !- Maximum Value of x
+    0.7,                     !- Minimum Curve Output
+    1;                       !- Maximum Curve Output
+
+
+!-   ===========  ALL OBJECTS IN CLASS: CURVE:BIQUADRATIC ===========
+
+Curve:Biquadratic,
+    Defrosteir,              !- Name
+    0.1528,                  !- Coefficient1 Constant
+    0,                       !- Coefficient2 x
+    0,                       !- Coefficient3 x**2
+    0,                       !- Coefficient4 y
+    0,                       !- Coefficient5 y**2
+    0,                       !- Coefficient6 x*y
+    -100,                    !- Minimum Value of x
+    100,                     !- Maximum Value of x
+    -100,                    !- Minimum Value of y
+    100;                     !- Maximum Value of y
+
+Curve:Biquadratic,
+    Heat-CAP-fT1,            !- Name
+    0.84077409,              !- Coefficient1 Constant
+    -0.0014336586,           !- Coefficient2 x
+    -0.000150336,            !- Coefficient3 x**2
+    0.029628603,             !- Coefficient4 y
+    0.000161676,             !- Coefficient5 y**2
+    -2.349e-05,              !- Coefficient6 x*y
+    -100,                    !- Minimum Value of x
+    100,                     !- Maximum Value of x
+    -100,                    !- Minimum Value of y
+    100;                     !- Maximum Value of y
+
+Curve:Biquadratic,
+    Heat-EIR-fT1,            !- Name
+    0.539472334,             !- Coefficient1 Constant
+    0.0165103146,            !- Coefficient2 x
+    0.00083874528,           !- Coefficient3 x**2
+    -0.00403234020000001,    !- Coefficient4 y
+    0.00142404156,           !- Coefficient5 y**2
+    -0.00211806252,          !- Coefficient6 x*y
+    -100,                    !- Minimum Value of x
+    100,                     !- Maximum Value of x
+    -100,                    !- Minimum Value of y
+    100;                     !- Maximum Value of y
+
+Curve:Biquadratic,
+    ConstantBiquadratic 1,   !- Name
+    1,                       !- Coefficient1 Constant
+    0,                       !- Coefficient2 x
+    0,                       !- Coefficient3 x**2
+    0,                       !- Coefficient4 y
+    0,                       !- Coefficient5 y**2
+    0,                       !- Coefficient6 x*y
+    -100,                    !- Minimum Value of x
+    100,                     !- Maximum Value of x
+    -100,                    !- Minimum Value of y
+    100;                     !- Maximum Value of y
+
+Curve:Biquadratic,
+    Heat-CAP-fT2,            !- Name
+    0.831506971,             !- Coefficient1 Constant
+    0.0018392166,            !- Coefficient2 x
+    -0.000187596,            !- Coefficient3 x**2
+    0.0266002056,            !- Coefficient4 y
+    0.000191484,             !- Coefficient5 y**2
+    -6.5772e-05,             !- Coefficient6 x*y
+    -100,                    !- Minimum Value of x
+    100,                     !- Maximum Value of x
+    -100,                    !- Minimum Value of y
+    100;                     !- Maximum Value of y
+
+Curve:Biquadratic,
+    Heat-EIR-fT2,            !- Name
+    0.787746797,             !- Coefficient1 Constant
+    -0.000652314599999999,   !- Coefficient2 x
+    0.00078866784,           !- Coefficient3 x**2
+    -0.0023209056,           !- Coefficient4 y
+    0.00074760408,           !- Coefficient5 y**2
+    -0.00109173096,          !- Coefficient6 x*y
+    -100,                    !- Minimum Value of x
+    100,                     !- Maximum Value of x
+    -100,                    !- Minimum Value of y
+    100;                     !- Maximum Value of y
+
+Curve:Biquadratic,
+    Cool-CAP-fT1,            !- Name
+    1.658788451,             !- Coefficient1 Constant
+    -0.0834530076,           !- Coefficient2 x
+    0.00342409032,           !- Coefficient3 x**2
+    0.0024332436,            !- Coefficient4 y
+    -4.5036e-05,             !- Coefficient5 y**2
+    -0.00053367984,          !- Coefficient6 x*y
+    -100,                    !- Minimum Value of x
+    100,                     !- Maximum Value of x
+    -100,                    !- Minimum Value of y
+    100;                     !- Maximum Value of y
+
+Curve:Biquadratic,
+    Cool-EIR-fT1,            !- Name
+    -0.582915701,            !- Coefficient1 Constant
+    0.1581006726,            !- Coefficient2 x
+    -0.00439794684,          !- Coefficient3 x**2
+    -0.020335122,            !- Coefficient4 y
+    0.00107983368,           !- Coefficient5 y**2
+    -0.0006395922,           !- Coefficient6 x*y
+    -100,                    !- Minimum Value of x
+    100,                     !- Maximum Value of x
+    -100,                    !- Minimum Value of y
+    100;                     !- Maximum Value of y
+
+Curve:Biquadratic,
+    ConstantBiquadratic,     !- Name
+    1,                       !- Coefficient1 Constant
+    0,                       !- Coefficient2 x
+    0,                       !- Coefficient3 x**2
+    0,                       !- Coefficient4 y
+    0,                       !- Coefficient5 y**2
+    0,                       !- Coefficient6 x*y
+    -100,                    !- Minimum Value of x
+    100,                     !- Maximum Value of x
+    -100,                    !- Minimum Value of y
+    100;                     !- Maximum Value of y
+
+Curve:Biquadratic,
+    Cool-CAP-fT2,            !- Name
+    1.472738138,             !- Coefficient1 Constant
+    -0.0672218352,           !- Coefficient2 x
+    0.0029199042,            !- Coefficient3 x**2
+    5.16005999999982e-05,    !- Coefficient4 y
+    -2.97756e-05,            !- Coefficient5 y**2
+    -0.00035908596,          !- Coefficient6 x*y
+    -100,                    !- Minimum Value of x
+    100,                     !- Maximum Value of x
+    -100,                    !- Minimum Value of y
+    100;                     !- Maximum Value of y
+
+Curve:Biquadratic,
+    Cool-EIR-fT2,            !- Name
+    -0.488195597,            !- Coefficient1 Constant
+    0.0991621818,            !- Coefficient2 x
+    -0.00236967444,          !- Coefficient3 x**2
+    0.019503441,             !- Coefficient4 y
+    0.0004297698,            !- Coefficient5 y**2
+    -0.00109743984,          !- Coefficient6 x*y
+    -100,                    !- Minimum Value of x
+    100,                     !- Maximum Value of x
+    -100,                    !- Minimum Value of y
+    100;                     !- Maximum Value of y
+

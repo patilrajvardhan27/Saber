@@ -1,0 +1,378 @@
+!-Generator IDFEditor 1.53
+!-Option SortedOrder
+
+!-NOTE: All comments with '!-' are ignored by the IDFEditor and are generated automatically.
+!-      Use '!' comments if they need to be retained when using the IDFEditor.
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SIZING:PLANT ===========
+
+Sizing:Plant,
+    dhw loop,                !- Plant or Condenser Loop Name
+    Heating,                 !- Loop Type
+    52.6666666666667,        !- Design Loop Exit Temperature {C}
+    5.55555555555556;        !- Loop Design Temperature Difference {deltaC}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: BRANCH ===========
+
+Branch,
+    dhw loop Supply Inlet Branch,  !- Name
+    ,                        !- Pressure Drop Curve Name
+    Pump:VariableSpeed,      !- Component 1 Object Type
+    Pump Variable Speed 1,   !- Component 1 Name
+    Node 10,                 !- Component 1 Inlet Node Name
+    Node 18;                 !- Component 1 Outlet Node Name
+
+Branch,
+    dhw loop Supply Branch 1,!- Name
+    ,                        !- Pressure Drop Curve Name
+    Pipe:Adiabatic,          !- Component 1 Object Type
+    Pipe Adiabatic 1,        !- Component 1 Name
+    Node 12,                 !- Component 1 Inlet Node Name
+    Node 16;                 !- Component 1 Outlet Node Name
+
+Branch,
+    dhw loop Supply Branch 2,!- Name
+    ,                        !- Pressure Drop Curve Name
+    WaterHeater:Mixed,       !- Component 1 Object Type
+    water heater,            !- Component 1 Name
+    Node 19,                 !- Component 1 Inlet Node Name
+    Node 20;                 !- Component 1 Outlet Node Name
+
+Branch,
+    dhw loop Supply Outlet Branch,  !- Name
+    ,                        !- Pressure Drop Curve Name
+    Pipe:Adiabatic,          !- Component 1 Object Type
+    Pipe Adiabatic 2,        !- Component 1 Name
+    Node 17,                 !- Component 1 Inlet Node Name
+    Node 11;                 !- Component 1 Outlet Node Name
+
+Branch,
+    dhw loop Demand Inlet Branch,  !- Name
+    ,                        !- Pressure Drop Curve Name
+    Pipe:Adiabatic,          !- Component 1 Object Type
+    dhw loop Demand Inlet Pipe,  !- Component 1 Name
+    Node 13,                 !- Component 1 Inlet Node Name
+    dhw loop Demand Inlet Pipe Node;  !- Component 1 Outlet Node Name
+
+Branch,
+    dhw loop Demand Branch 1,!- Name
+    ,                        !- Pressure Drop Curve Name
+    WaterUse:Connections,    !- Component 1 Object Type
+    Water Use Connections 1, !- Component 1 Name
+    Node 15,                 !- Component 1 Inlet Node Name
+    Node 21;                 !- Component 1 Outlet Node Name
+
+Branch,
+    dhw loop Demand Bypass Branch,  !- Name
+    ,                        !- Pressure Drop Curve Name
+    Pipe:Adiabatic,          !- Component 1 Object Type
+    dhw loop Demand Bypass Pipe,  !- Component 1 Name
+    dhw loop Demand Bypass Pipe Inlet Node,  !- Component 1 Inlet Node Name
+    dhw loop Demand Bypass Pipe Outlet Node;  !- Component 1 Outlet Node Name
+
+Branch,
+    dhw loop Demand Outlet Branch,  !- Name
+    ,                        !- Pressure Drop Curve Name
+    Pipe:Adiabatic,          !- Component 1 Object Type
+    dhw loop Demand Outlet Pipe,  !- Component 1 Name
+    dhw loop Demand Outlet Pipe Node,  !- Component 1 Inlet Node Name
+    Node 14;                 !- Component 1 Outlet Node Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: BRANCHLIST ===========
+
+BranchList,
+    dhw loop Supply Branches,!- Name
+    dhw loop Supply Inlet Branch,  !- Branch 1 Name
+    dhw loop Supply Branch 1,!- Branch 2 Name
+    dhw loop Supply Branch 2,!- Branch 3 Name
+    dhw loop Supply Outlet Branch;  !- Branch 4 Name
+
+BranchList,
+    dhw loop Demand Branches,!- Name
+    dhw loop Demand Inlet Branch,  !- Branch 1 Name
+    dhw loop Demand Branch 1,!- Branch 2 Name
+    dhw loop Demand Bypass Branch,  !- Branch 3 Name
+    dhw loop Demand Outlet Branch;  !- Branch 4 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: CONNECTOR:SPLITTER ===========
+
+Connector:Splitter,
+    dhw loop Supply Splitter,!- Name
+    dhw loop Supply Inlet Branch,  !- Inlet Branch Name
+    dhw loop Supply Branch 1,!- Outlet Branch 1 Name
+    dhw loop Supply Branch 2;!- Outlet Branch 2 Name
+
+Connector:Splitter,
+    dhw loop Demand Splitter,!- Name
+    dhw loop Demand Inlet Branch,  !- Inlet Branch Name
+    dhw loop Demand Branch 1,!- Outlet Branch 1 Name
+    dhw loop Demand Bypass Branch;  !- Outlet Branch 2 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: CONNECTOR:MIXER ===========
+
+Connector:Mixer,
+    dhw loop Supply Mixer,   !- Name
+    dhw loop Supply Outlet Branch,  !- Outlet Branch Name
+    dhw loop Supply Branch 1,!- Inlet Branch 1 Name
+    dhw loop Supply Branch 2;!- Inlet Branch 2 Name
+
+Connector:Mixer,
+    dhw loop Demand Mixer,   !- Name
+    dhw loop Demand Outlet Branch,  !- Outlet Branch Name
+    dhw loop Demand Branch 1,!- Inlet Branch 1 Name
+    dhw loop Demand Bypass Branch;  !- Inlet Branch 2 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: CONNECTORLIST ===========
+
+ConnectorList,
+    dhw loop Supply Connector List,  !- Name
+    Connector:Splitter,      !- Connector 1 Object Type
+    dhw loop Supply Splitter,!- Connector 1 Name
+    Connector:Mixer,         !- Connector 2 Object Type
+    dhw loop Supply Mixer;   !- Connector 2 Name
+
+ConnectorList,
+    dhw loop Demand Connector List,  !- Name
+    Connector:Splitter,      !- Connector 1 Object Type
+    dhw loop Demand Splitter,!- Connector 1 Name
+    Connector:Mixer,         !- Connector 2 Object Type
+    dhw loop Demand Mixer;   !- Connector 2 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: PIPE:ADIABATIC ===========
+
+Pipe:Adiabatic,
+    Pipe Adiabatic 1,        !- Name
+    Node 12,                 !- Inlet Node Name
+    Node 16;                 !- Outlet Node Name
+
+Pipe:Adiabatic,
+    Pipe Adiabatic 2,        !- Name
+    Node 17,                 !- Inlet Node Name
+    Node 11;                 !- Outlet Node Name
+
+Pipe:Adiabatic,
+    dhw loop Demand Inlet Pipe,  !- Name
+    Node 13,                 !- Inlet Node Name
+    dhw loop Demand Inlet Pipe Node;  !- Outlet Node Name
+
+Pipe:Adiabatic,
+    dhw loop Demand Bypass Pipe,  !- Name
+    dhw loop Demand Bypass Pipe Inlet Node,  !- Inlet Node Name
+    dhw loop Demand Bypass Pipe Outlet Node;  !- Outlet Node Name
+
+Pipe:Adiabatic,
+    dhw loop Demand Outlet Pipe,  !- Name
+    dhw loop Demand Outlet Pipe Node,  !- Inlet Node Name
+    Node 14;                 !- Outlet Node Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: PUMP:VARIABLESPEED ===========
+
+Pump:VariableSpeed,
+    Pump Variable Speed 1,   !- Name
+    Node 10,                 !- Inlet Node Name
+    Node 18,                 !- Outlet Node Name
+    autosize,                !- Design Maximum Flow Rate {m3/s}
+    1,                       !- Design Pump Head {Pa}
+    0,                       !- Design Power Consumption {W}
+    0.9,                     !- Motor Efficiency
+    0,                       !- Fraction of Motor Inefficiencies to Fluid Stream
+    0,                       !- Coefficient 1 of the Part Load Performance Curve
+    1,                       !- Coefficient 2 of the Part Load Performance Curve
+    0,                       !- Coefficient 3 of the Part Load Performance Curve
+    0,                       !- Coefficient 4 of the Part Load Performance Curve
+    0,                       !- Design Minimum Flow Rate {m3/s}
+    Intermittent,            !- Pump Control Type
+    ,                        !- Pump Flow Rate Schedule Name
+    ,                        !- Pump Curve Name
+    ,                        !- Impeller Diameter {m}
+    ,                        !- VFD Control Type
+    ,                        !- Pump RPM Schedule Name
+    ,                        !- Minimum Pressure Schedule {Pa}
+    ,                        !- Maximum Pressure Schedule {Pa}
+    ,                        !- Minimum RPM Schedule {rev/min}
+    ,                        !- Maximum RPM Schedule {rev/min}
+    ,                        !- Zone Name
+    ,                        !- Skin Loss Radiative Fraction
+    ,                        !- Design Power Sizing Method
+    ,                        !- Design Electric Power per Unit Flow Rate {W/(m3/s)}
+    ,                        !- Design Shaft Power per Unit Flow Rate per Unit Head {W/((m3/s)-Pa)}
+    ,                        !- Design Minimum Flow Rate Fraction
+    General;                 !- End-Use Subcategory
+
+
+!-   ===========  ALL OBJECTS IN CLASS: WATERHEATER:MIXED ===========
+
+WaterHeater:Mixed,
+    water heater,            !- Name
+    autosize,                !- Tank Volume {m3}
+    WH Setpoint Temp,        !- Setpoint Temperature Schedule Name
+    2,                       !- Deadband Temperature Difference {deltaC}
+    99,                      !- Maximum Temperature Limit {C}
+    Cycle,                   !- Heater Control Type
+    autosize,                !- Heater Maximum Capacity {W}
+    0,                       !- Heater Minimum Capacity {W}
+    0,                       !- Heater Ignition Minimum Flow Rate {m3/s}
+    0,                       !- Heater Ignition Delay {s}
+    NaturalGas,              !- Heater Fuel Type
+    0.783316843168888,       !- Heater Thermal Efficiency
+    ,                        !- Part Load Factor Curve Name
+    0,                       !- Off Cycle Parasitic Fuel Consumption Rate {W}
+    Electricity,             !- Off Cycle Parasitic Fuel Type
+    0,                       !- Off Cycle Parasitic Heat Fraction to Tank
+    0,                       !- On Cycle Parasitic Fuel Consumption Rate {W}
+    Electricity,             !- On Cycle Parasitic Fuel Type
+    0,                       !- On Cycle Parasitic Heat Fraction to Tank
+    Zone,                    !- Ambient Temperature Indicator
+    ,                        !- Ambient Temperature Schedule Name
+    living space,            !- Ambient Temperature Zone Name
+    ,                        !- Ambient Temperature Outdoor Air Node Name
+    2.18432265908159,        !- Off Cycle Loss Coefficient to Ambient Temperature {W/K}
+    0.91,                    !- Off Cycle Loss Fraction to Zone
+    2.18432265908159,        !- On Cycle Loss Coefficient to Ambient Temperature {W/K}
+    1,                       !- On Cycle Loss Fraction to Zone
+    ,                        !- Peak Use Flow Rate {m3/s}
+    ,                        !- Use Flow Rate Fraction Schedule Name
+    ,                        !- Cold Water Supply Temperature Schedule Name
+    Node 19,                 !- Use Side Inlet Node Name
+    Node 20,                 !- Use Side Outlet Node Name
+    1,                       !- Use Side Effectiveness
+    ,                        !- Source Side Inlet Node Name
+    ,                        !- Source Side Outlet Node Name
+    1,                       !- Source Side Effectiveness
+    Autosize,                !- Use Side Design Flow Rate {m3/s}
+    Autosize,                !- Source Side Design Flow Rate {m3/s}
+    1.5,                     !- Indirect Water Heating Recovery Time {hr}
+    IndirectHeatPrimarySetpoint,  !- Source Side Flow Control Mode
+    ,                        !- Indirect Alternate Setpoint Temperature Schedule Name
+    General;                 !- End-Use Subcategory
+
+
+!-   ===========  ALL OBJECTS IN CLASS: WATERHEATER:SIZING ===========
+
+WaterHeater:Sizing,
+    water heater,            !- WaterHeater Name
+    PeakDraw,                !- Design Mode
+    0.538503,                !- Time Storage Can Meet Peak Draw {hr}
+    0.5,                     !- Time for Tank Recovery {hr}
+    1;                       !- Nominal Tank Volume for Autosizing Plant Connections {m3}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: PLANTLOOP ===========
+
+PlantLoop,
+    dhw loop,                !- Name
+    Water,                   !- Fluid Type
+    ,                        !- User Defined Fluid Type
+    dhw loop Operation Schemes,  !- Plant Equipment Operation Scheme Name
+    Node 11,                 !- Loop Temperature Setpoint Node Name
+    100,                     !- Maximum Loop Temperature {C}
+    0,                       !- Minimum Loop Temperature {C}
+    0.01,                    !- Maximum Loop Flow Rate {m3/s}
+    0,                       !- Minimum Loop Flow Rate {m3/s}
+    autocalculate,           !- Plant Loop Volume {m3}
+    Node 10,                 !- Plant Side Inlet Node Name
+    Node 11,                 !- Plant Side Outlet Node Name
+    dhw loop Supply Branches,!- Plant Side Branch List Name
+    dhw loop Supply Connector List,  !- Plant Side Connector List Name
+    Node 13,                 !- Demand Side Inlet Node Name
+    Node 14,                 !- Demand Side Outlet Node Name
+    dhw loop Demand Branches,!- Demand Side Branch List Name
+    dhw loop Demand Connector List,  !- Demand Side Connector List Name
+    Optimal,                 !- Load Distribution Scheme
+    ,                        !- Availability Manager List Name
+    SingleSetpoint,          !- Plant Loop Demand Calculation Scheme
+    None;                    !- Common Pipe Simulation
+
+
+!-   ===========  ALL OBJECTS IN CLASS: PLANTEQUIPMENTLIST ===========
+
+PlantEquipmentList,
+    dhw loop Heating Equipment List,  !- Name
+    WaterHeater:Mixed,       !- Equipment 1 Object Type
+    water heater;            !- Equipment 1 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: PLANTEQUIPMENTOPERATION:HEATINGLOAD ===========
+
+PlantEquipmentOperation:HeatingLoad,
+    dhw loop Heating Operation Scheme,  !- Name
+    0,                       !- Load Range 1 Lower Limit {W}
+    1000000000,              !- Load Range 1 Upper Limit {W}
+    dhw loop Heating Equipment List;  !- Range 1 Equipment List Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: PLANTEQUIPMENTOPERATIONSCHEMES ===========
+
+PlantEquipmentOperationSchemes,
+    dhw loop Operation Schemes,  !- Name
+    PlantEquipmentOperation:HeatingLoad,  !- Control Scheme 1 Object Type
+    dhw loop Heating Operation Scheme,  !- Control Scheme 1 Name
+    Always On Discrete;      !- Control Scheme 1 Schedule Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SETPOINTMANAGER:SCHEDULED ===========
+
+SetpointManager:Scheduled,
+    Setpoint Manager Scheduled 1,  !- Name
+    Temperature,             !- Control Variable
+    dhw temp,                !- Schedule Name
+    Node 11;                 !- Setpoint Node or NodeList Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: WATERUSE:EQUIPMENT ===========
+
+WaterUse:Equipment,
+    dhw fixtures,            !- Name
+    dhw fixtures,            !- End-Use Subcategory
+    5.52832310375084e-06,    !- Peak Flow Rate {m3/s}
+    dhw fixtures,            !- Flow Rate Fraction Schedule Name
+    mixed water temperature schedule;  !- Target Temperature Schedule Name
+
+WaterUse:Equipment,
+    dhw distribution waste,  !- Name
+    dhw distribution waste,  !- End-Use Subcategory
+    1.94825937183308e-06,    !- Peak Flow Rate {m3/s}
+    dhw fixtures,            !- Flow Rate Fraction Schedule Name
+    mixed water temperature schedule;  !- Target Temperature Schedule Name
+
+WaterUse:Equipment,
+    clothes washer,          !- Name
+    clothes washer,          !- End-Use Subcategory
+    2.36558358202685e-07,    !- Peak Flow Rate {m3/s}
+    clothes washer,          !- Flow Rate Fraction Schedule Name
+    dhw temp;                !- Target Temperature Schedule Name
+
+WaterUse:Equipment,
+    dishwasher,              !- Name
+    dishwasher,              !- End-Use Subcategory
+    3.50380391506563e-07,    !- Peak Flow Rate {m3/s}
+    dishwasher,              !- Flow Rate Fraction Schedule Name
+    dhw temp;                !- Target Temperature Schedule Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: WATERUSE:CONNECTIONS ===========
+
+WaterUse:Connections,
+    Water Use Connections 1, !- Name
+    Node 15,                 !- Inlet Node Name
+    Node 21,                 !- Outlet Node Name
+    ,                        !- Supply Water Storage Tank Name
+    ,                        !- Reclamation Water Storage Tank Name
+    ,                        !- Hot Water Supply Temperature Schedule Name
+    ,                        !- Cold Water Supply Temperature Schedule Name
+    None,                    !- Drain Water Heat Exchanger Type
+    Plant,                   !- Drain Water Heat Exchanger Destination
+    ,                        !- Drain Water Heat Exchanger U-Factor Times Area {W/K}
+    dhw fixtures,            !- Water Use Equipment 1 Name
+    dhw distribution waste,  !- Water Use Equipment 2 Name
+    clothes washer,          !- Water Use Equipment 3 Name
+    dishwasher;              !- Water Use Equipment 4 Name
+

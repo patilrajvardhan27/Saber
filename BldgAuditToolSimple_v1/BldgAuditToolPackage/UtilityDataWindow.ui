@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>718</width>
+    <height>485</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QTableWidget" name="UtilityDataTable">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>681</width>
+     <height>391</height>
+    </rect>
+   </property>
+   <row>
+    <property name="text">
+     <string>January</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>February</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>March</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>April</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>May</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>June</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>July</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>August</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>September</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>Oct</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>November</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>December</string>
+    </property>
+   </row>
+   <column>
+    <property name="text">
+     <string>Year 1 - kWh</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Year 1 - Therms</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Year 2 - kWh</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Year 2 - Therms</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Year 3 - kWh</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Year 3 - Therms</string>
+    </property>
+   </column>
+  </widget>
+  <widget class="QPushButton" name="SetUtilityData">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>430</y>
+     <width>151</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Set Utility Data</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>430</y>
+     <width>317</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_4">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Year 1</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="Year1"/>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Year 2</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="Year2"/>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Year 3</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="Year3"/>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

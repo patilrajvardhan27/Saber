@@ -1,0 +1,7 @@
+﻿InsulationName,Rvalue_IP,Thickness_inch,Lifetime,Costpersft
+R-19Fiberglass,19,6.5,999,0.85
+R-30Fiberglass/Cellulose,30,6.5,999,1.2
+R-38Fiberglass/Cellulose,38,6.5,999,1.48
+R-38SprayFoam,38,6.5,999,4.06
+R-49SprayFoam,49,6.5,999,5.08
+R-60SprayFoam,60,6.5,999,6.1

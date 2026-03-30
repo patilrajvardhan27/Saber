@@ -1,0 +1,6 @@
+﻿Speeds,Stage,HeatingEff,SEER,EffName,COP-Cool1,COP-Cool2,COP-Heat1,COP-Heat2,Lifetime,Costperunit,CostperkBtuh
+Air Source Heat Pump,Single,8.8,15,HSPF 8.8 - SEER 15,4.28,,3.69,,15,2856,42
+Air Source Heat Pump,Double,8.9,16,HSPF 8.9 - SEER 16,4.337,3.998,4.28,3.771,15,3001,42
+Air Source Heat Pump,Double,9,17,HSPF 9 - SEER 17,4.658,4.307,4.358,3.867,15,3147,42
+Air Source Heat Pump,Double,9.6,18,HSPF 9.6 - SEER 18,4.953,4.591,4.747,4.378,15,3292,42
+Air Source Heat Pump,Double,9.8,19,HSPF 9.8 - SEER 19,5.285,4.913,4.904,4.595,15,3437,42

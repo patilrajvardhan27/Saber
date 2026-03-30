@@ -1,0 +1,328 @@
+!-Generator IDFEditor 1.53
+!-Option SortedOrder
+
+!-NOTE: All comments with '!-' are ignored by the IDFEditor and are generated automatically.
+!-      Use '!' comments if they need to be retained when using the IDFEditor.
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ZONE ===========
+
+Zone,
+    airloop ret air zone,    !- Name
+    ,                        !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    ,                        !- Type
+    1,                       !- Multiplier
+    ,                        !- Ceiling Height {m}
+    1,                       !- Volume {m3}
+    ,                        !- Floor Area {m2}
+    ,                        !- Zone Inside Convection Algorithm
+    ,                        !- Zone Outside Convection Algorithm
+    No;                      !- Part of Total Floor Area
+
+
+!-   ===========  ALL OBJECTS IN CLASS: SIZING:SYSTEM ===========
+
+Sizing:System,
+    furnace airloop,         !- AirLoop Name
+    Sensible,                !- Type of Load to Size On
+    Autosize,                !- Design Outdoor Air Flow Rate {m3/s}
+    0.3,                     !- Central Heating Maximum System Air Flow Ratio
+    7,                       !- Preheat Design Temperature {C}
+    0.008,                   !- Preheat Design Humidity Ratio {kgWater/kgDryAir}
+    12.8,                    !- Precool Design Temperature {C}
+    0.008,                   !- Precool Design Humidity Ratio {kgWater/kgDryAir}
+    12.8,                    !- Central Cooling Design Supply Air Temperature {C}
+    16.7,                    !- Central Heating Design Supply Air Temperature {C}
+    NonCoincident,           !- Type of Zone Sum to Use
+    Yes,                     !- 100% Outdoor Air in Cooling
+    Yes,                     !- 100% Outdoor Air in Heating
+    0.0085,                  !- Central Cooling Design Supply Air Humidity Ratio {kgWater/kgDryAir}
+    0.008,                   !- Central Heating Design Supply Air Humidity Ratio {kgWater/kgDryAir}
+    DesignDay,               !- Cooling Supply Air Flow Rate Method
+    0,                       !- Cooling Supply Air Flow Rate {m3/s}
+    0.0099676501,            !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    1,                       !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    3.9475456e-05,           !- Cooling Supply Air Flow Rate Per Unit Cooling Capacity {m3/s-W}
+    DesignDay,               !- Heating Supply Air Flow Rate Method
+    0,                       !- Heating Supply Air Flow Rate {m3/s}
+    0.0099676501,            !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    1,                       !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    1,                       !- Heating Fraction of Autosized Cooling Supply Air Flow Rate
+    3.1588213e-05,           !- Heating Supply Air Flow Rate Per Unit Heating Capacity {m3/s-W}
+    ZoneSum,                 !- System Outdoor Air Method
+    1,                       !- Zone Maximum Outdoor Air Fraction {dimensionless}
+    CoolingDesignCapacity,   !- Cooling Design Capacity Method
+    Autosize,                !- Cooling Design Capacity {W}
+    234.7,                   !- Cooling Design Capacity Per Floor Area {W/m2}
+    1,                       !- Fraction of Autosized Cooling Design Capacity
+    HeatingDesignCapacity,   !- Heating Design Capacity Method
+    Autosize,                !- Heating Design Capacity {W}
+    157,                     !- Heating Design Capacity Per Floor Area {W/m2}
+    1,                       !- Fraction of Autosized Heating Design Capacity
+    OnOff,                   !- Central Cooling Capacity Control Method
+    Autosize;                !- Occupant Diversity
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRTERMINAL:SINGLEDUCT:CONSTANTVOLUME:NOREHEAT ===========
+
+AirTerminal:SingleDuct:ConstantVolume:NoReheat,
+    furnace terminal,        !- Name
+    Always On Discrete,      !- Availability Schedule Name
+    Node 9,                  !- Air Inlet Node Name
+    Node 7,                  !- Air Outlet Node Name
+    0.4049309062656;         !- Maximum Air Flow Rate {m3/s}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ZONEHVAC:AIRDISTRIBUTIONUNIT ===========
+
+ZoneHVAC:AirDistributionUnit,
+    ADU furnace terminal,    !- Name
+    Node 7,                  !- Air Distribution Unit Outlet Node Name
+    AirTerminal:SingleDuct:ConstantVolume:NoReheat,  !- Air Terminal Object Type
+    furnace terminal;        !- Air Terminal Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ZONEHVAC:EQUIPMENTLIST ===========
+
+ZoneHVAC:EquipmentList,
+    living space Equipment List,  !- Name
+    SequentialLoad,          !- Load Distribution Scheme
+    ZoneHVAC:AirDistributionUnit,  !- Zone Equipment 1 Object Type
+    ADU furnace terminal,    !- Zone Equipment 1 Name
+    1,                       !- Zone Equipment 1 Cooling Sequence
+    1,                       !- Zone Equipment 1 Heating or No-Load Sequence
+    Sequential Fraction Schedule 1,  !- Zone Equipment 1 Sequential Cooling Fraction Schedule Name
+    Sequential Fraction Schedule;  !- Zone Equipment 1 Sequential Heating Fraction Schedule Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: ZONEHVAC:EQUIPMENTCONNECTIONS ===========
+
+ZoneHVAC:EquipmentConnections,
+    living space,            !- Zone Name
+    living space Equipment List,  !- Zone Conditioning Equipment List Name
+    living space Inlet Node List,  !- Zone Air Inlet Node or NodeList Name
+    ,                        !- Zone Air Exhaust Node or NodeList Name
+    Node 1,                  !- Zone Air Node Name
+    living space Return Node List;  !- Zone Return Air Node or NodeList Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: FAN:SYSTEMMODEL ===========
+
+Fan:SystemModel,
+    furnace supply fan,      !- Name
+    Always On Discrete,      !- Availability Schedule Name
+    Node 3,                  !- Air Inlet Node Name
+    furnace unitary system Fan - Heating Coil Node,  !- Air Outlet Node Name
+    0.4049309062656,         !- Design Maximum Air Flow Rate {m3/s}
+    Discrete,                !- Speed Control Method
+    0.2,                     !- Electric Power Minimum Flow Rate Fraction
+    794.580001233493,        !- Design Pressure Rise {Pa}
+    1,                       !- Motor Efficiency
+    1,                       !- Motor In Air Stream Fraction
+    Autosize,                !- Design Electric Power Consumption {W}
+    TotalEfficiencyAndPressure,  !- Design Power Sizing Method
+    840,                     !- Electric Power Per Unit Flow Rate {W/(m3/s)}
+    1.66667,                 !- Electric Power Per Unit Flow Rate Per Unit Pressure {W/((m3/s)-Pa)}
+    0.75,                    !- Fan Total Efficiency
+    ,                        !- Electric Power Function of Flow Fraction Curve Name
+    ,                        !- Night Ventilation Mode Pressure Rise {Pa}
+    ,                        !- Night Ventilation Mode Flow Fraction
+    ,                        !- Motor Loss Zone Name
+    0,                       !- Motor Loss Radiative Fraction
+    supply fan,              !- End-Use Subcategory
+    1,                       !- Number of Speeds
+    1,                       !- Speed 1 Flow Fraction
+    1;                       !- Speed 1 Electric Power Fraction
+
+
+!-   ===========  ALL OBJECTS IN CLASS: COIL:HEATING:FUEL ===========
+
+Coil:Heating:Fuel,
+    furnace htg coil,        !- Name
+    Always On Discrete,      !- Availability Schedule Name
+    NaturalGas,              !- Fuel Type
+    0.8,                     !- Burner Efficiency
+    autosize,                !- Nominal Capacity {W}
+    furnace unitary system Fan - Heating Coil Node,  !- Air Inlet Node Name
+    Node 4,                  !- Air Outlet Node Name
+    ,                        !- Temperature Setpoint Node Name
+    0,                       !- Parasitic Electric Load {W}
+    ,                        !- Part Load Fraction Correlation Curve Name
+    0;                       !- Parasitic Fuel Load {W}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:UNITARYSYSTEM ===========
+
+AirLoopHVAC:UnitarySystem,
+    furnace unitary system,  !- Name
+    Load,                    !- Control Type
+    living space,            !- Controlling Zone or Thermostat Location
+    None,                    !- Dehumidification Control Type
+    Always On Discrete,      !- Availability Schedule Name
+    Node 3,                  !- Air Inlet Node Name
+    Node 4,                  !- Air Outlet Node Name
+    Fan:SystemModel,         !- Supply Fan Object Type
+    furnace supply fan,      !- Supply Fan Name
+    BlowThrough,             !- Fan Placement
+    auto fan schedule,       !- Supply Air Fan Operating Mode Schedule Name
+    Coil:Heating:Fuel,       !- Heating Coil Object Type
+    furnace htg coil,        !- Heating Coil Name
+    1,                       !- DX Heating Coil Sizing Ratio
+    ,                        !- Cooling Coil Object Type
+    ,                        !- Cooling Coil Name
+    No,                      !- Use DOAS DX Cooling Coil
+    2,                       !- Minimum Supply Air Temperature {C}
+    SensibleOnlyLoadControl, !- Latent Load Control
+    ,                        !- Supplemental Heating Coil Object Type
+    ,                        !- Supplemental Heating Coil Name
+    SupplyAirFlowRate,       !- Cooling Supply Air Flow Rate Method
+    0,                       !- Cooling Supply Air Flow Rate {m3/s}
+    ,                        !- Cooling Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Cooling Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- Cooling Supply Air Flow Rate Per Unit of Capacity {m3/s-W}
+    SupplyAirFlowRate,       !- Heating Supply Air Flow Rate Method
+    autosize,                !- Heating Supply Air Flow Rate {m3/s}
+    ,                        !- Heating Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- Heating Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- Heating Supply Air Flow Rate Per Unit of Capacity {m3/s-W}
+    ,                        !- No Load Supply Air Flow Rate Method
+    0,                       !- No Load Supply Air Flow Rate {m3/s}
+    ,                        !- No Load Supply Air Flow Rate Per Floor Area {m3/s-m2}
+    ,                        !- No Load Fraction of Autosized Cooling Supply Air Flow Rate
+    ,                        !- No Load Fraction of Autosized Heating Supply Air Flow Rate
+    ,                        !- No Load Supply Air Flow Rate Per Unit of Capacity During Cooling Operation {m3/s-W}
+    ,                        !- No Load Supply Air Flow Rate Per Unit of Capacity During Heating Operation {m3/s-W}
+    48.8888888888889,        !- Maximum Supply Air Temperature {C}
+    21,                      !- Maximum Outdoor Dry-Bulb Temperature for Supplemental Heater Operation {C}
+    ,                        !- Outdoor Dry-Bulb Temperature Sensor Node Name
+    2.5,                     !- Maximum Cycling Rate {cycles/hr}
+    60,                      !- Heat Pump Time Constant {s}
+    0.01,                    !- Fraction of On-Cycle Power Use
+    60,                      !- Heat Pump Fan Delay Time {s}
+    0,                       !- Ancillary On-Cycle Electric Power {W}
+    0;                       !- Ancillary Off-Cycle Electric Power {W}
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC ===========
+
+AirLoopHVAC,
+    furnace airloop,         !- Name
+    ,                        !- Controller List Name
+    furnace airloopAvailability Manager List,  !- Availability Manager List Name
+    0.4049309062656,         !- Design Supply Air Flow Rate {m3/s}
+    furnace airloop Supply Branches,  !- Branch List Name
+    ,                        !- Connector List Name
+    Node 3,                  !- Supply Side Inlet Node Name
+    Node 6,                  !- Demand Side Outlet Node Name
+    furnace airloop Demand Inlet Nodes,  !- Demand Side Inlet Node Names
+    furnace airloop Supply Outlet Nodes,  !- Supply Side Outlet Node Names
+    1;                       !- Design Return Air Flow Fraction of Supply Air Flow
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:ZONESPLITTER ===========
+
+AirLoopHVAC:ZoneSplitter,
+    furnace zone splitter,   !- Name
+    Node 5,                  !- Inlet Node Name
+    Node 9;                  !- Outlet 1 Node Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:SUPPLYPATH ===========
+
+AirLoopHVAC:SupplyPath,
+    furnace airloop Node 5 Supply Path,  !- Name
+    Node 5,                  !- Supply Air Path Inlet Node Name
+    AirLoopHVAC:ZoneSplitter,!- Component 1 Object Type
+    furnace zone splitter;   !- Component 1 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:ZONEMIXER ===========
+
+AirLoopHVAC:ZoneMixer,
+    furnace zone mixer,      !- Name
+    Node 6,                  !- Outlet Node Name
+    Node 24;                 !- Inlet 1 Node Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:RETURNPLENUM ===========
+
+AirLoopHVAC:ReturnPlenum,
+    Air Loop HVAC Return Plenum 1,  !- Name
+    airloop ret air zone,    !- Zone Name
+    Node 22,                 !- Zone Node Name
+    Node 24,                 !- Outlet Node Name
+    ,                        !- Induced Air Outlet Node or NodeList Name
+    Node 8;                  !- Inlet 1 Node Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AIRLOOPHVAC:RETURNPATH ===========
+
+AirLoopHVAC:ReturnPath,
+    furnace airloop Return Path,  !- Name
+    Node 6,                  !- Return Air Path Outlet Node Name
+    AirLoopHVAC:ReturnPlenum,!- Component 1 Object Type
+    Air Loop HVAC Return Plenum 1,  !- Component 1 Name
+    AirLoopHVAC:ZoneMixer,   !- Component 2 Object Type
+    furnace zone mixer;      !- Component 2 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: BRANCH ===========
+
+Branch,
+    furnace airloop Main Branch,  !- Name
+    ,                        !- Pressure Drop Curve Name
+    AirLoopHVAC:UnitarySystem,  !- Component 1 Object Type
+    furnace unitary system,  !- Component 1 Name
+    Node 3,                  !- Component 1 Inlet Node Name
+    Node 4;                  !- Component 1 Outlet Node Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: BRANCHLIST ===========
+
+BranchList,
+    furnace airloop Supply Branches,  !- Name
+    furnace airloop Main Branch;  !- Branch 1 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: NODELIST ===========
+
+NodeList,
+    living space Inlet Node List,  !- Name
+    Node 7;                  !- Node 1 Name
+
+NodeList,
+    living space Return Node List,  !- Name
+    Node 8;                  !- Node 1 Name
+
+NodeList,
+    furnace airloop Supply Outlet Nodes,  !- Name
+    Node 4;                  !- Node 1 Name
+
+NodeList,
+    furnace airloop Demand Inlet Nodes,  !- Name
+    Node 5;                  !- Node 1 Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: OUTDOORAIR:NODE ===========
+
+OutdoorAir:Node,
+    Model Outdoor Air Node;  !- Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AVAILABILITYMANAGER:SCHEDULED ===========
+
+AvailabilityManager:Scheduled,
+    furnace airloop Availability Manager,  !- Name
+    Always On Discrete;      !- Schedule Name
+
+
+!-   ===========  ALL OBJECTS IN CLASS: AVAILABILITYMANAGERASSIGNMENTLIST ===========
+
+AvailabilityManagerAssignmentList,
+    furnace airloopAvailability Manager List,  !- Name
+    AvailabilityManager:Scheduled,  !- Availability Manager 1 Object Type
+    furnace airloop Availability Manager;  !- Availability Manager 1 Name
+
