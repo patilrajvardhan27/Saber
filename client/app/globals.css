@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-gray-100 text-app-text font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+  }
+}
+
+@layer components {
+  .form-input {
+    @apply w-full px-3 py-2 text-sm bg-bg-card border border-border rounded-md
+           text-app-text placeholder:text-app-text-light
+           focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent
+           transition-colors duration-150;
+  }
+
+  .form-select {
+    @apply form-input appearance-none cursor-pointer;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-app-text-muted mb-1;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold
+           bg-primary text-app-text-white rounded-md
+           hover:bg-primary-hover active:bg-primary-hover
+           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold
+           bg-bg-card text-app-text border border-border rounded-md
+           hover:bg-bg-muted active:bg-bg-muted
+           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold
+           bg-accent text-app-text-white rounded-md
+           hover:bg-accent-hover active:bg-accent-hover
+           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .card {
+    @apply bg-bg-card rounded-lg shadow-card border border-border;
+  }
+
+  .section-header {
+    @apply text-base font-semibold text-primary border-b border-border pb-2 mb-4;
+  }
+
+  .tab-btn {
+    @apply px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-150 whitespace-nowrap;
+  }
+
+  .tab-btn-active {
+    @apply tab-btn border-primary text-primary;
+  }
+
+  .tab-btn-inactive {
+    @apply tab-btn border-transparent text-app-text-muted hover:text-app-text hover:border-border-dark;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-bg-muted;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-border-dark rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-app-text-light;
+}
