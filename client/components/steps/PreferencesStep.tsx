@@ -10,11 +10,13 @@ import { RadioGroup } from "@/components/ui/RadioGroup";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { BUILDING_TYPES } from "@/data/options";
+import { PklUpload } from "@/components/PklUpload";
 
 export function ProjectInfoStep() {
   const { state, setField } = useForm();
   return (
     <StepLayout>
+      <PklUpload />
       <Card>
         <SectionHeader
           title="Project Information"

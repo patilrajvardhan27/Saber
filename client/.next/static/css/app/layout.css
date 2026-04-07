@@ -1,5 +1,5 @@
 /*!*************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[12].use[3]!./app/globals.css ***!
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[12].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[12].use[3]!./app/globals.css ***!
   \*************************************************************************************************************************************************************************************************************************************************************/
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 *, ::before, ::after{
@@ -785,6 +785,15 @@ h1, h2, h3, h4, h5, h6{
 .mt-auto{
   margin-top: auto;
 }
+.mb-1{
+  margin-bottom: 0.25rem;
+}
+.mt-2{
+  margin-top: 0.5rem;
+}
+.mt-5{
+  margin-top: 1.25rem;
+}
 .inline-block{
   display: inline-block;
 }
@@ -799,6 +808,9 @@ h1, h2, h3, h4, h5, h6{
 }
 .grid{
   display: grid;
+}
+.hidden{
+  display: none;
 }
 .h-0\.5{
   height: 0.125rem;
@@ -838,6 +850,15 @@ h1, h2, h3, h4, h5, h6{
 }
 .h-full{
   height: 100%;
+}
+.h-12{
+  height: 3rem;
+}
+.h-6{
+  height: 1.5rem;
+}
+.h-px{
+  height: 1px;
 }
 .min-h-\[640px\]{
   min-height: 640px;
@@ -890,17 +911,14 @@ h1, h2, h3, h4, h5, h6{
 .w-full{
   width: 100%;
 }
+.w-12{
+  width: 3rem;
+}
+.w-6{
+  width: 1.5rem;
+}
 .min-w-0{
   min-width: 0px;
-}
-.max-w-2xl{
-  max-width: 42rem;
-}
-.max-w-3xl{
-  max-width: 48rem;
-}
-.max-w-4xl{
-  max-width: 56rem;
 }
 .max-w-5xl{
   max-width: 64rem;
@@ -987,10 +1005,10 @@ h1, h2, h3, h4, h5, h6{
   margin-top: calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(1.25rem * var(--tw-space-y-reverse));
 }
-.space-y-6 > :not([hidden]) ~ :not([hidden]){
+.space-y-1 > :not([hidden]) ~ :not([hidden]){
   --tw-space-y-reverse: 0;
-  margin-top: calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));
-  margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
+  margin-top: calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.25rem * var(--tw-space-y-reverse));
 }
 .overflow-hidden{
   overflow: hidden;
@@ -1074,6 +1092,18 @@ h1, h2, h3, h4, h5, h6{
 .border-transparent{
   border-color: transparent;
 }
+.border-red-300{
+  --tw-border-opacity: 1;
+  border-color: rgb(252 165 165 / var(--tw-border-opacity, 1));
+}
+.border-teal-300{
+  --tw-border-opacity: 1;
+  border-color: rgb(94 234 212 / var(--tw-border-opacity, 1));
+}
+.border-teal-400{
+  --tw-border-opacity: 1;
+  border-color: rgb(45 212 191 / var(--tw-border-opacity, 1));
+}
 .bg-accent{
   --tw-bg-opacity: 1;
   background-color: rgb(8 145 178 / var(--tw-bg-opacity, 1));
@@ -1137,6 +1167,22 @@ h1, h2, h3, h4, h5, h6{
 .bg-white{
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+.bg-red-100{
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 226 226 / var(--tw-bg-opacity, 1));
+}
+.bg-red-50{
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 242 242 / var(--tw-bg-opacity, 1));
+}
+.bg-teal-100{
+  --tw-bg-opacity: 1;
+  background-color: rgb(204 251 241 / var(--tw-bg-opacity, 1));
+}
+.bg-teal-50{
+  --tw-bg-opacity: 1;
+  background-color: rgb(240 253 250 / var(--tw-bg-opacity, 1));
 }
 .object-contain{
   -o-object-fit: contain;
@@ -1224,6 +1270,10 @@ h1, h2, h3, h4, h5, h6{
 .py-4{
   padding-top: 1rem;
   padding-bottom: 1rem;
+}
+.py-8{
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 .pb-2{
   padding-bottom: 0.5rem;
@@ -1358,6 +1408,36 @@ h1, h2, h3, h4, h5, h6{
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
 }
+.text-gray-700{
+  --tw-text-opacity: 1;
+  color: rgb(55 65 81 / var(--tw-text-opacity, 1));
+}
+.text-red-400{
+  --tw-text-opacity: 1;
+  color: rgb(248 113 113 / var(--tw-text-opacity, 1));
+}
+.text-red-500{
+  --tw-text-opacity: 1;
+  color: rgb(239 68 68 / var(--tw-text-opacity, 1));
+}
+.text-red-600{
+  --tw-text-opacity: 1;
+  color: rgb(220 38 38 / var(--tw-text-opacity, 1));
+}
+.text-teal-500{
+  --tw-text-opacity: 1;
+  color: rgb(20 184 166 / var(--tw-text-opacity, 1));
+}
+.text-teal-700{
+  --tw-text-opacity: 1;
+  color: rgb(15 118 110 / var(--tw-text-opacity, 1));
+}
+.underline{
+  text-decoration-line: underline;
+}
+.underline-offset-2{
+  text-underline-offset: 2px;
+}
 .accent-primary{
   accent-color: #1e3c72;
 }
@@ -1382,6 +1462,11 @@ h1, h2, h3, h4, h5, h6{
   --tw-shadow-colored: 2px 0 8px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
+.shadow-sm{
+  --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
 .filter{
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
@@ -1403,6 +1488,9 @@ h1, h2, h3, h4, h5, h6{
 }
 .duration-300{
   transition-duration: 300ms;
+}
+.duration-200{
+  transition-duration: 200ms;
 }
 
 /* Scrollbar styling */
@@ -1426,6 +1514,14 @@ h1, h2, h3, h4, h5, h6{
 .hover\:border-accent:hover{
   --tw-border-opacity: 1;
   border-color: rgb(8 145 178 / var(--tw-border-opacity, 1));
+}
+.hover\:border-teal-400:hover{
+  --tw-border-opacity: 1;
+  border-color: rgb(45 212 191 / var(--tw-border-opacity, 1));
+}
+.hover\:border-teal-300:hover{
+  --tw-border-opacity: 1;
+  border-color: rgb(94 234 212 / var(--tw-border-opacity, 1));
 }
 .hover\:bg-accent-light:hover{
   --tw-bg-opacity: 1;
@@ -1451,6 +1547,9 @@ h1, h2, h3, h4, h5, h6{
   --tw-bg-opacity: 1;
   background-color: rgb(13 148 136 / var(--tw-bg-opacity, 1));
 }
+.hover\:bg-teal-50\/40:hover{
+  background-color: rgb(240 253 250 / 0.4);
+}
 .hover\:text-app-text:hover{
   --tw-text-opacity: 1;
   color: rgb(30 41 59 / var(--tw-text-opacity, 1));
@@ -1458,6 +1557,22 @@ h1, h2, h3, h4, h5, h6{
 .hover\:text-app-text-white:hover{
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+.hover\:text-teal-500:hover{
+  --tw-text-opacity: 1;
+  color: rgb(20 184 166 / var(--tw-text-opacity, 1));
+}
+.hover\:text-gray-600:hover{
+  --tw-text-opacity: 1;
+  color: rgb(75 85 99 / var(--tw-text-opacity, 1));
+}
+.hover\:text-red-600:hover{
+  --tw-text-opacity: 1;
+  color: rgb(220 38 38 / var(--tw-text-opacity, 1));
+}
+.hover\:text-teal-700:hover{
+  --tw-text-opacity: 1;
+  color: rgb(15 118 110 / var(--tw-text-opacity, 1));
 }
 .hover\:shadow-lg:hover{
   --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);

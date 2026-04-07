@@ -22,7 +22,7 @@ export function StepLayout({
   prevLabel,
   nextDisabled = false,
 }: StepLayoutProps) {
-  const { currentStep, nextStep, prevStep } = useForm();
+  const { currentStep, nextStep, prevStep, goToStep } = useForm();
 
   const subStep = SUB_STEPS[currentStep - 1];
   const section = SECTIONS.find((s) => s.id === subStep?.section)!;
@@ -53,13 +53,15 @@ export function StepLayout({
                 return (
                   <React.Fragment key={sec.id}>
                     <div className="flex flex-col items-center flex-shrink-0">
-                      <div
-                        className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                      <button
+                        type="button"
+                        onClick={() => goToStep(sec.firstStep)}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all cursor-pointer ${
                           isCompleted
-                            ? "bg-teal-500 text-white"
+                            ? "bg-teal-500 text-white hover:bg-teal-600"
                             : isActive
                             ? "bg-teal-500 text-white"
-                            : "bg-gray-100 text-gray-400 border-2 border-gray-200"
+                            : "bg-gray-100 text-gray-400 border-2 border-gray-200 hover:border-teal-400 hover:text-teal-500"
                         }`}
                       >
                         {isCompleted ? (
@@ -75,7 +77,7 @@ export function StepLayout({
                         ) : (
                           sec.id
                         )}
-                      </div>
+                      </button>
                       <span
                         className={`text-xs mt-1.5 font-medium whitespace-nowrap ${
                           isActive ? "text-teal-600" : "text-gray-400"
