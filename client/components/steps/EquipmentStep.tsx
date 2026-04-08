@@ -10,10 +10,11 @@ import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { COOKING_FUEL_TYPES, YES_NO, LED_OPTIONS } from "@/data/options";
 
-export function KitchenStep() {
+export function AppliancesStep() {
   const { state, setField } = useForm();
   return (
     <StepLayout>
+      {/* Kitchen */}
       <Card>
         <SectionHeader
           title="Kitchen Appliances"
@@ -57,14 +58,8 @@ export function KitchenStep() {
           </FormField>
         </div>
       </Card>
-    </StepLayout>
-  );
-}
 
-export function LaundryStep() {
-  const { state, setField } = useForm();
-  return (
-    <StepLayout>
+      {/* Laundry */}
       <Card>
         <SectionHeader title="Laundry Equipment" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -92,53 +87,11 @@ export function LaundryStep() {
   );
 }
 
-export function PlugLoadsStep() {
+export function LightingPlugLoadsStep() {
   const { state, setField } = useForm();
   return (
     <StepLayout>
-      <Card>
-        <SectionHeader
-          title="Other Plug Loads"
-          description="Enter rated wattage for electronics and miscellaneous equipment."
-        />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormField label="TV Rating">
-            <Input
-              type="number"
-              placeholder="200"
-              unit="W"
-              value={state.tvRating}
-              onChange={(e) => setField("tvRating", e.target.value)}
-            />
-          </FormField>
-          <FormField label="Office Equipment Rating">
-            <Input
-              type="number"
-              placeholder="300"
-              unit="W"
-              value={state.officeEqpRating}
-              onChange={(e) => setField("officeEqpRating", e.target.value)}
-            />
-          </FormField>
-          <FormField label="Miscellaneous Plug Loads">
-            <Input
-              type="number"
-              placeholder="500"
-              unit="W"
-              value={state.miscPlugLoadRating}
-              onChange={(e) => setField("miscPlugLoadRating", e.target.value)}
-            />
-          </FormField>
-        </div>
-      </Card>
-    </StepLayout>
-  );
-}
-
-export function LightingStep() {
-  const { state, setField } = useForm();
-  return (
-    <StepLayout>
+      {/* Lighting */}
       <Card>
         <SectionHeader
           title="Lighting"
@@ -175,6 +128,43 @@ export function LightingStep() {
               options={LED_OPTIONS}
               value={state.led}
               onChange={(e) => setField("led", e.target.value)}
+            />
+          </FormField>
+        </div>
+      </Card>
+
+      {/* Plug Loads */}
+      <Card>
+        <SectionHeader
+          title="Other Plug Loads"
+          description="Enter rated wattage for electronics and miscellaneous equipment."
+        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <FormField label="TV Rating">
+            <Input
+              type="number"
+              placeholder="200"
+              unit="W"
+              value={state.tvRating}
+              onChange={(e) => setField("tvRating", e.target.value)}
+            />
+          </FormField>
+          <FormField label="Office Equipment Rating">
+            <Input
+              type="number"
+              placeholder="300"
+              unit="W"
+              value={state.officeEqpRating}
+              onChange={(e) => setField("officeEqpRating", e.target.value)}
+            />
+          </FormField>
+          <FormField label="Miscellaneous Plug Loads">
+            <Input
+              type="number"
+              placeholder="500"
+              unit="W"
+              value={state.miscPlugLoadRating}
+              onChange={(e) => setField("miscPlugLoadRating", e.target.value)}
             />
           </FormField>
         </div>

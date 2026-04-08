@@ -13,25 +13,26 @@ import { ECM_MEASURES, ECM_MEASURE_OPTIONS } from "@/data/options";
 import type { FormField as FormFieldType } from "@/types/form";
 
 const COST_ROWS = [
-  { key: "wallInsulation",  label: "Wall Insulation" },
-  { key: "infiltration",    label: "Infiltration Sealing" },
+  { key: "wallInsulation",    label: "Wall Insulation" },
+  { key: "infiltration",      label: "Infiltration Sealing" },
   { key: "ceilingInsulation", label: "Ceiling Insulation" },
-  { key: "windowMaterial",  label: "Window Replacement" },
-  { key: "nightSetback",    label: "Night Setback Thermostat" },
-  { key: "daylighting",     label: "Daylighting Controls" },
-  { key: "economizer",      label: "Economizer" },
-  { key: "occupancySensor", label: "Occupancy Sensors" },
-  { key: "led",             label: "LED Lighting Upgrade" },
-  { key: "equipLoad",       label: "Reduce Equipment Load" },
-  { key: "coolingEff",      label: "Cooling Efficiency Upgrade" },
-  { key: "heatingEqp",      label: "Heating Equipment Replacement" },
-  { key: "heatingEff",      label: "Heating Efficiency Upgrade" },
+  { key: "windowMaterial",    label: "Window Replacement" },
+  { key: "nightSetback",      label: "Night Setback Thermostat" },
+  { key: "daylighting",       label: "Daylighting Controls" },
+  { key: "economizer",        label: "Economizer" },
+  { key: "occupancySensor",   label: "Occupancy Sensors" },
+  { key: "led",               label: "LED Lighting Upgrade" },
+  { key: "equipLoad",         label: "Reduce Equipment Load" },
+  { key: "coolingEff",        label: "Cooling Efficiency Upgrade" },
+  { key: "heatingEqp",        label: "Heating Equipment Replacement" },
+  { key: "heatingEff",        label: "Heating Efficiency Upgrade" },
 ];
 
-export function FinancialParamsStep() {
+export function FinancialsStep() {
   const { state, setField } = useForm();
   return (
     <StepLayout>
+      {/* Financial Parameters */}
       <Card>
         <SectionHeader
           title="Financial Parameters"
@@ -76,13 +77,8 @@ export function FinancialParamsStep() {
           </FormField>
         </div>
       </Card>
-    </StepLayout>
-  );
-}
 
-export function ECMCostDataStep() {
-  return (
-    <StepLayout>
+      {/* ECM Cost Data */}
       <Card>
         <div className="flex items-start justify-between gap-4 mb-4">
           <SectionHeader
@@ -184,10 +180,10 @@ export function ECMResultsStep() {
   const { state } = useForm();
 
   const metrics = [
-    { label: "Package Life-Cycle Cost (LCC)", value: state.packageLCC,              unit: "$", color: "text-primary"  },
-    { label: "Total Installed Cost (TIC)",     value: state.packageTIC,              unit: "$", color: "text-warning"  },
-    { label: "Electricity Savings",            value: state.packageKWhPctChange,     unit: "%", color: "text-success"  },
-    { label: "Natural Gas Savings",            value: state.packageThermsPctChange,  unit: "%", color: "text-accent"   },
+    { label: "Package Life-Cycle Cost (LCC)", value: state.packageLCC,             unit: "$", color: "text-primary" },
+    { label: "Total Installed Cost (TIC)",    value: state.packageTIC,             unit: "$", color: "text-warning" },
+    { label: "Electricity Savings",           value: state.packageKWhPctChange,    unit: "%", color: "text-success" },
+    { label: "Natural Gas Savings",           value: state.packageThermsPctChange, unit: "%", color: "text-accent"  },
   ];
 
   return (

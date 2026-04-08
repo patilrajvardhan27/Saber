@@ -41,9 +41,10 @@ export function WeatherDataStep() {
   );
 }
 
-export function TempAnalysisStep() {
+export function EnergyModelsStep() {
   return (
     <StepLayout>
+      {/* Temperature Analysis */}
       <Card>
         <SectionHeader
           title="Temperature Analysis"
@@ -60,13 +61,8 @@ export function TempAnalysisStep() {
           </div>
         </div>
       </Card>
-    </StepLayout>
-  );
-}
 
-export function DegreeDayStep() {
-  return (
-    <StepLayout>
+      {/* Degree Day Analysis */}
       <Card>
         <SectionHeader
           title="Degree Day Analysis"
@@ -87,9 +83,10 @@ export function DegreeDayStep() {
   );
 }
 
-export function EndUseStep() {
+export function AnalysisResultsStep() {
   return (
-    <StepLayout>
+    <StepLayout nextLabel="Proceed to ECM Evaluation">
+      {/* End-Use Breakdown */}
       <Card>
         <SectionHeader
           title="End-Use Energy Breakdown"
@@ -97,13 +94,8 @@ export function EndUseStep() {
         />
         <PlaceholderChart label="End-Use Energy Breakdown" />
       </Card>
-    </StepLayout>
-  );
-}
 
-export function ModelComparisonStep() {
-  return (
-    <StepLayout nextLabel="Proceed to ECM Evaluation">
+      {/* Model Comparison */}
       <Card>
         <SectionHeader
           title="Model Comparison"

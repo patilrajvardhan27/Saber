@@ -18,13 +18,16 @@ import {
   YES_NO,
 } from "@/data/options";
 
-export function CoolingStep() {
+export function HeatingCoolingStep() {
   const { state, setField } = useForm();
   const coolingEffOptions = COOLING_EFF_OPTIONS[state.coolingEqp] ?? [];
+  const heatingEffOptions = HEATING_EFF_OPTIONS[state.heatingEqp] ?? [];
   const showCoolingCustom = state.coolingEff === "Other..";
+  const showHeatingCustom = state.heatingEff === "Other..";
 
   return (
     <StepLayout>
+      {/* Cooling */}
       <Card>
         <SectionHeader
           title="Cooling"
@@ -76,17 +79,8 @@ export function CoolingStep() {
           </FormField>
         </div>
       </Card>
-    </StepLayout>
-  );
-}
 
-export function HeatingStep() {
-  const { state, setField } = useForm();
-  const heatingEffOptions = HEATING_EFF_OPTIONS[state.heatingEqp] ?? [];
-  const showHeatingCustom = state.heatingEff === "Other..";
-
-  return (
-    <StepLayout>
+      {/* Heating */}
       <Card>
         <SectionHeader
           title="Heating"
@@ -160,10 +154,11 @@ export function HeatingStep() {
   );
 }
 
-export function DHWStep() {
+export function HotWaterOtherStep() {
   const { state, setField } = useForm();
   return (
     <StepLayout>
+      {/* Domestic Hot Water */}
       <Card>
         <SectionHeader
           title="Domestic Hot Water (DHW)"
@@ -192,14 +187,8 @@ export function DHWStep() {
           )}
         </div>
       </Card>
-    </StepLayout>
-  );
-}
 
-export function OtherHVACStep() {
-  const { state, setField } = useForm();
-  return (
-    <StepLayout>
+      {/* Other Mechanical Equipment */}
       <Card>
         <SectionHeader
           title="Other Mechanical Equipment"

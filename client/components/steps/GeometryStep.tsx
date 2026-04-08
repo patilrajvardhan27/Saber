@@ -40,10 +40,11 @@ function ShapeIcon({ shape, selected }: { shape: string; selected: boolean }) {
   );
 }
 
-export function FloorPlanShapeStep() {
+export function ShapeOrientationStep() {
   const { state, setField } = useForm();
   return (
     <StepLayout>
+      {/* Floor Plan Shape */}
       <Card>
         <SectionHeader
           title="Floor Plan Shape"
@@ -57,14 +58,8 @@ export function FloorPlanShapeStep() {
           ))}
         </div>
       </Card>
-    </StepLayout>
-  );
-}
 
-export function OrientationStep() {
-  const { state, setField } = useForm();
-  return (
-    <StepLayout>
+      {/* Building Orientation */}
       <Card>
         <SectionHeader
           title="Building Orientation"
@@ -76,6 +71,7 @@ export function OrientationStep() {
           onChange={(v) => setField("orientation", v)}
           columns={3}
         />
+        <p className="text-xs text-app-text-muted mt-1">Hold Ctrl / Cmd to select multiple.</p>
       </Card>
     </StepLayout>
   );
@@ -85,6 +81,7 @@ export function DimensionsStep() {
   const { state, setField } = useForm();
   return (
     <StepLayout>
+      {/* Building Dimensions */}
       <Card>
         <SectionHeader
           title="Building Dimensions"
@@ -119,14 +116,8 @@ export function DimensionsStep() {
           </FormField>
         </div>
       </Card>
-    </StepLayout>
-  );
-}
 
-export function CornersStep() {
-  const { state, setField } = useForm();
-  return (
-    <StepLayout>
+      {/* Corner Coordinates */}
       <Card>
         <SectionHeader
           title="Building Corner Coordinates"

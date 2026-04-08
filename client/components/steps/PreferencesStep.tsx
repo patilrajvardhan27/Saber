@@ -12,11 +12,13 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { BUILDING_TYPES } from "@/data/options";
 import { PklUpload } from "@/components/PklUpload";
 
-export function ProjectInfoStep() {
+export function ProjectSetupStep() {
   const { state, setField } = useForm();
   return (
     <StepLayout>
       <PklUpload />
+
+      {/* Project Information */}
       <Card>
         <SectionHeader
           title="Project Information"
@@ -47,14 +49,8 @@ export function ProjectInfoStep() {
           </FormField>
         </div>
       </Card>
-    </StepLayout>
-  );
-}
 
-export function BuildingPropertiesStep() {
-  const { state, setField } = useForm();
-  return (
-    <StepLayout>
+      {/* Building Properties */}
       <Card>
         <SectionHeader
           title="Building Properties Input"
@@ -92,14 +88,8 @@ export function BuildingPropertiesStep() {
           </div>
         )}
       </Card>
-    </StepLayout>
-  );
-}
 
-export function UtilityDataStep() {
-  const { state, setField } = useForm();
-  return (
-    <StepLayout>
+      {/* Utility Data */}
       <Card>
         <SectionHeader
           title="Utility Data Source"

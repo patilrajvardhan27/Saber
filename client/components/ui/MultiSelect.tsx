@@ -15,54 +15,50 @@ export function MultiSelect({
   value,
   onChange,
   singleSelect = false,
-  columns = 1,
 }: MultiSelectProps) {
-  const toggle = (opt: string) => {
-    if (singleSelect) {
-      onChange([opt]);
-      return;
-    }
-    if (value.includes(opt)) {
-      onChange(value.filter((v) => v !== opt));
-    } else {
-      onChange([...value, opt]);
-    }
+  if (singleSelect) {
+    return (
+      <div className="relative">
+        <select
+          className="form-select pr-8 w-full"
+          value={value[0] ?? ""}
+          onChange={(e) => onChange(e.target.value ? [e.target.value] : [])}
+        >
+          <option value="" disabled>
+            Select an option
+          </option>
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+          <svg className="h-4 w-4 text-app-text-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = Array.from(e.target.selectedOptions).map((o) => o.value);
+    onChange(selected);
   };
 
-  const gridClass = columns === 3 ? "grid-cols-3" : columns === 2 ? "grid-cols-2" : "grid-cols-1";
-
   return (
-    <div className={`grid ${gridClass} gap-1.5`}>
-      {options.map((opt) => {
-        const selected = value.includes(opt);
-        return (
-          <button
-            key={opt}
-            type="button"
-            onClick={() => toggle(opt)}
-            className={`text-left px-3 py-2 text-sm rounded-md border transition-colors duration-100
-              ${
-                selected
-                  ? "bg-primary-100 border-primary text-primary font-medium"
-                  : "bg-bg-card border-border text-app-text hover:border-accent hover:bg-accent-light"
-              }`}
-          >
-            <span className="flex items-center gap-2">
-              <span
-                className={`inline-block w-3.5 h-3.5 rounded-sm border flex-shrink-0 transition-colors
-                  ${selected ? "bg-primary border-primary" : "border-border-dark bg-bg-muted"}`}
-              >
-                {selected && (
-                  <svg viewBox="0 0 12 12" fill="none" className="w-3.5 h-3.5">
-                    <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </span>
-              {opt}
-            </span>
-          </button>
-        );
-      })}
-    </div>
+    <select
+      multiple
+      className="form-select w-full min-h-[120px] pr-2"
+      value={value}
+      onChange={handleChange}
+    >
+      {options.map((opt) => (
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
   );
 }

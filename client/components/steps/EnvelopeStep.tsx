@@ -21,8 +21,6 @@ import {
   WINDOW_MATERIALS,
 } from "@/data/options";
 
-/* ── SVG illustrations ─────────────────────────────────────────── */
-
 function WallIllustration({ insulation }: { insulation: string }) {
   const hasInsulation = insulation && insulation !== "Uninsulated";
   return (
@@ -43,7 +41,7 @@ function WallIllustration({ insulation }: { insulation: string }) {
   );
 }
 
-export function ExtWallsStep() {
+export function WallsRoofStep() {
   const { state, setField } = useForm();
 
   const imagePanel = (
@@ -56,6 +54,7 @@ export function ExtWallsStep() {
 
   return (
     <StepLayout imagePanel={imagePanel}>
+      {/* Exterior Walls */}
       <Card>
         <SectionHeader
           title="Exterior Walls"
@@ -80,14 +79,8 @@ export function ExtWallsStep() {
           </FormField>
         </div>
       </Card>
-    </StepLayout>
-  );
-}
 
-export function RoofCeilingStep() {
-  const { state, setField } = useForm();
-  return (
-    <StepLayout>
+      {/* Roof / Ceiling */}
       <Card>
         <SectionHeader
           title="Roof / Ceiling"
@@ -116,10 +109,11 @@ export function RoofCeilingStep() {
   );
 }
 
-export function FoundationStep() {
+export function FoundationInfiltrationStep() {
   const { state, setField } = useForm();
   return (
     <StepLayout>
+      {/* Foundation */}
       <Card>
         <SectionHeader
           title="Foundation"
@@ -143,14 +137,8 @@ export function FoundationStep() {
           </FormField>
         </div>
       </Card>
-    </StepLayout>
-  );
-}
 
-export function InfiltrationStep() {
-  const { state, setField } = useForm();
-  return (
-    <StepLayout>
+      {/* Air Infiltration */}
       <Card>
         <SectionHeader
           title="Air Infiltration"
@@ -171,10 +159,11 @@ export function InfiltrationStep() {
   );
 }
 
-export function WindowsStep() {
+export function WindowsShadingStep() {
   const { state, setField } = useForm();
   return (
     <StepLayout>
+      {/* Windows */}
       <Card>
         <SectionHeader
           title="Windows"
@@ -189,6 +178,7 @@ export function WindowsStep() {
               onChange={(v) => setField("windowMaterial", v)}
               columns={2}
             />
+            <p className="text-xs text-app-text-muted mt-1">Hold Ctrl / Cmd to select multiple.</p>
           </div>
           <div>
             <p className="form-label mb-3">Window-to-Wall Ratio by Facade (%)</p>
@@ -233,14 +223,8 @@ export function WindowsStep() {
           </div>
         </div>
       </Card>
-    </StepLayout>
-  );
-}
 
-export function ShadingStep() {
-  const { state, setField } = useForm();
-  return (
-    <StepLayout>
+      {/* Shading */}
       <Card>
         <SectionHeader
           title="Shading"
