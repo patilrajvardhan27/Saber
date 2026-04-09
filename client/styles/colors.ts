@@ -1,59 +1,75 @@
 /**
  * Single source of truth for all application colors.
+ * Palette derived from best-iucrc.org (Blocksy theme palette).
  * All color references MUST come from this file — no hardcoded hex values elsewhere.
  * Tailwind config consumes this to generate utility classes.
  */
 export const colors = {
+  // Primary: deep forest green (#0C3D00) — headers, sidebar, main text emphasis
   primary: {
-    DEFAULT: "#1e3c72",
-    light: "#2a5298",
-    lighter: "#3b6bbf",
-    hover: "#162d57",
-    50: "#eef2ff",
-    100: "#e0e7ff",
-    200: "#c7d2fe",
+    DEFAULT: "#0C3D00",
+    light:   "#126000",
+    lighter: "#1c8000",
+    hover:   "#092e00",
+    50:      "#f0f7ee",
+    100:     "#dceedd",
+    200:     "#b9deb8",
   },
+
+  // Accent: vibrant medium green (#00964F) — buttons, links, active states
   accent: {
-    DEFAULT: "#0891b2",
-    hover: "#0e7490",
-    light: "#e0f7fa",
-    200: "#a5f3fc",
+    DEFAULT: "#00964F",
+    hover:   "#007a3f",
+    light:   "#e6f7ef",
+    200:     "#99d9be",
   },
+
+  // Muted teal from palette-color-3 — secondary accent, borders
+  teal: {
+    DEFAULT: "#327674",
+    hover:   "#275f5e",
+    light:   "#eaf4f4",
+    200:     "#a8cece",
+  },
+
   success: {
-    DEFAULT: "#16a34a",
-    light: "#dcfce7",
-    hover: "#15803d",
+    DEFAULT: "#126000",
+    light:   "#d4edda",
+    hover:   "#0C3D00",
   },
   warning: {
-    DEFAULT: "#d97706",
-    light: "#fef3c7",
-    hover: "#b45309",
+    DEFAULT: "#96650C",
+    light:   "#fef3d0",
+    hover:   "#7a500a",
   },
   error: {
     DEFAULT: "#dc2626",
-    light: "#fee2e2",
-    hover: "#b91c1c",
+    light:   "#fee2e2",
+    hover:   "#b91c1c",
   },
+
   bg: {
-    DEFAULT: "#f8fafc",
-    card: "#ffffff",
-    muted: "#f1f5f9",
-    sidebar: "#0f2240",
-    "sidebar-hover": "#1a3558",
-    "sidebar-active": "#2a5298",
+    DEFAULT:          "#f8faf8",
+    card:             "#ffffff",
+    muted:            "#f2f6f2",
+    sidebar:          "#0C3D00",
+    "sidebar-hover":  "#126000",
+    "sidebar-active": "#00964F",
   },
+
   border: {
-    DEFAULT: "#e2e8f0",
-    focus: "#0891b2",
-    dark: "#cbd5e1",
+    DEFAULT: "#d4e4d4",
+    focus:   "#00964F",
+    dark:    "#b0c8b0",
   },
+
   text: {
-    DEFAULT: "#1e293b",
-    muted: "#64748b",
-    light: "#94a3b8",
-    white: "#ffffff",
-    "sidebar-inactive": "#94a3b8",
-    "sidebar-active": "#ffffff",
+    DEFAULT:            "#1a2e1a",
+    muted:              "#767171",
+    light:              "#9aaa9a",
+    white:              "#ffffff",
+    "sidebar-inactive": "#b9deb8",
+    "sidebar-active":   "#ffffff",
   },
 } as const;
 

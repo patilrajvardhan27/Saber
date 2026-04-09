@@ -88,7 +88,7 @@ export function DimensionsStep() {
           description="Enter overall floor area and vertical dimensions."
         />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <FormField label="Floor Area" required hint="Above-ground conditioned area">
+          <FormField label="Floor Area" fieldKey="floorArea" required hint="Above-ground conditioned area">
             <Input
               type="number"
               placeholder="2000"
@@ -97,7 +97,7 @@ export function DimensionsStep() {
               onChange={(e) => setField("floorArea", e.target.value)}
             />
           </FormField>
-          <FormField label="Number of Floors" required>
+          <FormField label="Number of Floors" fieldKey="flrQty" required>
             <Input
               type="number"
               placeholder="1"
@@ -105,7 +105,7 @@ export function DimensionsStep() {
               onChange={(e) => setField("flrQty", e.target.value)}
             />
           </FormField>
-          <FormField label="Wall Height" required>
+          <FormField label="Wall Height" fieldKey="wallHt" required>
             <Input
               type="number"
               placeholder="10"
@@ -128,7 +128,7 @@ export function DimensionsStep() {
           }
         />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <FormField label="x1">
+          <FormField label="x1" fieldKey="x1">
             <Input
               type="number"
               placeholder="0"
@@ -137,7 +137,7 @@ export function DimensionsStep() {
               onChange={(e) => setField("x1", e.target.value)}
             />
           </FormField>
-          <FormField label="x2">
+          <FormField label="x2" fieldKey="x2">
             <Input
               type="number"
               placeholder="40"
@@ -146,7 +146,7 @@ export function DimensionsStep() {
               onChange={(e) => setField("x2", e.target.value)}
             />
           </FormField>
-          <FormField label="y1">
+          <FormField label="y1" fieldKey="y1">
             <Input
               type="number"
               placeholder="0"
@@ -155,7 +155,7 @@ export function DimensionsStep() {
               onChange={(e) => setField("y1", e.target.value)}
             />
           </FormField>
-          <FormField label="y2">
+          <FormField label="y2" fieldKey="y2">
             <Input
               type="number"
               placeholder="50"

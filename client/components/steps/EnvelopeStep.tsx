@@ -61,7 +61,7 @@ export function WallsRoofStep() {
           description="Define the wall construction type and insulation level."
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="Wall Construction Type" required>
+          <FormField label="Wall Construction Type" fieldKey="extWallConst" required>
             <Select
               options={EXT_WALL_CONSTRUCTIONS}
               placeholder="Select construction type…"
@@ -69,7 +69,7 @@ export function WallsRoofStep() {
               onChange={(e) => setField("extWallConst", e.target.value)}
             />
           </FormField>
-          <FormField label="Wall Insulation" required>
+          <FormField label="Wall Insulation" fieldKey="wallInsulation" required>
             <Select
               options={WALL_INSULATIONS}
               placeholder="Select insulation level…"
@@ -87,7 +87,7 @@ export function WallsRoofStep() {
           description="Specify the roof construction and ceiling insulation."
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="Roof Construction Type" required>
+          <FormField label="Roof Construction Type" fieldKey="extRoofConst" required>
             <Select
               options={EXT_ROOF_CONSTRUCTIONS}
               placeholder="Select roof type…"
@@ -95,7 +95,7 @@ export function WallsRoofStep() {
               onChange={(e) => setField("extRoofConst", e.target.value)}
             />
           </FormField>
-          <FormField label="Ceiling Insulation" required>
+          <FormField label="Ceiling Insulation" fieldKey="ceilingInsulation" required>
             <Select
               options={CEILING_INSULATIONS}
               placeholder="Select insulation level…"
@@ -120,7 +120,7 @@ export function FoundationInfiltrationStep() {
           description="Select the foundation type and any slab insulation."
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="Foundation Type" required>
+          <FormField label="Foundation Type" fieldKey="foundation" required>
             <Select
               options={FOUNDATIONS}
               placeholder="Select foundation type…"
@@ -128,7 +128,7 @@ export function FoundationInfiltrationStep() {
               onChange={(e) => setField("foundation", e.target.value)}
             />
           </FormField>
-          <FormField label="Slab Insulation">
+          <FormField label="Slab Insulation" fieldKey="slabInsulation">
             <Select
               options={SLAB_INSULATIONS}
               value={state.slabInsulation}
@@ -145,7 +145,7 @@ export function FoundationInfiltrationStep() {
           description="Air changes per hour at 50 Pascal pressure. Lower = tighter building."
         />
         <div className="max-w-xs">
-          <FormField label="Air Leakage — ACH50" required>
+          <FormField label="Air Leakage — ACH50" fieldKey="ach50" required>
             <Select
               options={ACH50_OPTIONS}
               placeholder="Select ACH50 value…"
@@ -183,7 +183,7 @@ export function WindowsShadingStep() {
           <div>
             <p className="form-label mb-3">Window-to-Wall Ratio by Facade (%)</p>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <FormField label="Front">
+              <FormField label="Front" fieldKey="wwrFront">
                 <Input
                   type="number"
                   placeholder="30"
@@ -192,7 +192,7 @@ export function WindowsShadingStep() {
                   onChange={(e) => setField("wwrFront", e.target.value)}
                 />
               </FormField>
-              <FormField label="Left">
+              <FormField label="Left" fieldKey="wwrLeft">
                 <Input
                   type="number"
                   placeholder="15"
@@ -201,7 +201,7 @@ export function WindowsShadingStep() {
                   onChange={(e) => setField("wwrLeft", e.target.value)}
                 />
               </FormField>
-              <FormField label="Back">
+              <FormField label="Back" fieldKey="wwrBack">
                 <Input
                   type="number"
                   placeholder="20"
@@ -210,7 +210,7 @@ export function WindowsShadingStep() {
                   onChange={(e) => setField("wwrBack", e.target.value)}
                 />
               </FormField>
-              <FormField label="Right">
+              <FormField label="Right" fieldKey="wwrRight">
                 <Input
                   type="number"
                   placeholder="15"
@@ -231,7 +231,7 @@ export function WindowsShadingStep() {
           description="Configure overhang depth and window geometry for solar shading calculations."
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormField label="Overhang Depth" hint="Horizontal projection above windows">
+          <FormField label="Overhang Depth" fieldKey="overhang" hint="Horizontal projection above windows">
             <Input
               type="number"
               placeholder="0"
@@ -240,7 +240,7 @@ export function WindowsShadingStep() {
               onChange={(e) => setField("overhang", e.target.value)}
             />
           </FormField>
-          <FormField label="Window Height">
+          <FormField label="Window Height" fieldKey="windowHt">
             <Input
               type="number"
               placeholder="4"
@@ -249,7 +249,7 @@ export function WindowsShadingStep() {
               onChange={(e) => setField("windowHt", e.target.value)}
             />
           </FormField>
-          <FormField label="Windows per Wall">
+          <FormField label="Windows per Wall" fieldKey="nWindow">
             <Input
               type="number"
               placeholder="3"

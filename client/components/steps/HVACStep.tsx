@@ -34,7 +34,7 @@ export function HeatingCoolingStep() {
           description="Define the cooling equipment type, efficiency, and thermostat setpoint."
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="Cooling Equipment" required>
+          <FormField label="Cooling Equipment" fieldKey="coolingEqp" required>
             <Select
               options={COOLING_EQUIPMENT}
               placeholder="Select cooling equipment…"
@@ -47,7 +47,7 @@ export function HeatingCoolingStep() {
           </FormField>
 
           {state.coolingEqp && state.coolingEqp !== "NoCooling" && (
-            <FormField label="Cooling Efficiency (SEER2)">
+            <FormField label="Cooling Efficiency (SEER2)" fieldKey="coolingEff">
               <Select
                 options={coolingEffOptions}
                 placeholder="Select efficiency…"
@@ -58,7 +58,7 @@ export function HeatingCoolingStep() {
           )}
 
           {showCoolingCustom && (
-            <FormField label="Custom SEER2 Value" hint="Enter the SEER2 rating manually">
+            <FormField label="Custom SEER2 Value" fieldKey="coolingEffCustom" hint="Enter the SEER2 rating manually">
               <Input
                 type="number"
                 placeholder="15.0"
@@ -68,7 +68,7 @@ export function HeatingCoolingStep() {
             </FormField>
           )}
 
-          <FormField label="Cooling Setpoint" hint="Indoor thermostat cooling set temperature">
+          <FormField label="Cooling Setpoint" fieldKey="tspc" hint="Indoor thermostat cooling set temperature">
             <Input
               type="number"
               placeholder="75"
@@ -87,7 +87,7 @@ export function HeatingCoolingStep() {
           description="Define the heating equipment type, efficiency, setpoint, and night setback."
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="Heating Equipment" required>
+          <FormField label="Heating Equipment" fieldKey="heatingEqp" required>
             <Select
               options={HEATING_EQUIPMENT}
               placeholder="Select heating equipment…"
@@ -100,7 +100,7 @@ export function HeatingCoolingStep() {
           </FormField>
 
           {state.heatingEqp && state.heatingEqp !== "NoHeating" && (
-            <FormField label="Heating Efficiency">
+            <FormField label="Heating Efficiency" fieldKey="heatingEff">
               <Select
                 options={heatingEffOptions}
                 placeholder="Select efficiency…"
@@ -111,7 +111,7 @@ export function HeatingCoolingStep() {
           )}
 
           {showHeatingCustom && (
-            <FormField label="Custom Efficiency Value">
+            <FormField label="Custom Efficiency Value" fieldKey="heatingEffCustom">
               <Input
                 type="number"
                 placeholder="92.0"
@@ -121,7 +121,7 @@ export function HeatingCoolingStep() {
             </FormField>
           )}
 
-          <FormField label="Heating Setpoint">
+          <FormField label="Heating Setpoint" fieldKey="tsph">
             <Input
               type="number"
               placeholder="70"
@@ -131,7 +131,7 @@ export function HeatingCoolingStep() {
             />
           </FormField>
 
-          <FormField label="Night Setback" hint="Temperature offset during setback period">
+          <FormField label="Night Setback" fieldKey="nightSetback" hint="Temperature offset during setback period">
             <Select
               options={NIGHT_SETBACK_OPTIONS}
               value={state.nightSetback}
@@ -139,7 +139,7 @@ export function HeatingCoolingStep() {
             />
           </FormField>
 
-          <FormField label="Night Setback Hours" hint="Hours per day with setback active">
+          <FormField label="Night Setback Hours" fieldKey="nNightSetbackHours" hint="Hours per day with setback active">
             <Input
               type="number"
               placeholder="8"
@@ -165,7 +165,7 @@ export function HotWaterOtherStep() {
           description="Specify the hot water system type and storage tank size."
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="DHW System Type" required>
+          <FormField label="DHW System Type" fieldKey="dhwSystemType" required>
             <Select
               options={DHW_SYSTEM_TYPES}
               placeholder="Select DHW system…"
@@ -175,7 +175,7 @@ export function HotWaterOtherStep() {
           </FormField>
 
           {state.dhwSystemType && state.dhwSystemType !== "NoDHWSystem" && (
-            <FormField label="Tank Volume" hint="Domestic hot water storage tank size">
+            <FormField label="Tank Volume" fieldKey="dhwTankVol" hint="Domestic hot water storage tank size">
               <Input
                 type="number"
                 placeholder="50"
@@ -195,7 +195,7 @@ export function HotWaterOtherStep() {
           description="Additional mechanical systems that affect building energy use."
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="Economizer" hint="Air-side economizer for free cooling">
+          <FormField label="Economizer" fieldKey="economizer" hint="Air-side economizer for free cooling">
             <Select
               options={YES_NO}
               value={state.economizer}
@@ -203,7 +203,7 @@ export function HotWaterOtherStep() {
             />
           </FormField>
 
-          <FormField label="Swamp Cooler (Evaporative)" hint="Evaporative cooling system">
+          <FormField label="Swamp Cooler (Evaporative)" fieldKey="swampCooler" hint="Evaporative cooling system">
             <Select
               options={["No"]}
               value={state.swampCooler}

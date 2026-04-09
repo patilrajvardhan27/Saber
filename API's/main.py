@@ -69,6 +69,9 @@ PROP_KEY_MAP: dict[str, str] = {
     "SwampCooler":        "swampCooler",
     "Economizer":         "economizer",
     "LEDCurrent":         "led",
+    "LEDECM":             "ecmLED",
+    "EquipLoadRed":       "ecmReduceEquipLoad",
+    "OccupancySensor":    "ecmOccupancySensor",
 }
 
 # Fields that hold a single string value but map to a list in the frontend
@@ -109,4 +112,9 @@ async def upload_pkl(file: UploadFile = File(...)):
         raw = _val(df, prop_key)
         fields[form_key] = [raw] if raw else []
 
-    return {"fields": fields, "count": len([v for v in fields.values() if v])}
+    populated_keys = [k for k, v in fields.items() if v]
+    return {
+        "fields": fields,
+        "count": len(populated_keys),
+        "populated_keys": populated_keys,
+    }

@@ -21,7 +21,7 @@ export function AppliancesStep() {
           description="Enter rated wattage for kitchen equipment."
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="Cooking Range Fuel Type">
+          <FormField label="Cooking Range Fuel Type" fieldKey="cookingFuelType">
             <Select
               options={COOKING_FUEL_TYPES}
               placeholder="Select fuel type…"
@@ -29,7 +29,7 @@ export function AppliancesStep() {
               onChange={(e) => setField("cookingFuelType", e.target.value)}
             />
           </FormField>
-          <FormField label="Cooking Range Rating">
+          <FormField label="Cooking Range Rating" fieldKey="cookingRating">
             <Input
               type="number"
               placeholder="3500"
@@ -38,7 +38,7 @@ export function AppliancesStep() {
               onChange={(e) => setField("cookingRating", e.target.value)}
             />
           </FormField>
-          <FormField label="Refrigerator Rating">
+          <FormField label="Refrigerator Rating" fieldKey="fridgeRating">
             <Input
               type="number"
               placeholder="150"
@@ -47,7 +47,7 @@ export function AppliancesStep() {
               onChange={(e) => setField("fridgeRating", e.target.value)}
             />
           </FormField>
-          <FormField label="Dishwasher Rating">
+          <FormField label="Dishwasher Rating" fieldKey="dishWasherRating">
             <Input
               type="number"
               placeholder="1200"
@@ -63,7 +63,7 @@ export function AppliancesStep() {
       <Card>
         <SectionHeader title="Laundry Equipment" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="Clothes Washer Rating">
+          <FormField label="Clothes Washer Rating" fieldKey="washerRating">
             <Input
               type="number"
               placeholder="500"
@@ -72,7 +72,7 @@ export function AppliancesStep() {
               onChange={(e) => setField("washerRating", e.target.value)}
             />
           </FormField>
-          <FormField label="Clothes Dryer Rating">
+          <FormField label="Clothes Dryer Rating" fieldKey="dryerRating">
             <Input
               type="number"
               placeholder="5000"
@@ -98,7 +98,7 @@ export function LightingPlugLoadsStep() {
           description="Define installed lighting parameters."
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="Lighting Power Density" hint="Total installed lighting power per unit area">
+          <FormField label="Lighting Power Density" fieldKey="lpd" hint="Total installed lighting power per unit area">
             <Input
               type="number"
               placeholder="1.5"
@@ -107,7 +107,7 @@ export function LightingPlugLoadsStep() {
               onChange={(e) => setField("lpd", e.target.value)}
             />
           </FormField>
-          <FormField label="Annual Lighting Hours" hint="Hours per year that lighting is used">
+          <FormField label="Annual Lighting Hours" fieldKey="nHoursLighting" hint="Hours per year that lighting is used">
             <Input
               type="number"
               placeholder="2920"
@@ -116,14 +116,14 @@ export function LightingPlugLoadsStep() {
               onChange={(e) => setField("nHoursLighting", e.target.value)}
             />
           </FormField>
-          <FormField label="Daylighting Controls" hint="Is daylighting sensor/control system installed?">
+          <FormField label="Daylighting Controls" fieldKey="daylighting" hint="Is daylighting sensor/control system installed?">
             <Select
               options={YES_NO}
               value={state.daylighting}
               onChange={(e) => setField("daylighting", e.target.value)}
             />
           </FormField>
-          <FormField label="LED Percentage" hint="Fraction of installed lamps that are LED">
+          <FormField label="LED Percentage" fieldKey="led" hint="Fraction of installed lamps that are LED">
             <Select
               options={LED_OPTIONS}
               value={state.led}
@@ -140,7 +140,7 @@ export function LightingPlugLoadsStep() {
           description="Enter rated wattage for electronics and miscellaneous equipment."
         />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormField label="TV Rating">
+          <FormField label="TV Rating" fieldKey="tvRating">
             <Input
               type="number"
               placeholder="200"
@@ -149,7 +149,7 @@ export function LightingPlugLoadsStep() {
               onChange={(e) => setField("tvRating", e.target.value)}
             />
           </FormField>
-          <FormField label="Office Equipment Rating">
+          <FormField label="Office Equipment Rating" fieldKey="officeEqpRating">
             <Input
               type="number"
               placeholder="300"
@@ -158,7 +158,7 @@ export function LightingPlugLoadsStep() {
               onChange={(e) => setField("officeEqpRating", e.target.value)}
             />
           </FormField>
-          <FormField label="Miscellaneous Plug Loads">
+          <FormField label="Miscellaneous Plug Loads" fieldKey="miscPlugLoadRating">
             <Input
               type="number"
               placeholder="500"

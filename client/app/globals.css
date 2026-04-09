@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Work Sans loaded via <link> in layout.tsx for better LCP performance */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,11 +9,28 @@
   }
 
   body {
-    @apply bg-gray-100 text-app-text font-sans antialiased;
+    @apply bg-bg text-app-text font-sans antialiased;
+    font-size: 1rem;
+    line-height: 1.6;
+    letter-spacing: 0em;
+    font-weight: 400;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1 {
+    @apply font-semibold tracking-tight;
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+
+  h2 {
+    @apply font-semibold tracking-tight;
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+
+  h3, h4, h5, h6 {
     @apply font-semibold;
+    line-height: 1.4;
   }
 }
 
@@ -73,6 +90,19 @@
   .tab-btn-inactive {
     @apply tab-btn border-transparent text-app-text-muted hover:text-app-text hover:border-border-dark;
   }
+}
+
+/* Autofill highlighting — applied when field was populated from a .pkl file */
+.autofill-field input,
+.autofill-field select {
+  background-color: #f0f9f4 !important; /* brand-50 */
+  border-color: #3da571 !important;     /* brand-400 */
+}
+.autofill-field input:focus,
+.autofill-field select:focus {
+  background-color: #ffffff !important;
+  border-color: #00964F !important;
+  box-shadow: 0 0 0 2px rgba(0, 150, 79, 0.18) !important;
 }
 
 /* Scrollbar styling */
