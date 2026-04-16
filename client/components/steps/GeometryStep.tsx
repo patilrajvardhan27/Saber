@@ -50,7 +50,7 @@ export function ShapeOrientationStep() {
           title="Floor Plan Shape"
           description="Select the floor plan shape of the building."
         />
-        <div className="flex gap-4">
+        <div className="flex gap-3">
           {SHAPE_TYPES.map((shape) => (
             <div key={shape} onClick={() => setField("shapeType", shape)}>
               <ShapeIcon shape={shape} selected={state.shapeType === shape} />
@@ -79,15 +79,48 @@ export function ShapeOrientationStep() {
 
 export function DimensionsStep() {
   const { state, setField } = useForm();
+
+  const isLShape = state.shapeType === "L-Shape";
+  const imageSrc = isLShape ? "/shapes/L-Shape.png" : "/shapes/Rectangle.png";
+  const imageAlt = isLShape ? "L-Shape floor plan — x1, x2, y1, y2 corner coordinates" : "Rectangle floor plan — x1 width, y1 depth, corner coordinates";
+
+  const imagePanel = (
+    <div className="flex flex-col items-center gap-4 w-full">
+      {/* Shape diagram */}
+      <div className="bg-white rounded-2xl shadow-md border border-brand-100 overflow-hidden w-full">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imageSrc}
+          alt={imageAlt}
+          className="w-full h-auto object-contain"
+        />
+      </div>
+      {/* Dimension legend */}
+      <div className="bg-white/70 rounded-xl border border-brand-100 px-5 py-3 w-full">
+        <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">Coordinate Reference</p>
+        <div className={`grid gap-x-6 gap-y-1 text-xs text-app-text-muted ${isLShape ? "grid-cols-2" : "grid-cols-2"}`}>
+          <span><span className="font-semibold text-primary">x1</span> — full width</span>
+          <span><span className="font-semibold text-primary">y1</span> — full depth</span>
+          {isLShape && (
+            <>
+              <span><span className="font-semibold text-primary">x2</span> — inner notch width</span>
+              <span><span className="font-semibold text-primary">y2</span> — inner notch depth</span>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <StepLayout>
+    <StepLayout imagePanel={imagePanel}>
       {/* Building Dimensions */}
       <Card>
         <SectionHeader
           title="Building Dimensions"
           description="Enter overall floor area and vertical dimensions."
         />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <FormField label="Floor Area" fieldKey="floorArea" required hint="Above-ground conditioned area">
             <Input
               type="number"
@@ -127,7 +160,7 @@ export function DimensionsStep() {
               : "For rectangular plans, x1/y1 and x2/y2 define opposite corners."
           }
         />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <FormField label="x1" fieldKey="x1">
             <Input
               type="number"

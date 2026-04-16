@@ -20,7 +20,7 @@ export function AppliancesStep() {
           title="Kitchen Appliances"
           description="Enter rated wattage for kitchen equipment."
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <FormField label="Cooking Range Fuel Type" fieldKey="cookingFuelType">
             <Select
               options={COOKING_FUEL_TYPES}
@@ -62,7 +62,7 @@ export function AppliancesStep() {
       {/* Laundry */}
       <Card>
         <SectionHeader title="Laundry Equipment" />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <FormField label="Clothes Washer Rating" fieldKey="washerRating">
             <Input
               type="number"
@@ -97,7 +97,7 @@ export function LightingPlugLoadsStep() {
           title="Lighting"
           description="Define installed lighting parameters."
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <FormField label="Lighting Power Density" fieldKey="lpd" hint="Total installed lighting power per unit area">
             <Input
               type="number"
@@ -139,7 +139,7 @@ export function LightingPlugLoadsStep() {
           title="Other Plug Loads"
           description="Enter rated wattage for electronics and miscellaneous equipment."
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <FormField label="TV Rating" fieldKey="tvRating">
             <Input
               type="number"

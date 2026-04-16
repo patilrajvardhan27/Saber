@@ -2,37 +2,27 @@
 
 import React from "react";
 import { useForm } from "@/context/FormContext";
+import type { EcmMetrics, EcmPlots } from "@/context/FormContext";
 import { StepLayout } from "@/components/StepLayout";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ECM_MEASURES, ECM_MEASURE_OPTIONS } from "@/data/options";
 import type { FormField as FormFieldType } from "@/types/form";
 
-const COST_ROWS = [
-  { key: "wallInsulation",    label: "Wall Insulation" },
-  { key: "infiltration",      label: "Infiltration Sealing" },
-  { key: "ceilingInsulation", label: "Ceiling Insulation" },
-  { key: "windowMaterial",    label: "Window Replacement" },
-  { key: "nightSetback",      label: "Night Setback Thermostat" },
-  { key: "daylighting",       label: "Daylighting Controls" },
-  { key: "economizer",        label: "Economizer" },
-  { key: "occupancySensor",   label: "Occupancy Sensors" },
-  { key: "led",               label: "LED Lighting Upgrade" },
-  { key: "equipLoad",         label: "Reduce Equipment Load" },
-  { key: "coolingEff",        label: "Cooling Efficiency Upgrade" },
-  { key: "heatingEqp",        label: "Heating Equipment Replacement" },
-  { key: "heatingEff",        label: "Heating Efficiency Upgrade" },
-];
+const API = "http://localhost:8000";
 
+function plotUrl(projectName: string, filename: string) {
+  return `${API}/results/${encodeURIComponent(projectName)}/plot/${encodeURIComponent(filename)}`;
+}
+
+// ── Step 14: Financials & Costs ───────────────────────────────────────────────
 export function FinancialsStep() {
   const { state, setField } = useForm();
   return (
     <StepLayout>
-      {/* Financial Parameters */}
       <Card>
         <SectionHeader
           title="Financial Parameters"
@@ -77,74 +67,123 @@ export function FinancialsStep() {
           </FormField>
         </div>
       </Card>
-
-      {/* ECM Cost Data */}
-      <Card>
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <SectionHeader
-            title="ECM Cost Data"
-            description="Enter per-unit and fixed installed costs for each energy conservation measure."
-            className="mb-0"
-          />
-          <div className="flex gap-2 flex-shrink-0">
-            <Button variant="secondary" size="sm">Reset Defaults</Button>
-            <Button variant="primary" size="sm">Set Cost Data</Button>
-          </div>
-        </div>
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-bg-muted border-b border-border">
-                <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs w-52">Measure</th>
-                <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Cost per Unit ($/ft²)</th>
-                <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Fixed Cost ($)</th>
-                <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Lifetime (yrs)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {COST_ROWS.map((row, i) => (
-                <tr key={row.key} className={i % 2 === 0 ? "bg-bg-card" : "bg-bg-muted"}>
-                  <td className="px-4 py-2 font-medium text-app-text text-xs">{row.label}</td>
-                  <td className="px-4 py-1.5">
-                    <input type="number" placeholder="0.00" className="form-input !py-1 !text-xs w-28" />
-                  </td>
-                  <td className="px-4 py-1.5">
-                    <input type="number" placeholder="0.00" className="form-input !py-1 !text-xs w-28" />
-                  </td>
-                  <td className="px-4 py-1.5">
-                    <input type="number" placeholder="20" className="form-input !py-1 !text-xs w-20" />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
     </StepLayout>
   );
 }
 
+// ── Step 15: ECM Selection ────────────────────────────────────────────────────
 export function ECMSelectionStep() {
-  const { state, setField } = useForm();
+  const {
+    state, setField,
+    pklProjectName,
+    ecmStatus, ecmError,
+    setEcmRunning, setEcmDone, setEcmError,
+    goToStep,
+  } = useForm();
+
+  const isRunning = ecmStatus === "running";
+
+  // Baseline display value for each ECM key
+  const baselineMap: Record<string, string> = {
+    ecmWallInsulation:    state.wallInsulation   || "—",
+    ecmInfiltration:      state.ach50            || "—",
+    ecmCeilingInsulation: state.ceilingInsulation|| "—",
+    ecmWindowMaterial:    state.windowMaterial?.[0] || "—",
+    ecmNightSetback:      state.nightSetback      || "—",
+    ecmNightSetbackHours: state.nNightSetbackHours|| "—",
+    ecmDaylighting:       state.daylighting       || "No",
+    ecmEconomizer:        state.economizer        || "No",
+    ecmOccupancySensor:   "No",
+    ecmLED:               state.led               || "0",
+    ecmReduceEquipLoad:   "0%",
+    ecmCoolingEff:        state.coolingEff        || "—",
+    ecmHeatingEqp:        state.heatingEqp        || "—",
+    ecmHeatingEff:        state.heatingEff        || "—",
+  };
+
+  async function evaluatePackage() {
+    if (!pklProjectName || isRunning) return;
+    setEcmRunning();
+
+    const body = {
+      ecm_wall_insulation:    state.ecmWallInsulation    || "",
+      ecm_infiltration:       state.ecmInfiltration      || "",
+      ecm_ceiling_insulation: state.ecmCeilingInsulation || "",
+      ecm_window_material:    state.ecmWindowMaterial    || "",
+      ecm_occupancy_sensor:   state.ecmOccupancySensor   || "No",
+      ecm_led:                state.ecmLED               || "",
+      ecm_daylighting:        state.ecmDaylighting        || "No",
+      ecm_economizer:         state.ecmEconomizer         || "No",
+      kwh_rate:    parseFloat(state.kWhCost)    || 0.12,
+      therm_rate:  parseFloat(state.thermCost)  || 1.20,
+      discount_rate: parseFloat(state.discountRate) || 3.0,
+      lifetime:    parseInt(state.lifetime)     || 20,
+    };
+
+    try {
+      const res = await fetch(`${API}/run-ecm/${encodeURIComponent(pklProjectName)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Unknown error" }));
+        throw new Error(err.detail ?? "ECM evaluation failed");
+      }
+      const data = await res.json();
+      if (data.status === "no_measures") {
+        throw new Error("No ECM options selected — choose at least one upgrade.");
+      }
+      setEcmDone(data.metrics as EcmMetrics, data.plots as EcmPlots);
+      setTimeout(() => goToStep(16), 800);
+    } catch (err: unknown) {
+      setEcmError(err instanceof Error ? err.message : "ECM evaluation failed");
+    }
+  }
+
   return (
     <StepLayout>
       <Card>
         <div className="flex items-start justify-between gap-4 mb-4">
           <SectionHeader
             title="ECM Selection"
-            description="Select the upgraded option for each measure, then evaluate individual measures or the full package."
+            description="Select the upgraded option for each measure, then evaluate the full package."
             className="mb-0"
           />
-          <div className="flex gap-2 flex-shrink-0">
-            <Button variant="secondary" size="sm">Evaluate Individual</Button>
-            <Button variant="primary" size="sm">Evaluate Package</Button>
-          </div>
+          <button
+            type="button"
+            onClick={evaluatePackage}
+            disabled={!pklProjectName || isRunning}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold flex-shrink-0 transition-all ${
+              !pklProjectName || isRunning
+                ? "bg-bg-muted text-app-text-muted cursor-not-allowed border border-border"
+                : "bg-brand-500 text-white hover:bg-brand-600 shadow-sm"
+            }`}
+          >
+            {isRunning ? (
+              <>
+                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+                Evaluating…
+              </>
+            ) : "Evaluate Package"}
+          </button>
         </div>
+
+        {ecmStatus === "error" && (
+          <div className="flex items-start gap-2 px-3 py-2 mb-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+            <span className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0 mt-0.5" />
+            <span><span className="font-semibold">Error:</span> {ecmError}</span>
+          </div>
+        )}
+
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-bg-muted border-b border-border">
-                <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs w-56">Measure</th>
+                <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs w-52">Measure</th>
                 <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Baseline</th>
                 <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">ECM Option</th>
               </tr>
@@ -155,11 +194,13 @@ export function ECMSelectionStep() {
                 return (
                   <tr key={measure.key} className={i % 2 === 0 ? "bg-bg-card" : "bg-bg-muted"}>
                     <td className="px-4 py-2 font-medium text-app-text text-xs">{measure.label}</td>
-                    <td className="px-4 py-2 text-xs text-app-text-muted">Current setting</td>
+                    <td className="px-4 py-2 text-xs text-app-text-muted font-mono">
+                      {baselineMap[measure.key]}
+                    </td>
                     <td className="px-4 py-1.5">
                       <Select
                         options={options}
-                        placeholder="Select ECM option…"
+                        placeholder="No change"
                         value={(state as unknown as Record<string, string>)[measure.key] ?? ""}
                         onChange={(e) => setField(measure.key as FormFieldType, e.target.value)}
                         className="!text-xs !py-1 w-64"
@@ -176,38 +217,132 @@ export function ECMSelectionStep() {
   );
 }
 
-export function ECMResultsStep() {
-  const { state } = useForm();
+// ── Step 16: Results Summary ──────────────────────────────────────────────────
+function MetricCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color: string }) {
+  return (
+    <div className="rounded-2xl border border-brand-100 bg-white p-5 flex flex-col items-center text-center shadow-sm">
+      <p className={`text-2xl font-bold ${color}`}>{value}</p>
+      {sub && <p className="text-xs text-app-text-muted mt-0.5">{sub}</p>}
+      <p className="text-xs text-app-text-muted mt-2 leading-tight">{label}</p>
+    </div>
+  );
+}
 
-  const metrics = [
-    { label: "Package Life-Cycle Cost (LCC)", value: state.packageLCC,             unit: "$", color: "text-primary" },
-    { label: "Total Installed Cost (TIC)",    value: state.packageTIC,             unit: "$", color: "text-warning" },
-    { label: "Electricity Savings",           value: state.packageKWhPctChange,    unit: "%", color: "text-success" },
-    { label: "Natural Gas Savings",           value: state.packageThermsPctChange, unit: "%", color: "text-accent"  },
-  ];
+export function ECMResultsStep() {
+  const { pklProjectName, ecmStatus, ecmMetrics, ecmPlots, ecmError } = useForm();
+  const isDone = ecmStatus === "done";
+  const isRunning = ecmStatus === "running";
+
+  const fmt = (n: number, decimals = 0) =>
+    n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 
   return (
     <StepLayout nextLabel="Save & Export">
+
+      {/* Status banner */}
+      {isRunning && (
+        <div className="flex items-center gap-3 px-4 py-3 mb-4 rounded-lg bg-brand-50 border border-brand-200 text-sm text-brand-800">
+          <svg className="w-4 h-4 animate-spin flex-shrink-0 text-brand-500" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+          Running ECM evaluation…
+        </div>
+      )}
+      {ecmStatus === "error" && (
+        <div className="flex items-start gap-2 px-3 py-2 mb-4 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+          <span className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0 mt-0.5" />
+          <span><span className="font-semibold">Error:</span> {ecmError}</span>
+        </div>
+      )}
+
+      {/* Key metrics */}
       <Card>
         <SectionHeader
-          title="Results Summary"
-          description="Package-level energy and cost performance metrics after ECM evaluation."
+          title="Package Performance Summary"
+          description="Life-cycle cost and energy savings for the selected ECM package."
         />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
-          {metrics.map((m) => (
-            <div key={m.label} className="card p-4 text-center">
-              <p className={`text-2xl font-bold ${m.color}`}>
-                {m.value ? `${m.value}${m.unit}` : "—"}
-              </p>
-              <p className="text-xs text-app-text-muted mt-1 leading-tight">{m.label}</p>
+        {isDone && ecmMetrics ? (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+              <MetricCard
+                label="Total Installed Cost"
+                value={`$${fmt(ecmMetrics.tic)}`}
+                color="text-warning"
+              />
+              <MetricCard
+                label="Package Life-Cycle Cost"
+                value={`$${fmt(ecmMetrics.lcc)}`}
+                color="text-primary"
+              />
+              <MetricCard
+                label="Electricity Savings"
+                value={`${fmt(ecmMetrics.kwh_pct_savings, 1)}%`}
+                sub={`${fmt(ecmMetrics.org_kwh)} → ${fmt(ecmMetrics.eem_kwh)} kWh`}
+                color="text-success"
+              />
+              <MetricCard
+                label="Natural Gas Savings"
+                value={`${fmt(ecmMetrics.therms_pct_savings, 1)}%`}
+                sub={`${fmt(ecmMetrics.org_therms)} → ${fmt(ecmMetrics.eem_therms)} therms`}
+                color="text-accent"
+              />
             </div>
-          ))}
-        </div>
-        <div className="flex gap-3 justify-end">
-          <Button variant="secondary" size="sm">Save Individual Results</Button>
-          <Button variant="primary" size="sm">Save Package Results</Button>
+          </>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+            {["Total Installed Cost", "Package Life-Cycle Cost", "Electricity Savings", "Natural Gas Savings"].map((label) => (
+              <div key={label} className="rounded-2xl border border-border bg-bg-muted p-5 flex flex-col items-center text-center">
+                <p className="text-2xl font-bold text-app-text-light">—</p>
+                <p className="text-xs text-app-text-muted mt-2 leading-tight">{label}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Comparison charts */}
+      <Card>
+        <SectionHeader
+          title="Monthly Energy Comparison"
+          description="Baseline vs. ECM package monthly energy use by end use."
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <p className="text-xs font-semibold text-primary mb-2">Electricity (kWh)</p>
+            {isDone && ecmPlots?.elec_monthly_comp ? (
+              <img
+                src={plotUrl(pklProjectName, ecmPlots.elec_monthly_comp)}
+                alt="Electricity EEM Comparison"
+                className="w-full h-auto rounded-lg border border-brand-100 object-contain bg-white"
+              />
+            ) : (
+              <div className="h-56 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-bg-muted">
+                <p className="text-sm text-app-text-light">
+                  {isRunning ? "Generating…" : "Run ECM evaluation to generate"}
+                </p>
+              </div>
+            )}
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-primary mb-2">Natural Gas (Therms)</p>
+            {isDone && ecmPlots?.ng_monthly_comp ? (
+              <img
+                src={plotUrl(pklProjectName, ecmPlots.ng_monthly_comp)}
+                alt="Natural Gas EEM Comparison"
+                className="w-full h-auto rounded-lg border border-brand-100 object-contain bg-white"
+              />
+            ) : (
+              <div className="h-56 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-bg-muted">
+                <p className="text-sm text-app-text-light">
+                  {isRunning ? "Generating…" : "Run ECM evaluation to generate"}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </Card>
+
     </StepLayout>
   );
 }

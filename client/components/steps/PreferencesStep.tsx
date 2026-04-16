@@ -23,7 +23,7 @@ export function ProjectSetupStep() {
           title="Project Information"
           description="Provide basic details about the building audit project."
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <FormField label="Project Name" fieldKey="projectName" required>
             <Input
               placeholder="e.g. Community Church Audit 2024"
@@ -55,7 +55,7 @@ export function ProjectSetupStep() {
           title="Utility Rates"
           description="Enter the energy costs used for financial calculations."
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <FormField label="Cost per Therm" fieldKey="thermCost" hint="Natural gas rate ($/therm)">
             <Input
               type="number"

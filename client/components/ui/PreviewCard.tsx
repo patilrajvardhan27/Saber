@@ -10,9 +10,9 @@ interface PreviewCardProps {
 
 export function PreviewCard({ image, title, subtitle }: PreviewCardProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-[260px]">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-[400px]">
       {image && (
-        <div className="bg-brand-50 flex items-center justify-center h-48 p-4">
+        <div className="bg-brand-50 flex items-center justify-center h-72 p-6">
           {typeof image === "string" ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={image} alt={title} className="object-contain h-full w-full" />
@@ -21,10 +21,10 @@ export function PreviewCard({ image, title, subtitle }: PreviewCardProps) {
           )}
         </div>
       )}
-      <div className="p-5">
-        <p className="text-base font-semibold text-primary leading-snug">{title}</p>
+      <div className="p-6">
+        <p className="text-lg font-semibold text-primary leading-snug">{title}</p>
         {subtitle && (
-          <p className="text-sm text-app-text-muted mt-1 leading-snug">{subtitle}</p>
+          <p className="text-sm text-app-text-muted mt-1.5 leading-snug">{subtitle}</p>
         )}
       </div>
     </div>

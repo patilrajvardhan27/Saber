@@ -9,7 +9,6 @@ import { Select } from "@/components/ui/Select";
 import { MultiSelect } from "@/components/ui/MultiSelect";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { PreviewCard } from "@/components/ui/PreviewCard";
 import {
   EXT_WALL_CONSTRUCTIONS,
   WALL_INSULATIONS,
@@ -21,47 +20,83 @@ import {
   WINDOW_MATERIALS,
 } from "@/data/options";
 
-function WallIllustration({ insulation }: { insulation: string }) {
-  const hasInsulation = insulation && insulation !== "Uninsulated";
-  return (
-    <svg viewBox="0 0 120 100" className="w-full h-full" fill="none">
-      <rect x="10" y="10" width="100" height="80" rx="4" fill="#d1d5db" />
-      {[20, 40, 60].map((y) =>
-        [10, 50].map((x) => (
-          <rect key={`${x}-${y}`} x={x} y={y} width="35" height="18" rx="1" fill="#9ca3af" opacity="0.5" />
-        ))
-      )}
-      {hasInsulation && (
-        <rect x="10" y="10" width="26" height="80" fill="#bef264" opacity="0.8" rx="2" />
-      )}
-      <text x="60" y="97" textAnchor="middle" fontSize="7" fill="#6b7280">
-        {hasInsulation ? "Insulated Wall" : "Uninsulated Wall"}
-      </text>
-    </svg>
-  );
-}
+const WALL_IMAGE_MAP: Record<string, string> = {
+  "2x4 insulated wood stud with vinyl siding": "/envelope/2x4 insulated wood stud with vinyl siding.png",
+  "2x4 insulated wood stud with brick finish":  "/envelope/2x4 insulated wood stud with brick finish.png",
+  "Insulated 8in. Concrete":                    "/envelope/Insulated 8in. Concrete.png",
+};
 
 export function WallsRoofStep() {
   const { state, setField } = useForm();
 
+  const wallImg   = state.extWallConst ? WALL_IMAGE_MAP[state.extWallConst] : null;
+  const hasRoofInsulation = state.ceilingInsulation && state.ceilingInsulation !== "Uninsulated";
+  const roofImg   = state.extRoofConst
+    ? hasRoofInsulation
+      ? "/envelope/Attic Insulation.png"
+      : "/envelope/Asphalt Shingles.png"
+    : null;
+
   const imagePanel = (
-    <PreviewCard
-      image={<WallIllustration insulation={state.wallInsulation} />}
-      title={state.extWallConst || "Wall Construction"}
-      subtitle={state.wallInsulation || "Select insulation level"}
-    />
+    <div className="flex flex-col gap-5 w-full">
+      {/* Wall diagram */}
+      <div className="bg-white rounded-2xl shadow-md border border-brand-100 overflow-hidden w-full">
+        <div className="px-4 pt-3 pb-1 border-b border-brand-100">
+          <p className="text-xs font-bold text-primary uppercase tracking-wider">Wall Construction</p>
+          <p className="text-xs text-app-text-muted mt-0.5">
+            {state.extWallConst || "Select a wall type to preview"}
+          </p>
+        </div>
+        {wallImg ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={wallImg} alt={state.extWallConst} className="w-full h-auto object-contain p-2" />
+        ) : (
+          <div className="h-40 flex items-center justify-center text-xs text-app-text-muted">
+            Select wall construction type
+          </div>
+        )}
+      </div>
+
+      {/* Roof / Ceiling diagram */}
+      <div className="bg-white rounded-2xl shadow-md border border-brand-100 overflow-hidden w-full">
+        <div className="px-4 pt-3 pb-1 border-b border-brand-100">
+          <p className="text-xs font-bold text-primary uppercase tracking-wider">Roof / Ceiling</p>
+          <p className="text-xs text-app-text-muted mt-0.5">
+            {state.extRoofConst
+              ? hasRoofInsulation
+                ? `${state.extRoofConst} · ${state.ceilingInsulation}`
+                : state.extRoofConst
+              : "Select a roof type to preview"}
+          </p>
+        </div>
+        {roofImg ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={roofImg} alt={state.extRoofConst} className="w-full h-auto object-contain p-2" />
+        ) : (
+          <div className="h-40 flex items-center justify-center text-xs text-app-text-muted">
+            Select roof construction type
+          </div>
+        )}
+      </div>
+    </div>
   );
 
   return (
     <StepLayout imagePanel={imagePanel}>
-      {/* Exterior Walls */}
+
+      {/* ── Exterior Walls ── */}
       <Card>
         <SectionHeader
           title="Exterior Walls"
-          description="Define the wall construction type and insulation level."
+          description="Defines the thermal mass, layers, and insulation of the building envelope. The diagram on the right updates as you select."
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="Wall Construction Type" fieldKey="extWallConst" required>
+        <div className="flex flex-col gap-4">
+          <FormField
+            label="Wall Construction Type"
+            fieldKey="extWallConst"
+            required
+            hint="Structural system and exterior finish material"
+          >
             <Select
               options={EXT_WALL_CONSTRUCTIONS}
               placeholder="Select construction type…"
@@ -69,7 +104,13 @@ export function WallsRoofStep() {
               onChange={(e) => setField("extWallConst", e.target.value)}
             />
           </FormField>
-          <FormField label="Wall Insulation" fieldKey="wallInsulation" required>
+
+          <FormField
+            label="Wall Insulation"
+            fieldKey="wallInsulation"
+            required
+            hint="Cavity or continuous insulation R-value — higher R = better thermal resistance"
+          >
             <Select
               options={WALL_INSULATIONS}
               placeholder="Select insulation level…"
@@ -77,17 +118,38 @@ export function WallsRoofStep() {
               onChange={(e) => setField("wallInsulation", e.target.value)}
             />
           </FormField>
+
+          {/* Insulation status badge */}
+          {state.wallInsulation && (
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium ${
+              state.wallInsulation === "Uninsulated"
+                ? "bg-red-50 border border-red-200 text-red-700"
+                : "bg-brand-50 border border-brand-200 text-brand-800"
+            }`}>
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                state.wallInsulation === "Uninsulated" ? "bg-red-400" : "bg-brand-500"
+              }`} />
+              {state.wallInsulation === "Uninsulated"
+                ? "No insulation — high heat loss expected"
+                : `${state.wallInsulation} installed — diagram shows insulated cross-section`}
+            </div>
+          )}
         </div>
       </Card>
 
-      {/* Roof / Ceiling */}
+      {/* ── Roof / Ceiling ── */}
       <Card>
         <SectionHeader
           title="Roof / Ceiling"
-          description="Specify the roof construction and ceiling insulation."
+          description="Roof assembly and ceiling insulation together control heat gain and loss through the top of the building. Diagram switches to attic detail when insulation is selected."
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField label="Roof Construction Type" fieldKey="extRoofConst" required>
+        <div className="flex flex-col gap-4">
+          <FormField
+            label="Roof Construction Type"
+            fieldKey="extRoofConst"
+            required
+            hint="Exterior roofing material and structural assembly"
+          >
             <Select
               options={EXT_ROOF_CONSTRUCTIONS}
               placeholder="Select roof type…"
@@ -95,7 +157,13 @@ export function WallsRoofStep() {
               onChange={(e) => setField("extRoofConst", e.target.value)}
             />
           </FormField>
-          <FormField label="Ceiling Insulation" fieldKey="ceilingInsulation" required>
+
+          <FormField
+            label="Ceiling Insulation"
+            fieldKey="ceilingInsulation"
+            required
+            hint="Attic floor insulation R-value — higher R = less heat transfer through ceiling"
+          >
             <Select
               options={CEILING_INSULATIONS}
               placeholder="Select insulation level…"
@@ -103,8 +171,25 @@ export function WallsRoofStep() {
               onChange={(e) => setField("ceilingInsulation", e.target.value)}
             />
           </FormField>
+
+          {/* Insulation status badge */}
+          {state.ceilingInsulation && (
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium ${
+              state.ceilingInsulation === "Uninsulated"
+                ? "bg-red-50 border border-red-200 text-red-700"
+                : "bg-brand-50 border border-brand-200 text-brand-800"
+            }`}>
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                state.ceilingInsulation === "Uninsulated" ? "bg-red-400" : "bg-brand-500"
+              }`} />
+              {state.ceilingInsulation === "Uninsulated"
+                ? "No ceiling insulation — diagram shows bare roof assembly"
+                : `${state.ceilingInsulation} attic insulation — diagram switches to insulated attic view`}
+            </div>
+          )}
         </div>
       </Card>
+
     </StepLayout>
   );
 }
@@ -119,7 +204,7 @@ export function FoundationInfiltrationStep() {
           title="Foundation"
           description="Select the foundation type and any slab insulation."
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <FormField label="Foundation Type" fieldKey="foundation" required>
             <Select
               options={FOUNDATIONS}
@@ -159,106 +244,149 @@ export function FoundationInfiltrationStep() {
   );
 }
 
+const WINDOW_IMAGE_MAP: Record<string, string> = {
+  "Single Pane Clear":                          "/windows/single-pane-clear.png",
+  "Double Pane Clear":                          "/windows/double-pane-clear.png",
+  "Low-e Double Pane Clear Air Filled":         "/windows/low-e-double-pane-air.png",
+  "Low-e Double Pane Clear Argon Filled":       "/windows/low-e-double-pane-argon.png",
+  "Low-e Double Pane Insulated Air Filled":     "/windows/low-e-double-pane-air-insulated.png",
+  "Low-e Double Pane Insulated Argon Filled":   "/windows/low-e-double-pane-argon-insulated.png",
+  "Low-e Triple Pane Clear Air Filled":         "/windows/low-e-triple-pane-air.png",
+  "Low-e Triple Pane Clear Argon Filled":       "/windows/low-e-triple-pane-argon.png",
+  "Low-e Triple Pane Insulated Air Filled":     "/windows/low-e-triple-pane-air-insulated.png",
+  "Low-e Triple Pane Insulated Argon Filled":   "/windows/low-e-triple-pane-argon-insulated.png",
+};
+
 export function WindowsShadingStep() {
   const { state, setField } = useForm();
+
+  // Show diagram for the first selected window material
+  const firstMaterial = state.windowMaterial?.[0] ?? null;
+  const windowImg = firstMaterial ? (WINDOW_IMAGE_MAP[firstMaterial] ?? null) : null;
+  const multipleSelected = (state.windowMaterial?.length ?? 0) > 1;
+
+  const imagePanel = (
+    <div className="flex flex-col gap-5 w-full">
+
+      {/* Window glazing diagram */}
+      <div className="bg-white rounded-2xl shadow-md border border-brand-100 overflow-hidden w-full">
+        <div className="px-4 pt-3 pb-1 border-b border-brand-100">
+          <p className="text-xs font-bold text-primary uppercase tracking-wider">Window Glazing</p>
+          <p className="text-xs text-app-text-muted mt-0.5">
+            {firstMaterial
+              ? multipleSelected
+                ? `${firstMaterial} (+${state.windowMaterial.length - 1} more)`
+                : firstMaterial
+              : "Select a window material to preview"}
+          </p>
+        </div>
+        {windowImg ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={windowImg} alt={firstMaterial ?? ""} className="w-full h-auto object-contain p-3" />
+        ) : (
+          <div className="h-48 flex flex-col items-center justify-center gap-2 text-app-text-muted">
+            <svg viewBox="0 0 40 40" fill="none" className="w-8 h-8 opacity-30">
+              <rect x="4" y="4" width="32" height="32" rx="3" stroke="currentColor" strokeWidth="2"/>
+              <line x1="20" y1="4" x2="20" y2="36" stroke="currentColor" strokeWidth="1.5"/>
+              <line x1="4" y1="20" x2="36" y2="20" stroke="currentColor" strokeWidth="1.5"/>
+            </svg>
+            <p className="text-xs">Select window material to preview</p>
+          </div>
+        )}
+      </div>
+
+      {/* Shading overhang diagram — always visible */}
+      <div className="bg-white rounded-2xl shadow-md border border-brand-100 overflow-hidden w-full">
+        <div className="px-4 pt-3 pb-1 border-b border-brand-100">
+          <p className="text-xs font-bold text-primary uppercase tracking-wider">Shading Overhang</p>
+          <p className="text-xs text-app-text-muted mt-0.5">
+            {state.overhang
+              ? `Overhang depth: ${state.overhang} ft · Window height: ${state.windowHt || "—"} ft`
+              : "Horizontal projection above windows"}
+          </p>
+        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/windows/shading-overhang.png"
+          alt="Shading overhang depth and window height reference"
+          className="w-full h-auto object-contain p-3"
+        />
+      </div>
+
+    </div>
+  );
+
   return (
-    <StepLayout>
-      {/* Windows */}
+    <StepLayout imagePanel={imagePanel}>
+
+      {/* ── Windows ── */}
       <Card>
         <SectionHeader
           title="Windows"
-          description="Select glazing type and window-to-wall ratios by facade."
+          description="Select glazing type and set window-to-wall ratios per facade. The cross-section diagram on the right shows the selected glazing assembly."
         />
-        <div className="space-y-5">
+        <div className="flex flex-col gap-4">
           <div>
-            <p className="form-label mb-2">Window Material (select one or more)</p>
+            <p className="form-label mb-2">Window Material <span className="text-app-text-muted font-normal">(select one or more)</span></p>
             <MultiSelect
               options={WINDOW_MATERIALS}
               value={state.windowMaterial}
               onChange={(v) => setField("windowMaterial", v)}
               columns={2}
             />
-            <p className="text-xs text-app-text-muted mt-1">Hold Ctrl / Cmd to select multiple.</p>
+            {multipleSelected && (
+              <p className="text-xs text-app-text-muted mt-1.5">
+                Diagram shows <span className="font-medium text-primary">{firstMaterial}</span> — first selected type.
+              </p>
+            )}
           </div>
+
           <div>
-            <p className="form-label mb-3">Window-to-Wall Ratio by Facade (%)</p>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <p className="form-label mb-2">Window-to-Wall Ratio by Facade (%)</p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <FormField label="Front" fieldKey="wwrFront">
-                <Input
-                  type="number"
-                  placeholder="30"
-                  unit="%"
-                  value={state.wwrFront}
-                  onChange={(e) => setField("wwrFront", e.target.value)}
-                />
+                <Input type="number" placeholder="30" unit="%" value={state.wwrFront}
+                  onChange={(e) => setField("wwrFront", e.target.value)} />
               </FormField>
               <FormField label="Left" fieldKey="wwrLeft">
-                <Input
-                  type="number"
-                  placeholder="15"
-                  unit="%"
-                  value={state.wwrLeft}
-                  onChange={(e) => setField("wwrLeft", e.target.value)}
-                />
+                <Input type="number" placeholder="15" unit="%" value={state.wwrLeft}
+                  onChange={(e) => setField("wwrLeft", e.target.value)} />
               </FormField>
               <FormField label="Back" fieldKey="wwrBack">
-                <Input
-                  type="number"
-                  placeholder="20"
-                  unit="%"
-                  value={state.wwrBack}
-                  onChange={(e) => setField("wwrBack", e.target.value)}
-                />
+                <Input type="number" placeholder="20" unit="%" value={state.wwrBack}
+                  onChange={(e) => setField("wwrBack", e.target.value)} />
               </FormField>
               <FormField label="Right" fieldKey="wwrRight">
-                <Input
-                  type="number"
-                  placeholder="15"
-                  unit="%"
-                  value={state.wwrRight}
-                  onChange={(e) => setField("wwrRight", e.target.value)}
-                />
+                <Input type="number" placeholder="15" unit="%" value={state.wwrRight}
+                  onChange={(e) => setField("wwrRight", e.target.value)} />
               </FormField>
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Shading */}
+      {/* ── Shading ── */}
       <Card>
         <SectionHeader
           title="Shading"
-          description="Configure overhang depth and window geometry for solar shading calculations."
+          description="Overhang depth, window height, and count determine how much direct solar gain is blocked. The diagram on the right shows the Depth and Height labels."
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormField label="Overhang Depth" fieldKey="overhang" hint="Horizontal projection above windows">
-            <Input
-              type="number"
-              placeholder="0"
-              unit="ft"
-              value={state.overhang}
-              onChange={(e) => setField("overhang", e.target.value)}
-            />
+        <div className="grid grid-cols-3 gap-3">
+          <FormField label="Overhang Depth" fieldKey="overhang" hint="Horizontal projection above windows (ft)">
+            <Input type="number" placeholder="0" unit="ft" value={state.overhang}
+              onChange={(e) => setField("overhang", e.target.value)} />
           </FormField>
-          <FormField label="Window Height" fieldKey="windowHt">
-            <Input
-              type="number"
-              placeholder="4"
-              unit="ft"
-              value={state.windowHt}
-              onChange={(e) => setField("windowHt", e.target.value)}
-            />
+          <FormField label="Window Height" fieldKey="windowHt" hint="Vertical window dimension (ft)">
+            <Input type="number" placeholder="4" unit="ft" value={state.windowHt}
+              onChange={(e) => setField("windowHt", e.target.value)} />
           </FormField>
-          <FormField label="Windows per Wall" fieldKey="nWindow">
-            <Input
-              type="number"
-              placeholder="3"
-              value={state.nWindow}
-              onChange={(e) => setField("nWindow", e.target.value)}
-            />
+          <FormField label="Windows per Wall" fieldKey="nWindow" hint="Number of windows on each facade">
+            <Input type="number" placeholder="3" value={state.nWindow}
+              onChange={(e) => setField("nWindow", e.target.value)} />
           </FormField>
         </div>
       </Card>
+
     </StepLayout>
   );
 }

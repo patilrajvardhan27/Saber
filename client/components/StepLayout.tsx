@@ -37,13 +37,13 @@ export function StepLayout({
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center p-6 py-10">
-      <div className="w-full max-w-5xl">
+      <div className="w-full max-w-7xl">
         <div
           className="bg-white rounded-3xl overflow-hidden flex"
           style={{ boxShadow: "0 8px 40px rgba(12,61,0,0.12)" }}
         >
           {/* Main content */}
-          <div className="flex-1 flex flex-col p-10 min-h-[640px]">
+          <div className="flex-1 flex flex-col p-10 min-h-[800px]">
 
             {/* Section progress bar */}
             <div className="flex items-start mb-10">
@@ -110,13 +110,6 @@ export function StepLayout({
                   <span className="font-semibold">{pklFieldCount} fields</span> auto-populated from{" "}
                   <span className="font-mono font-medium">{pklFileName}</span> — review and adjust as needed
                 </span>
-                <button
-                  type="button"
-                  onClick={() => goToStep(1)}
-                  className="ml-auto text-brand-600 hover:text-brand-800 underline underline-offset-2 whitespace-nowrap"
-                >
-                  Change file
-                </button>
               </div>
             )}
 
@@ -180,7 +173,7 @@ export function StepLayout({
 
           {/* Right: image / preview panel */}
           {imagePanel && (
-            <div className="w-80 xl:w-96 bg-brand-50 border-l border-brand-100 flex-shrink-0 flex items-center justify-center p-8">
+            <div className="w-[420px] xl:w-[500px] bg-brand-50 border-l border-brand-100 flex-shrink-0 flex items-center justify-center p-8">
               {imagePanel}
             </div>
           )}

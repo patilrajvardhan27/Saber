@@ -3,6 +3,33 @@
 import React, { createContext, useContext, useReducer, useCallback } from "react";
 import { FormState, initialFormState, FormField, SECTIONS, TOTAL_STEPS } from "@/types/form";
 
+export interface EcmMetrics {
+  tic: number;
+  lcc: number;
+  kwh_pct_savings: number;
+  therms_pct_savings: number;
+  org_kwh: number;
+  eem_kwh: number;
+  org_therms: number;
+  eem_therms: number;
+}
+
+export interface EcmPlots {
+  elec_monthly_comp: string | null;
+  ng_monthly_comp: string | null;
+}
+
+export interface AnalysisPlots {
+  weather: string | null;
+  elec_temp_model: string | null;
+  ff_temp_model: string | null;
+  ff_dd_model: string | null;
+  elec_dd_model: string | null;
+  end_use: string | null;
+  ng_monthly: string | null;
+  elec_monthly: string | null;
+}
+
 interface FormContextValue {
   state: FormState;
   currentStep: number;
@@ -10,8 +37,24 @@ interface FormContextValue {
   pklFileName: string;
   pklFieldCount: number;
   pklFields: string[];
-  setPklMeta: (fileName: string, fieldCount: number) => void;
+  pklProjectName: string;
+  utilFileName: string;
+  analysisStatus: "idle" | "running" | "done" | "error";
+  analysisPlots: AnalysisPlots | null;
+  analysisError: string;
+  setPklMeta: (fileName: string, fieldCount: number, projectName: string) => void;
   setPklFields: (fields: string[]) => void;
+  setUtilUploaded: (fileName: string) => void;
+  setAnalysisRunning: () => void;
+  setAnalysisDone: (plots: AnalysisPlots) => void;
+  setAnalysisError: (message: string) => void;
+  ecmStatus: "idle" | "running" | "done" | "error";
+  ecmMetrics: EcmMetrics | null;
+  ecmPlots: EcmPlots | null;
+  ecmError: string;
+  setEcmRunning: () => void;
+  setEcmDone: (metrics: EcmMetrics, plots: EcmPlots) => void;
+  setEcmError: (message: string) => void;
   setField: (field: FormField, value: FormState[FormField]) => void;
   setFields: (fields: Partial<FormState>) => void;
   goToStep: (step: number) => void;
@@ -24,8 +67,15 @@ type Action =
   | { type: "SET_FIELD"; field: FormField; value: FormState[FormField] }
   | { type: "SET_FIELDS"; fields: Partial<FormState> }
   | { type: "SET_STEP"; step: number }
-  | { type: "SET_PKL_META"; fileName: string; fieldCount: number }
-  | { type: "SET_PKL_FIELDS"; fields: string[] };
+  | { type: "SET_PKL_META"; fileName: string; fieldCount: number; projectName: string }
+  | { type: "SET_PKL_FIELDS"; fields: string[] }
+  | { type: "SET_UTIL_UPLOADED"; fileName: string }
+  | { type: "SET_ANALYSIS_RUNNING" }
+  | { type: "SET_ANALYSIS_DONE"; plots: AnalysisPlots }
+  | { type: "SET_ANALYSIS_ERROR"; message: string }
+  | { type: "SET_ECM_RUNNING" }
+  | { type: "SET_ECM_DONE"; metrics: EcmMetrics; plots: EcmPlots }
+  | { type: "SET_ECM_ERROR"; message: string };
 
 interface State {
   form: FormState;
@@ -33,6 +83,15 @@ interface State {
   pklFileName: string;
   pklFieldCount: number;
   pklFields: string[];
+  pklProjectName: string;
+  utilFileName: string;
+  analysisStatus: "idle" | "running" | "done" | "error";
+  analysisPlots: AnalysisPlots | null;
+  analysisError: string;
+  ecmStatus: "idle" | "running" | "done" | "error";
+  ecmMetrics: EcmMetrics | null;
+  ecmPlots: EcmPlots | null;
+  ecmError: string;
 }
 
 function reducer(state: State, action: Action): State {
@@ -41,7 +100,6 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         form: { ...state.form, [action.field]: action.value },
-        // Remove from autofill set when user manually edits
         pklFields: state.pklFields.filter((f) => f !== action.field),
       };
     case "SET_FIELDS":
@@ -49,9 +107,28 @@ function reducer(state: State, action: Action): State {
     case "SET_STEP":
       return { ...state, currentStep: Math.max(1, Math.min(action.step, TOTAL_STEPS)) };
     case "SET_PKL_META":
-      return { ...state, pklFileName: action.fileName, pklFieldCount: action.fieldCount };
+      return {
+        ...state,
+        pklFileName: action.fileName,
+        pklFieldCount: action.fieldCount,
+        pklProjectName: action.projectName,
+      };
     case "SET_PKL_FIELDS":
       return { ...state, pklFields: action.fields };
+    case "SET_UTIL_UPLOADED":
+      return { ...state, utilFileName: action.fileName };
+    case "SET_ANALYSIS_RUNNING":
+      return { ...state, analysisStatus: "running", analysisError: "" };
+    case "SET_ANALYSIS_DONE":
+      return { ...state, analysisStatus: "done", analysisPlots: action.plots, analysisError: "" };
+    case "SET_ANALYSIS_ERROR":
+      return { ...state, analysisStatus: "error", analysisError: action.message };
+    case "SET_ECM_RUNNING":
+      return { ...state, ecmStatus: "running", ecmError: "" };
+    case "SET_ECM_DONE":
+      return { ...state, ecmStatus: "done", ecmMetrics: action.metrics, ecmPlots: action.plots, ecmError: "" };
+    case "SET_ECM_ERROR":
+      return { ...state, ecmStatus: "error", ecmError: action.message };
     default:
       return state;
   }
@@ -66,6 +143,15 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
     pklFileName: "",
     pklFieldCount: 0,
     pklFields: [],
+    pklProjectName: "",
+    utilFileName: "",
+    analysisStatus: "idle",
+    analysisPlots: null,
+    analysisError: "",
+    ecmStatus: "idle",
+    ecmMetrics: null,
+    ecmPlots: null,
+    ecmError: "",
   });
 
   const setField = useCallback(
@@ -95,13 +181,45 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
   );
 
   const setPklMeta = useCallback(
-    (fileName: string, fieldCount: number) =>
-      dispatch({ type: "SET_PKL_META", fileName, fieldCount }),
+    (fileName: string, fieldCount: number, projectName: string) =>
+      dispatch({ type: "SET_PKL_META", fileName, fieldCount, projectName }),
     []
   );
 
   const setPklFields = useCallback(
     (fields: string[]) => dispatch({ type: "SET_PKL_FIELDS", fields }),
+    []
+  );
+
+  const setUtilUploaded = useCallback(
+    (fileName: string) => dispatch({ type: "SET_UTIL_UPLOADED", fileName }),
+    []
+  );
+
+  const setAnalysisRunning = useCallback(
+    () => dispatch({ type: "SET_ANALYSIS_RUNNING" }),
+    []
+  );
+
+  const setAnalysisDone = useCallback(
+    (plots: AnalysisPlots) => dispatch({ type: "SET_ANALYSIS_DONE", plots }),
+    []
+  );
+
+  const setAnalysisError = useCallback(
+    (message: string) => dispatch({ type: "SET_ANALYSIS_ERROR", message }),
+    []
+  );
+
+  const setEcmRunning = useCallback(() => dispatch({ type: "SET_ECM_RUNNING" }), []);
+
+  const setEcmDone = useCallback(
+    (metrics: EcmMetrics, plots: EcmPlots) => dispatch({ type: "SET_ECM_DONE", metrics, plots }),
+    []
+  );
+
+  const setEcmError = useCallback(
+    (message: string) => dispatch({ type: "SET_ECM_ERROR", message }),
     []
   );
 
@@ -119,8 +237,24 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
         pklFileName: state.pklFileName,
         pklFieldCount: state.pklFieldCount,
         pklFields: state.pklFields,
+        pklProjectName: state.pklProjectName,
+        utilFileName: state.utilFileName,
+        analysisStatus: state.analysisStatus,
+        analysisPlots: state.analysisPlots,
+        analysisError: state.analysisError,
         setPklMeta,
         setPklFields,
+        setUtilUploaded,
+        setAnalysisRunning,
+        setAnalysisDone,
+        setAnalysisError,
+        ecmStatus: state.ecmStatus,
+        ecmMetrics: state.ecmMetrics,
+        ecmPlots: state.ecmPlots,
+        ecmError: state.ecmError,
+        setEcmRunning,
+        setEcmDone,
+        setEcmError,
         setField,
         setFields,
         goToStep,
