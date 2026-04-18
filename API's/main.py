@@ -526,6 +526,46 @@ async def run_ecm(project_name: str, req: EcmRequest):
         raise HTTPException(status_code=500, detail=f"ECM evaluation failed: {exc}")
 
 
+# ── Export PKL ────────────────────────────────────────────────────────────────
+class ExportPklRequest(BaseModel):
+    form_data: dict
+
+
+@app.post("/export-pkl/{project_name}")
+async def export_pkl_handler(project_name: str, req: ExportPklRequest):
+    """Generate a {project_name}-Baseline.pkl from frontend form data and return it for download."""
+    from fastapi.responses import Response as FastAPIResponse
+
+    REVERSE_MAP = {v: k for k, v in PROP_KEY_MAP.items()}
+    REVERSE_LIST = {v: k for k, v in LIST_FIELDS.items()}
+
+    rows = []
+    fd = req.form_data
+
+    for form_key, prop_key in REVERSE_MAP.items():
+        value = fd.get(form_key, "")
+        rows.append({"PropKey": prop_key, "PropValue": value if value != "" else None})
+
+    for form_key, prop_key in REVERSE_LIST.items():
+        value = fd.get(form_key, [])
+        if isinstance(value, list):
+            value = value[0] if value else ""
+        rows.append({"PropKey": prop_key, "PropValue": value if value != "" else None})
+
+    df = pd.DataFrame(rows, columns=["PropKey", "PropValue"])
+
+    buf = io.BytesIO()
+    df.to_pickle(buf)
+    buf.seek(0)
+
+    safe_name = project_name.replace(" ", "").replace("/", "").replace("..", "")
+    return FastAPIResponse(
+        content=buf.read(),
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{safe_name}-Baseline.pkl"'},
+    )
+
+
 # ── Serve result plots ─────────────────────────────────────────────────────────
 @app.get("/results/{project_name}/plot/{filename:path}")
 async def get_plot(project_name: str, filename: str):

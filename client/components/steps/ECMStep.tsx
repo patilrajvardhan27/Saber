@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ECM_MEASURES, ECM_MEASURE_OPTIONS } from "@/data/options";
 import type { FormField as FormFieldType } from "@/types/form";
+import { ExportDropdown } from "@/components/ExportDropdown";
 
 const API = "http://localhost:8000";
 
@@ -135,7 +136,7 @@ export function ECMSelectionStep() {
         throw new Error("No ECM options selected — choose at least one upgrade.");
       }
       setEcmDone(data.metrics as EcmMetrics, data.plots as EcmPlots);
-      setTimeout(() => goToStep(16), 800);
+      setTimeout(() => goToStep(14), 800);
     } catch (err: unknown) {
       setEcmError(err instanceof Error ? err.message : "ECM evaluation failed");
     }
@@ -237,7 +238,7 @@ export function ECMResultsStep() {
     n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 
   return (
-    <StepLayout nextLabel="Save & Export">
+    <StepLayout rightAction={<ExportDropdown />}>
 
       {/* Status banner */}
       {isRunning && (

@@ -11,6 +11,7 @@ interface StepLayoutProps {
   nextLabel?: string;
   prevLabel?: string;
   nextDisabled?: boolean;
+  rightAction?: React.ReactNode;
 }
 
 export function StepLayout({
@@ -21,6 +22,7 @@ export function StepLayout({
   nextLabel,
   prevLabel,
   nextDisabled = false,
+  rightAction,
 }: StepLayoutProps) {
   const { currentStep, nextStep, prevStep, goToStep, pklFileName, pklFieldCount } = useForm();
 
@@ -148,32 +150,34 @@ export function StepLayout({
                 {prevLabel ?? "Back"}
               </button>
 
-              <button
-                onClick={handleNext}
-                disabled={nextDisabled}
-                className={`flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold transition-all ${
-                  nextDisabled
-                    ? "bg-bg-muted text-app-text-muted cursor-not-allowed"
-                    : "bg-brand-500 text-white hover:bg-brand-600 shadow-md hover:shadow-lg"
-                }`}
-              >
-                {isLast ? (nextLabel ?? "Finish") : (nextLabel ?? "Next")}
-                <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4">
-                  <path
-                    d="M6 4l4 4-4 4"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
+              {rightAction ?? (
+                <button
+                  onClick={handleNext}
+                  disabled={nextDisabled}
+                  className={`flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-semibold transition-all ${
+                    nextDisabled
+                      ? "bg-bg-muted text-app-text-muted cursor-not-allowed"
+                      : "bg-brand-500 text-white hover:bg-brand-600 shadow-md hover:shadow-lg"
+                  }`}
+                >
+                  {isLast ? (nextLabel ?? "Finish") : (nextLabel ?? "Next")}
+                  <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4">
+                    <path
+                      d="M6 4l4 4-4 4"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
 
           {/* Right: image / preview panel */}
           {imagePanel && (
-            <div className="w-[420px] xl:w-[500px] bg-brand-50 border-l border-brand-100 flex-shrink-0 flex items-center justify-center p-8">
+            <div className="w-[420px] xl:w-[500px] bg-brand-50 border-l border-brand-100 flex-shrink-0 flex flex-col p-8">
               {imagePanel}
             </div>
           )}

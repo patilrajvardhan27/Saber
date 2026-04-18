@@ -7,7 +7,7 @@ import { ShapeOrientationStep, DimensionsStep } from "@/components/steps/Geometr
 import { WallsRoofStep, FoundationInfiltrationStep, WindowsShadingStep } from "@/components/steps/EnvelopeStep";
 import { HeatingCoolingStep, HotWaterOtherStep } from "@/components/steps/HVACStep";
 import { AppliancesStep, LightingPlugLoadsStep } from "@/components/steps/EquipmentStep";
-import { WeatherDataStep, EnergyModelsStep, AnalysisResultsStep } from "@/components/steps/AnalysisStep";
+import { AnalysisResultsStep } from "@/components/steps/AnalysisStep";
 import { FinancialsStep, ECMSelectionStep, ECMResultsStep } from "@/components/steps/ECMStep";
 
 const STEP_COMPONENTS: Record<number, React.ComponentType> = {
@@ -21,12 +21,10 @@ const STEP_COMPONENTS: Record<number, React.ComponentType> = {
   8:  HotWaterOtherStep,
   9:  AppliancesStep,
   10: LightingPlugLoadsStep,
-  11: WeatherDataStep,
-  12: EnergyModelsStep,
-  13: AnalysisResultsStep,
-  14: FinancialsStep,
-  15: ECMSelectionStep,
-  16: ECMResultsStep,
+  11: AnalysisResultsStep,
+  12: FinancialsStep,
+  13: ECMSelectionStep,
+  14: ECMResultsStep,
 };
 
 function AppContent() {

@@ -85,18 +85,20 @@ export function DimensionsStep() {
   const imageAlt = isLShape ? "L-Shape floor plan — x1, x2, y1, y2 corner coordinates" : "Rectangle floor plan — x1 width, y1 depth, corner coordinates";
 
   const imagePanel = (
-    <div className="flex flex-col items-center gap-4 w-full">
+    <div className="flex flex-col gap-4 w-full h-full">
       {/* Shape diagram */}
-      <div className="bg-white rounded-2xl shadow-md border border-brand-100 overflow-hidden w-full">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={imageSrc}
-          alt={imageAlt}
-          className="w-full h-auto object-contain"
-        />
+      <div className="bg-white rounded-2xl shadow-md border border-brand-100 overflow-hidden w-full flex flex-col flex-1 min-h-0">
+        <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageSrc}
+            alt={imageAlt}
+            className="w-full h-full object-contain p-4"
+          />
+        </div>
       </div>
       {/* Dimension legend */}
-      <div className="bg-white/70 rounded-xl border border-brand-100 px-5 py-3 w-full">
+      <div className="bg-white/70 rounded-xl border border-brand-100 px-5 py-3 w-full flex-shrink-0">
         <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">Coordinate Reference</p>
         <div className={`grid gap-x-6 gap-y-1 text-xs text-app-text-muted ${isLShape ? "grid-cols-2" : "grid-cols-2"}`}>
           <span><span className="font-semibold text-primary">x1</span> — full width</span>

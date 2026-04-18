@@ -12,31 +12,44 @@ function plotUrl(projectName: string, filename: string): string {
   return `${API}/results/${encodeURIComponent(projectName)}/plot/${encodeURIComponent(filename)}`;
 }
 
+// Fixed-size image box — all charts render inside this consistent container
+function ChartBox({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="w-full h-64 rounded-lg border border-brand-100 bg-white overflow-hidden flex items-center justify-center">
+      {children}
+    </div>
+  );
+}
+
 function PlaceholderChart({ label }: { label: string }) {
   return (
-    <div className="h-56 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 bg-bg-muted">
-      <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10 text-app-text-light">
-        <rect x="4"  y="28" width="8"  height="16" rx="2" fill="currentColor" opacity="0.4" />
-        <rect x="14" y="20" width="8"  height="24" rx="2" fill="currentColor" opacity="0.6" />
-        <rect x="24" y="10" width="8"  height="34" rx="2" fill="currentColor" opacity="0.8" />
-        <rect x="34" y="16" width="8"  height="28" rx="2" fill="currentColor" opacity="0.5" />
-      </svg>
-      <p className="text-sm text-app-text-light font-medium">{label}</p>
-      <p className="text-xs text-app-text-light">Run analysis to generate chart</p>
-    </div>
+    <ChartBox>
+      <div className="flex flex-col items-center justify-center gap-2 text-app-text-light">
+        <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+          <rect x="4"  y="28" width="8"  height="16" rx="2" fill="currentColor" opacity="0.4" />
+          <rect x="14" y="20" width="8"  height="24" rx="2" fill="currentColor" opacity="0.6" />
+          <rect x="24" y="10" width="8"  height="34" rx="2" fill="currentColor" opacity="0.8" />
+          <rect x="34" y="16" width="8"  height="28" rx="2" fill="currentColor" opacity="0.5" />
+        </svg>
+        <p className="text-sm font-medium">{label}</p>
+        <p className="text-xs">Run analysis to generate chart</p>
+      </div>
+    </ChartBox>
   );
 }
 
 function LoadingChart({ label }: { label: string }) {
   return (
-    <div className="h-56 rounded-lg border-2 border-brand-200 flex flex-col items-center justify-center gap-3 bg-brand-50">
-      <svg className="w-8 h-8 text-brand-400 animate-spin" viewBox="0 0 24 24" fill="none">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-      </svg>
-      <p className="text-sm text-brand-600 font-medium">{label}</p>
-      <p className="text-xs text-brand-400">Analysis running…</p>
-    </div>
+    <ChartBox>
+      <div className="flex flex-col items-center justify-center gap-3 text-brand-600">
+        <svg className="w-8 h-8 text-brand-400 animate-spin" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+        <p className="text-sm font-medium">{label}</p>
+        <p className="text-xs text-brand-400">Analysis running…</p>
+      </div>
+    </ChartBox>
   );
 }
 
@@ -54,11 +67,13 @@ function PlotOrState({
   if (isRunning) return <LoadingChart label={label} />;
   if (!filename) return <PlaceholderChart label={label} />;
   return (
-    <img
-      src={plotUrl(projectName, filename)}
-      alt={label}
-      className="w-full h-auto rounded-lg border border-brand-100 object-contain bg-white"
-    />
+    <ChartBox>
+      <img
+        src={plotUrl(projectName, filename)}
+        alt={label}
+        className="w-full h-full object-contain"
+      />
+    </ChartBox>
   );
 }
 
@@ -99,53 +114,36 @@ function AnalysisBanner() {
   return null;
 }
 
-// ── Step 11: Weather Data ─────────────────────────────────────────────────────
-export function WeatherDataStep() {
+// ── Combined Results Step ─────────────────────────────────────────────────────
+export function AnalysisResultsStep() {
   const { pklProjectName, analysisStatus, analysisPlots } = useForm();
   const isRunning = analysisStatus === "running";
   const isDone = analysisStatus === "done";
 
   return (
-    <StepLayout>
+    <StepLayout nextLabel="Proceed to ECM Evaluation">
+      <AnalysisBanner />
+
+      {/* Weather Data */}
       <Card>
         <SectionHeader
           title="Weather Data"
           description="Hourly weather data from the nearest NOAA station, automatically fetched when the PKL file is uploaded."
         />
-        <AnalysisBanner />
-        {isDone && analysisPlots?.weather ? (
-          <img
-            src={plotUrl(pklProjectName, analysisPlots.weather)}
-            alt="Annual Temperature Profile"
-            className="w-full h-auto rounded-lg border border-brand-100 object-contain bg-white"
-          />
-        ) : (
-          <PlotOrState
-            projectName={pklProjectName}
-            filename={null}
-            label="Annual Temperature Profile"
-            isRunning={isRunning}
-          />
-        )}
+        <PlotOrState
+          projectName={pklProjectName}
+          filename={isDone ? analysisPlots?.weather : null}
+          label="Annual Temperature Profile"
+          isRunning={isRunning}
+        />
       </Card>
-    </StepLayout>
-  );
-}
 
-// ── Step 12: Energy Models ────────────────────────────────────────────────────
-export function EnergyModelsStep() {
-  const { pklProjectName, analysisStatus, analysisPlots } = useForm();
-  const isRunning = analysisStatus === "running";
-  const isDone = analysisStatus === "done";
-
-  return (
-    <StepLayout>
+      {/* Temperature-Based Change-Point Models */}
       <Card>
         <SectionHeader
           title="Temperature-Based Change-Point Models"
           description="Electricity and fossil-fuel consumption as a function of outdoor temperature."
         />
-        <AnalysisBanner />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-xs font-semibold text-primary mb-2">Electricity (Cooling)</p>
@@ -168,6 +166,7 @@ export function EnergyModelsStep() {
         </div>
       </Card>
 
+      {/* Degree-Day Models */}
       <Card>
         <SectionHeader
           title="Degree-Day Models"
@@ -194,24 +193,13 @@ export function EnergyModelsStep() {
           </div>
         </div>
       </Card>
-    </StepLayout>
-  );
-}
 
-// ── Step 13: Analysis Results ─────────────────────────────────────────────────
-export function AnalysisResultsStep() {
-  const { pklProjectName, analysisStatus, analysisPlots } = useForm();
-  const isRunning = analysisStatus === "running";
-  const isDone = analysisStatus === "done";
-
-  return (
-    <StepLayout nextLabel="Proceed to ECM Evaluation">
+      {/* Annual End-Use Breakdown */}
       <Card>
         <SectionHeader
           title="Annual End-Use Energy Breakdown"
           description="Estimated annual energy breakdown (kBtu) from the calibrated energy model."
         />
-        <AnalysisBanner />
         <PlotOrState
           projectName={pklProjectName}
           filename={isDone ? analysisPlots?.end_use : null}
@@ -220,6 +208,7 @@ export function AnalysisResultsStep() {
         />
       </Card>
 
+      {/* Monthly Model vs. Meter */}
       <Card>
         <SectionHeader
           title="Monthly Model vs. Meter Comparison"

@@ -28,6 +28,12 @@ const HEATING_IMAGE_MAP: Record<string, string> = {
   "Air Source Heat Pump": "/hvac/heating/Air Source Heat Pump.png",
 };
 
+const DHW_IMAGE_MAP: Record<string, string> = {
+  "Gas Boiler":     "/hvac/dhw/Gas Boiler.png",
+  "Electric Heater": "/hvac/dhw/Electric Heater.png",
+  "NoDHWSystem":    "/hvac/dhw/NoDHWSystem.png",
+};
+
 function EquipmentImageCard({
   label,
   subtitle,
@@ -40,23 +46,25 @@ function EquipmentImageCard({
   emptyText: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-brand-100 overflow-hidden w-full">
-      <div className="px-4 pt-3 pb-1 border-b border-brand-100">
+    <div className="bg-white rounded-2xl shadow-md border border-brand-100 overflow-hidden w-full flex flex-col flex-1 min-h-0">
+      <div className="px-4 pt-3 pb-1 border-b border-brand-100 flex-shrink-0">
         <p className="text-xs font-bold text-primary uppercase tracking-wider">{label}</p>
         {subtitle && <p className="text-xs text-app-text-muted mt-0.5 truncate">{subtitle}</p>}
       </div>
-      {imgSrc ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imgSrc} alt={label} className="w-full h-auto object-contain p-3" />
-      ) : (
-        <div className="h-44 flex flex-col items-center justify-center gap-2 text-app-text-muted">
-          <svg viewBox="0 0 40 40" fill="none" className="w-8 h-8 opacity-30">
-            <rect x="8" y="8" width="24" height="24" rx="4" stroke="currentColor" strokeWidth="2"/>
-            <path d="M14 20h12M20 14v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <p className="text-xs">{emptyText}</p>
-        </div>
-      )}
+      <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+        {imgSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imgSrc} alt={label} className="w-full h-full object-contain p-4" />
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-2 text-app-text-muted w-full h-full">
+            <svg viewBox="0 0 40 40" fill="none" className="w-8 h-8 opacity-30">
+              <rect x="8" y="8" width="24" height="24" rx="4" stroke="currentColor" strokeWidth="2"/>
+              <path d="M14 20h12M20 14v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            <p className="text-xs">{emptyText}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -72,7 +80,7 @@ export function HeatingCoolingStep() {
   const heatingImg = state.heatingEqp ? (HEATING_IMAGE_MAP[state.heatingEqp] ?? null) : null;
 
   const imagePanel = (
-    <div className="flex flex-col gap-5 w-full">
+    <div className="flex flex-col gap-5 w-full h-full">
       <EquipmentImageCard
         label="Cooling System"
         subtitle={
@@ -282,8 +290,30 @@ export function HeatingCoolingStep() {
 
 export function HotWaterOtherStep() {
   const { state, setField } = useForm();
+
+  const dhwImg = state.dhwSystemType ? (DHW_IMAGE_MAP[state.dhwSystemType] ?? null) : null;
+
+  const imagePanel = (
+    <div className="flex flex-col gap-5 w-full h-full">
+      <EquipmentImageCard
+        label="DHW System"
+        subtitle={
+          state.dhwSystemType === "NoDHWSystem"
+            ? "No DHW system"
+            : state.dhwSystemType
+              ? state.dhwTankVol
+                ? `${state.dhwSystemType} · ${state.dhwTankVol} gal`
+                : state.dhwSystemType
+              : undefined
+        }
+        imgSrc={dhwImg}
+        emptyText="Select DHW system to preview"
+      />
+    </div>
+  );
+
   return (
-    <StepLayout>
+    <StepLayout imagePanel={imagePanel}>
       {/* Domestic Hot Water */}
       <Card>
         <SectionHeader
