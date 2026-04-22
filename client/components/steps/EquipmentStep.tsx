@@ -107,15 +107,6 @@ export function LightingPlugLoadsStep() {
               onChange={(e) => setField("lpd", e.target.value)}
             />
           </FormField>
-          <FormField label="Annual Lighting Hours" fieldKey="nHoursLighting" hint="Hours per year that lighting is used">
-            <Input
-              type="number"
-              placeholder="2920"
-              unit="hrs/yr"
-              value={state.nHoursLighting}
-              onChange={(e) => setField("nHoursLighting", e.target.value)}
-            />
-          </FormField>
           <FormField label="Daylighting Controls" fieldKey="daylighting" hint="Is daylighting sensor/control system installed?">
             <Select
               options={YES_NO}

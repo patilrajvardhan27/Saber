@@ -12,12 +12,8 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ECM_MEASURES, ECM_MEASURE_OPTIONS } from "@/data/options";
 import type { FormField as FormFieldType } from "@/types/form";
 import { ExportDropdown } from "@/components/ExportDropdown";
+import { API } from "@/utils/api";
 
-const API = "http://localhost:8000";
-
-function plotUrl(projectName: string, filename: string) {
-  return `${API}/results/${encodeURIComponent(projectName)}/plot/${encodeURIComponent(filename)}`;
-}
 
 // ── Step 14: Financials & Costs ───────────────────────────────────────────────
 export function FinancialsStep() {
@@ -119,6 +115,7 @@ export function ECMSelectionStep() {
       therm_rate:  parseFloat(state.thermCost)  || 1.20,
       discount_rate: parseFloat(state.discountRate) || 3.0,
       lifetime:    parseInt(state.lifetime)     || 20,
+      form_data:   state,
     };
 
     try {
@@ -132,9 +129,6 @@ export function ECMSelectionStep() {
         throw new Error(err.detail ?? "ECM evaluation failed");
       }
       const data = await res.json();
-      if (data.status === "no_measures") {
-        throw new Error("No ECM options selected — choose at least one upgrade.");
-      }
       setEcmDone(data.metrics as EcmMetrics, data.plots as EcmPlots);
       setTimeout(() => goToStep(14), 800);
     } catch (err: unknown) {
@@ -229,13 +223,58 @@ function MetricCard({ label, value, sub, color }: { label: string; value: string
   );
 }
 
+const ECM_DESCRIPTIONS: Record<string, (baseline: string, selected: string) => string> = {
+  ecmWallInsulation:    (b, s) => `Wall insulation upgraded from ${b} to ${s}.`,
+  ecmInfiltration:      (b, s) => `Air leakage reduced from ${b} ACH50 to ${s} ACH50.`,
+  ecmCeilingInsulation: (b, s) => `Ceiling insulation upgraded from ${b} to ${s}.`,
+  ecmWindowMaterial:    (b, s) => `Windows upgraded from ${b} to ${s}.`,
+  ecmNightSetback:      (b, s) => `Night setback temperature set to ${s}°F (baseline: ${b}°F).`,
+  ecmNightSetbackHours: (b, s) => `Night setback extended to ${s} hrs/day (baseline: ${b} hrs).`,
+  ecmDaylighting:       (_b, _s) => "Daylighting controls added to reduce lighting energy use.",
+  ecmEconomizer:        (_b, _s) => "Air-side economizer added for free cooling during mild weather.",
+  ecmOccupancySensor:   (_b, _s) => "Occupancy sensors installed to cut lighting when spaces are unoccupied.",
+  ecmLED:               (b, s) => `LED fraction increased from ${b}% to ${s}%.`,
+  ecmReduceEquipLoad:   (_b, s) => `Plug load reduction of ${s} applied through equipment scheduling.`,
+  ecmCoolingEff:        (b, s) => `Cooling efficiency upgraded from ${b} to ${s} SEER2.`,
+  ecmHeatingEqp:        (b, s) => `Heating equipment replaced: ${b} → ${s}.`,
+  ecmHeatingEff:        (b, s) => `Heating efficiency upgraded from ${b} to ${s}.`,
+};
+
 export function ECMResultsStep() {
-  const { pklProjectName, ecmStatus, ecmMetrics, ecmPlots, ecmError } = useForm();
+  const { state, pklProjectName, ecmStatus, ecmMetrics, ecmPlots, ecmError } = useForm();
   const isDone = ecmStatus === "done";
   const isRunning = ecmStatus === "running";
 
   const fmt = (n: number, decimals = 0) =>
     n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+
+  const baselineMap: Record<string, string> = {
+    ecmWallInsulation:    state.wallInsulation    || "Uninsulated",
+    ecmInfiltration:      state.ach50             || "—",
+    ecmCeilingInsulation: state.ceilingInsulation || "Uninsulated",
+    ecmWindowMaterial:    state.windowMaterial?.[0] || "—",
+    ecmNightSetback:      state.nightSetback      || "0",
+    ecmNightSetbackHours: state.nNightSetbackHours|| "0",
+    ecmDaylighting:       state.daylighting       || "No",
+    ecmEconomizer:        state.economizer        || "No",
+    ecmOccupancySensor:   "No",
+    ecmLED:               state.led               || "0",
+    ecmReduceEquipLoad:   "0%",
+    ecmCoolingEff:        state.coolingEff        || "—",
+    ecmHeatingEqp:        state.heatingEqp        || "—",
+    ecmHeatingEff:        state.heatingEff        || "—",
+  };
+
+  const activeMeasures = ECM_MEASURES.filter((m) => {
+    const val = (state as unknown as Record<string, string>)[m.key];
+    return val && val !== "No change" && val !== "" && val !== "No";
+  }).map((m) => ({
+    label: m.label,
+    description: ECM_DESCRIPTIONS[m.key]?.(
+      baselineMap[m.key],
+      (state as unknown as Record<string, string>)[m.key]
+    ) ?? `${m.label} changed to ${(state as unknown as Record<string, string>)[m.key]}.`,
+  }));
 
   return (
     <StepLayout rightAction={<ExportDropdown />}>
@@ -265,17 +304,24 @@ export function ECMResultsStep() {
         />
         {isDone && ecmMetrics ? (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+              <MetricCard
+                label="Baseline Life-Cycle Cost"
+                value={`$${fmt(ecmMetrics.org_lcc)}`}
+                color="text-app-text-muted"
+              />
+              <MetricCard
+                label="ECM Package Life-Cycle Cost"
+                value={`$${fmt(ecmMetrics.lcc)}`}
+                color="text-primary"
+              />
               <MetricCard
                 label="Total Installed Cost"
                 value={`$${fmt(ecmMetrics.tic)}`}
                 color="text-warning"
               />
-              <MetricCard
-                label="Package Life-Cycle Cost"
-                value={`$${fmt(ecmMetrics.lcc)}`}
-                color="text-primary"
-              />
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-5">
               <MetricCard
                 label="Electricity Savings"
                 value={`${fmt(ecmMetrics.kwh_pct_savings, 1)}%`}
@@ -291,16 +337,44 @@ export function ECMResultsStep() {
             </div>
           </>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
-            {["Total Installed Cost", "Package Life-Cycle Cost", "Electricity Savings", "Natural Gas Savings"].map((label) => (
-              <div key={label} className="rounded-2xl border border-border bg-bg-muted p-5 flex flex-col items-center text-center">
-                <p className="text-2xl font-bold text-app-text-light">—</p>
-                <p className="text-xs text-app-text-muted mt-2 leading-tight">{label}</p>
-              </div>
-            ))}
-          </div>
+          <><div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+              {["Baseline Life-Cycle Cost", "ECM Package Life-Cycle Cost", "Total Installed Cost"].map((label) => (
+                <div key={label} className="rounded-2xl border border-border bg-bg-muted p-5 flex flex-col items-center text-center">
+                  <p className="text-2xl font-bold text-app-text-light">—</p>
+                  <p className="text-xs text-app-text-muted mt-2 leading-tight">{label}</p>
+                </div>
+              ))}
+            </div><div className="grid grid-cols-2 gap-4 mb-5">
+                {["Electricity Savings", "Natural Gas Savings"].map((label) => (
+                  <div key={label} className="rounded-2xl border border-border bg-bg-muted p-5 flex flex-col items-center text-center">
+                    <p className="text-2xl font-bold text-app-text-light">—</p>
+                    <p className="text-xs text-app-text-muted mt-2 leading-tight">{label}</p>
+                  </div>
+                ))}
+              </div></>
         )}
       </Card>
+
+      {/* Selected measures summary */}
+      {activeMeasures.length > 0 && (
+        <Card>
+          <SectionHeader
+            title="Applied ECM Measures"
+            description="Summary of changes made relative to the baseline building."
+          />
+          <ul className="flex flex-col gap-2">
+            {activeMeasures.map((m) => (
+              <li key={m.label} className="flex items-start gap-2.5">
+                <span className="mt-1 w-2 h-2 rounded-full bg-brand-400 flex-shrink-0" />
+                <span className="text-sm text-app-text leading-snug">
+                  <span className="font-semibold text-primary">{m.label}:</span>{" "}
+                  {m.description}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       {/* Comparison charts */}
       <Card>
@@ -313,7 +387,7 @@ export function ECMResultsStep() {
             <p className="text-xs font-semibold text-primary mb-2">Electricity (kWh)</p>
             {isDone && ecmPlots?.elec_monthly_comp ? (
               <img
-                src={plotUrl(pklProjectName, ecmPlots.elec_monthly_comp)}
+                src={ecmPlots.elec_monthly_comp}
                 alt="Electricity EEM Comparison"
                 className="w-full h-auto rounded-lg border border-brand-100 object-contain bg-white"
               />
@@ -329,7 +403,7 @@ export function ECMResultsStep() {
             <p className="text-xs font-semibold text-primary mb-2">Natural Gas (Therms)</p>
             {isDone && ecmPlots?.ng_monthly_comp ? (
               <img
-                src={plotUrl(pklProjectName, ecmPlots.ng_monthly_comp)}
+                src={ecmPlots.ng_monthly_comp}
                 alt="Natural Gas EEM Comparison"
                 className="w-full h-auto rounded-lg border border-brand-100 object-contain bg-white"
               />

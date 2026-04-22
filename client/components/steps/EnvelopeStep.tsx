@@ -44,7 +44,11 @@ export function WallsRoofStep() {
         <div className="px-4 pt-3 pb-1 border-b border-brand-100 flex-shrink-0">
           <p className="text-xs font-bold text-primary uppercase tracking-wider">Wall Construction</p>
           <p className="text-xs text-app-text-muted mt-0.5">
-            {state.extWallConst || "Select a wall type to preview"}
+            {state.extWallConst
+              ? state.wallInsulation
+                ? `${state.extWallConst} · ${state.wallInsulation}`
+                : state.extWallConst
+              : "Select a wall type to preview"}
           </p>
         </div>
         <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">

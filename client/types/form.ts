@@ -80,7 +80,6 @@ export interface FormState {
   miscPlugLoadRating: string;
   lpd: string;
   daylighting: string;
-  nHoursLighting: string;
   led: string;
 
   // ── Cost & Financial ──────────────────────────────────────
@@ -175,7 +174,6 @@ export const initialFormState: FormState = {
   miscPlugLoadRating: "",
   lpd: "",
   daylighting: "No",
-  nHoursLighting: "",
   led: "0.0",
 
   thermCost: "",

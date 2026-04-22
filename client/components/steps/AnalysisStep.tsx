@@ -2,15 +2,11 @@
 
 import React from "react";
 import { useForm } from "@/context/FormContext";
+import type { AnalysisPlots } from "@/context/FormContext";
 import { StepLayout } from "@/components/StepLayout";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-
-const API = "http://localhost:8000";
-
-function plotUrl(projectName: string, filename: string): string {
-  return `${API}/results/${encodeURIComponent(projectName)}/plot/${encodeURIComponent(filename)}`;
-}
+import { API } from "@/utils/api";
 
 // Fixed-size image box — all charts render inside this consistent container
 function ChartBox({ children }: { children: React.ReactNode }) {
@@ -54,12 +50,10 @@ function LoadingChart({ label }: { label: string }) {
 }
 
 function PlotOrState({
-  projectName,
   filename,
   label,
   isRunning,
 }: {
-  projectName: string;
   filename: string | null | undefined;
   label: string;
   isRunning: boolean;
@@ -69,11 +63,89 @@ function PlotOrState({
   return (
     <ChartBox>
       <img
-        src={plotUrl(projectName, filename)}
+        src={filename}
         alt={label}
         className="w-full h-full object-contain"
       />
     </ChartBox>
+  );
+}
+
+// ── Generate Result section (always shown on results page) ───────────────────
+function GenerateResultSection() {
+  const {
+    state, pklProjectName,
+    setAnalysisRunning, setAnalysisDone, setAnalysisError,
+    analysisStatus, setPklMeta,
+  } = useForm();
+
+  const manualName = state.projectName.trim().replace(/[\s/]/g, "").replace(/\.\./g, "");
+  const effectiveProject = pklProjectName || manualName;
+  const canGenerate = !!effectiveProject && analysisStatus !== "running";
+
+  async function handleGenerate() {
+    if (!canGenerate) return;
+    setPklMeta(pklProjectName ? pklProjectName : "", 0, effectiveProject);
+    setAnalysisRunning();
+    try {
+      const res = await fetch(`${API}/run-analysis-manual/${encodeURIComponent(effectiveProject)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ form_data: state }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Unknown error" }));
+        throw new Error(err.detail ?? "Analysis failed");
+      }
+      const data = await res.json();
+      setPklMeta(pklProjectName ? pklProjectName : "", 0, data.project_name ?? effectiveProject);
+      setAnalysisDone(data.plots as AnalysisPlots);
+    } catch (err: unknown) {
+      setAnalysisError(err instanceof Error ? err.message : "Analysis failed");
+    }
+  }
+
+  return (
+    <Card>
+      <SectionHeader
+        title="Generate Result"
+        description="Run the energy analysis using current field values — works whether inputs were loaded from a PKL file or entered manually."
+      />
+      <div className="space-y-4">
+        {!effectiveProject && (
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            Set a project name on Step 1 before generating results.
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={handleGenerate}
+          disabled={!canGenerate}
+          className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all ${
+            canGenerate
+              ? "bg-brand-500 text-white hover:bg-brand-600 shadow-md hover:shadow-lg"
+              : "bg-bg-muted text-app-text-muted cursor-not-allowed"
+          }`}
+        >
+          {analysisStatus === "running" ? (
+            <>
+              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+              Running Analysis…
+            </>
+          ) : (
+            <>
+              <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4">
+                <path d="M5 3l14 9-14 9V3z" fill="currentColor" />
+              </svg>
+              Generate Result
+            </>
+          )}
+        </button>
+      </div>
+    </Card>
   );
 }
 
@@ -122,6 +194,7 @@ export function AnalysisResultsStep() {
 
   return (
     <StepLayout nextLabel="Proceed to ECM Evaluation">
+      <GenerateResultSection />
       <AnalysisBanner />
 
       {/* Weather Data */}
@@ -131,7 +204,6 @@ export function AnalysisResultsStep() {
           description="Hourly weather data from the nearest NOAA station, automatically fetched when the PKL file is uploaded."
         />
         <PlotOrState
-          projectName={pklProjectName}
           filename={isDone ? analysisPlots?.weather : null}
           label="Annual Temperature Profile"
           isRunning={isRunning}
@@ -148,7 +220,6 @@ export function AnalysisResultsStep() {
           <div>
             <p className="text-xs font-semibold text-primary mb-2">Electricity (Cooling)</p>
             <PlotOrState
-              projectName={pklProjectName}
               filename={isDone ? analysisPlots?.elec_temp_model : null}
               label="Electricity Temp-Based Model"
               isRunning={isRunning}
@@ -157,7 +228,6 @@ export function AnalysisResultsStep() {
           <div>
             <p className="text-xs font-semibold text-primary mb-2">Fossil Fuel (Heating)</p>
             <PlotOrState
-              projectName={pklProjectName}
               filename={isDone ? analysisPlots?.ff_temp_model : null}
               label="Fossil Fuel Temp-Based Model"
               isRunning={isRunning}
@@ -176,7 +246,6 @@ export function AnalysisResultsStep() {
           <div>
             <p className="text-xs font-semibold text-primary mb-2">Heating Degree Days (Fossil Fuel)</p>
             <PlotOrState
-              projectName={pklProjectName}
               filename={isDone ? analysisPlots?.ff_dd_model : null}
               label="HDD-Based Heating Model"
               isRunning={isRunning}
@@ -185,7 +254,6 @@ export function AnalysisResultsStep() {
           <div>
             <p className="text-xs font-semibold text-primary mb-2">Cooling Degree Days (Electricity)</p>
             <PlotOrState
-              projectName={pklProjectName}
               filename={isDone ? analysisPlots?.elec_dd_model : null}
               label="CDD-Based Cooling Model"
               isRunning={isRunning}
@@ -201,7 +269,6 @@ export function AnalysisResultsStep() {
           description="Estimated annual energy breakdown (kBtu) from the calibrated energy model."
         />
         <PlotOrState
-          projectName={pklProjectName}
           filename={isDone ? analysisPlots?.end_use : null}
           label="End-Use Energy Breakdown"
           isRunning={isRunning}
@@ -218,7 +285,6 @@ export function AnalysisResultsStep() {
           <div>
             <p className="text-xs font-semibold text-primary mb-2">Electricity (kWh)</p>
             <PlotOrState
-              projectName={pklProjectName}
               filename={isDone ? analysisPlots?.elec_monthly : null}
               label="Electricity Monthly Breakdown"
               isRunning={isRunning}
@@ -227,7 +293,6 @@ export function AnalysisResultsStep() {
           <div>
             <p className="text-xs font-semibold text-primary mb-2">Natural Gas (Therms)</p>
             <PlotOrState
-              projectName={pklProjectName}
               filename={isDone ? analysisPlots?.ng_monthly : null}
               label="Natural Gas Monthly Breakdown"
               isRunning={isRunning}

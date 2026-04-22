@@ -1,5 +1,3 @@
-
-
 import pandas as pd
 import geocoder
 import numpy 
@@ -37,13 +35,13 @@ class EvaluateMeasure:
             self.WallArea["Left"] = y1*WallHeight
             self.WallArea["Right"] = y1*WallHeight
             self.WallArea["Back"] = x1*WallHeight
-            
+
             self.WindowArea = {}
             self.WindowArea["Front"] = WWR["Front"]/100*self.WallArea["Front"]
             self.WindowArea["Left"] = WWR["Left"]/100*self.WallArea["Left"]
             self.WindowArea["Right"] = WWR["Right"]/100*self.WallArea["Right"]
             self.WindowArea["Back"] = WWR["Back"]/100*self.WallArea["Back"]
-            
+
             self.ExtWallArea = {}
             for face in self.WallArea.keys():
                 self.ExtWallArea[face] = self.WallArea[face] - self.WindowArea[face]
@@ -391,13 +389,16 @@ class EvaluateMeasure:
         #print("Lighting New", df_MonthlyEndUse_EEM["EL-Lighting"])
         
         LEDOptions = pd.read_csv(os.path.join(self.ProjectPath,"CostData","Equipment-LED.csv"))
-        
+
+        # Snap percentage_change to the nearest available row in the CSV
+        nearest_idx = (LEDOptions["PercentageLED"] - percentage_change).abs().idxmin()
+
         EEMResults = {}
         EEMResults["Measure"] = "LEDLighting"
         EEMResults["OrgPropValue"] = pct_LED
         EEMResults["NewPropValue"] = pct_LED_EEM
-        EEMResults["InitFixedCost"] = LEDOptions.loc[LEDOptions.PercentageLED==percentage_change,"FixedCost"].astype(float).iloc[0]
-        EEMResults["UnitVarCost"] = LEDOptions.loc[LEDOptions.PercentageLED==percentage_change,"Costpersft"].astype(float).iloc[0]
+        EEMResults["InitFixedCost"] = float(LEDOptions.loc[nearest_idx, "FixedCost"])
+        EEMResults["UnitVarCost"] = float(LEDOptions.loc[nearest_idx, "Costpersft"])
         EEMResults["Unit"] = self.FloorArea
         EEMResults["InitVarCost"] = EEMResults["UnitVarCost"]*EEMResults["Unit"]
         EEMResults["RetrofitCost"] = 0

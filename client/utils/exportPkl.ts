@@ -1,6 +1,5 @@
 import type { FormState } from "@/types/form";
-
-const API = "http://localhost:8000";
+import { API } from "@/utils/api";
 
 export async function exportPkl(state: FormState, pklProjectName: string): Promise<void> {
   const raw = state.projectName || pklProjectName || "Project";

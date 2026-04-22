@@ -2,11 +2,17 @@
 
 import React, { useRef, useState, DragEvent } from "react";
 import { useForm } from "@/context/FormContext";
+import { API } from "@/utils/api";
 
 type Status = "idle" | "loading" | "success" | "error";
 
-export function UtilityUpload() {
+interface UtilityUploadProps {
+  projectName?: string;
+}
+
+export function UtilityUpload({ projectName: projectNameProp }: UtilityUploadProps = {}) {
   const { pklProjectName, setUtilUploaded, utilFileName } = useForm();
+  const resolvedProjectName = projectNameProp || pklProjectName;
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>(utilFileName ? "success" : "idle");
   const [fileName, setFileName] = useState<string>(utilFileName);
@@ -20,9 +26,9 @@ export function UtilityUpload() {
       return;
     }
 
-    if (!pklProjectName) {
+    if (!resolvedProjectName) {
       setStatus("error");
-      setErrorMsg("Please upload a *-Baseline.pkl file first so the project name is known.");
+      setErrorMsg("Please set a project name first so the utility data can be saved.");
       return;
     }
 
@@ -34,7 +40,7 @@ export function UtilityUpload() {
     formData.append("file", file);
 
     try {
-      const res = await fetch(`http://localhost:8000/upload-utility/${encodeURIComponent(pklProjectName)}`, {
+      const res = await fetch(`${API}/upload-utility/${encodeURIComponent(resolvedProjectName)}`, {
         method: "POST",
         body: formData,
       });

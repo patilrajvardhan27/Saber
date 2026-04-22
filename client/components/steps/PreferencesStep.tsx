@@ -14,9 +14,7 @@ import { PklUpload } from "@/components/PklUpload";
 export function ProjectSetupStep() {
   const { state, setField } = useForm();
   return (
-    <StepLayout>
-      <PklUpload />
-
+    <StepLayout nextDisabled={!state.projectName.trim()}>
       {/* Project Information */}
       <Card>
         <SectionHeader
@@ -76,6 +74,8 @@ export function ProjectSetupStep() {
           </FormField>
         </div>
       </Card>
+
+      <PklUpload />
     </StepLayout>
   );
 }

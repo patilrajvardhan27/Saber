@@ -1,7 +1,6 @@
 import type { FormState } from "@/types/form";
 import type { AnalysisPlots, EcmMetrics, EcmPlots } from "@/context/FormContext";
-
-const API = "http://localhost:8000";
+import { API } from "@/utils/api";
 
 async function toDataUri(url: string): Promise<string> {
   try {
@@ -129,7 +128,7 @@ td{padding:6px 10px;vertical-align:top}
 .plot-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
 .plot-item img{width:100%;border-radius:6px;border:1px solid #e0eee0}
 .pl{font-size:11px;color:#555;margin-bottom:4px;font-weight:600}
-.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px;margin-bottom:4px}
+.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px;margin-bottom:4px}
 .mc{border:1px solid #d0e8d0;border-radius:10px;padding:14px;text-align:center;background:#f5fbf5}
 .mv{font-size:20px;font-weight:700}
 .ml{font-size:10px;color:#666;margin-top:4px;line-height:1.3}
@@ -232,10 +231,74 @@ ${sec("Equipment & Appliances",
 )}
 ${sec("Lighting",
   r("Lighting Power Density", state.lpd, "W/ft²") +
-  r("Operating Hours", state.nHoursLighting, "hrs/yr") +
   r("Daylighting Control", state.daylighting) +
   r("LED Fraction (Current)", state.led, "%")
 )}
+
+<!-- Section 7: Financials & Costs -->
+${sec("Financials & Costs",
+  r("Cost per Therm", state.thermCost, "$/therm") +
+  r("Cost per kWh", state.kWhCost, "$/kWh") +
+  r("Discount Rate", state.discountRate, "%") +
+  r("Measure Lifetime", state.lifetime, "yrs")
+)}
+
+<!-- Section 8: ECM Selections -->
+${(() => {
+  const baselineMap: Record<string, string> = {
+    ecmWallInsulation:    state.wallInsulation    || "—",
+    ecmInfiltration:      state.ach50             || "—",
+    ecmCeilingInsulation: state.ceilingInsulation || "—",
+    ecmWindowMaterial:    state.windowMaterial?.[0] || "—",
+    ecmNightSetback:      state.nightSetback      || "—",
+    ecmNightSetbackHours: state.nNightSetbackHours|| "—",
+    ecmDaylighting:       state.daylighting       || "No",
+    ecmEconomizer:        state.economizer        || "No",
+    ecmOccupancySensor:   "No",
+    ecmLED:               state.led               || "0",
+    ecmReduceEquipLoad:   "0%",
+    ecmCoolingEff:        state.coolingEff        || "—",
+    ecmHeatingEqp:        state.heatingEqp        || "—",
+    ecmHeatingEff:        state.heatingEff        || "—",
+  };
+  const ecmMeasures = [
+    { key: "ecmWallInsulation",    label: "Wall Insulation" },
+    { key: "ecmInfiltration",      label: "Infiltration (ACH50)" },
+    { key: "ecmCeilingInsulation", label: "Ceiling Insulation" },
+    { key: "ecmWindowMaterial",    label: "Window Material" },
+    { key: "ecmNightSetback",      label: "Night Setback (°F)" },
+    { key: "ecmNightSetbackHours", label: "Night Setback Hours" },
+    { key: "ecmDaylighting",       label: "Daylighting" },
+    { key: "ecmEconomizer",        label: "Economizer" },
+    { key: "ecmOccupancySensor",   label: "Occupancy Sensor" },
+    { key: "ecmLED",               label: "LED Lighting (%)" },
+    { key: "ecmReduceEquipLoad",   label: "Reduce Equipment Load" },
+    { key: "ecmCoolingEff",        label: "Cooling Efficiency" },
+    { key: "ecmHeatingEqp",        label: "Heating Equipment" },
+    { key: "ecmHeatingEff",        label: "Heating Efficiency" },
+  ];
+  const hasAny = ecmMeasures.some((m) => (state as unknown as Record<string,string>)[m.key]);
+  if (!hasAny) return "";
+  const rows = ecmMeasures.map((m, i) => {
+    const selected = (state as unknown as Record<string,string>)[m.key] || "No change";
+    const baseline = baselineMap[m.key];
+    return `<tr style="background:${i % 2 === 0 ? "#fff" : "#f5faf5"}">
+      <td class="lbl" style="width:35%">${m.label}</td>
+      <td class="val" style="width:30%;color:#888;font-style:italic">${baseline}</td>
+      <td class="val" style="width:35%;color:${selected === "No change" ? "#aaa" : "#1a7d1a"};font-weight:${selected === "No change" ? "400" : "600"}">${selected}</td>
+    </tr>`;
+  }).join("");
+  return `<div class="sec"><h2>ECM Selections</h2>
+    <table>
+      <thead><tr style="background:#e8f4e8">
+        <th style="text-align:left;padding:6px 10px;font-size:11px;color:#1a3d1a;width:35%">Measure</th>
+        <th style="text-align:left;padding:6px 10px;font-size:11px;color:#1a3d1a;width:30%">Baseline</th>
+        <th style="text-align:left;padding:6px 10px;font-size:11px;color:#1a3d1a;width:35%">ECM Option</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+})()}
 
 ${(P.weather || P.end_use || P.elec_monthly || P.ng_monthly)
   ? `<div class="pb"></div>
@@ -259,8 +322,11 @@ ${(ecmMetrics || P.ecm_elec_monthly_comp || P.ecm_ng_monthly_comp)
   ? `<div class="pb"></div>
      <div class="sec"><h2>ECM Package Results</h2>
      ${ecmMetrics ? `<div class="metric-grid">
+       <div class="mc"><div class="mv" style="color:#555">$${fmt(ecmMetrics.org_lcc)}</div><div class="ml">Baseline Life-Cycle Cost</div></div>
+       <div class="mc"><div class="mv blue">$${fmt(ecmMetrics.lcc)}</div><div class="ml">ECM Package Life-Cycle Cost</div></div>
        <div class="mc"><div class="mv orange">$${fmt(ecmMetrics.tic)}</div><div class="ml">Total Installed Cost</div></div>
-       <div class="mc"><div class="mv blue">$${fmt(ecmMetrics.lcc)}</div><div class="ml">Package Life-Cycle Cost</div></div>
+     </div>
+     <div class="metric-grid" style="grid-template-columns:1fr 1fr;margin-top:12px">
        <div class="mc"><div class="mv green">${fmt(ecmMetrics.kwh_pct_savings, 1)}%</div><div class="ml">Electricity Savings</div><div class="ms">${fmt(ecmMetrics.org_kwh)} → ${fmt(ecmMetrics.eem_kwh)} kWh</div></div>
        <div class="mc"><div class="mv teal">${fmt(ecmMetrics.therms_pct_savings, 1)}%</div><div class="ml">Natural Gas Savings</div><div class="ms">${fmt(ecmMetrics.org_therms)} → ${fmt(ecmMetrics.eem_therms)} therms</div></div>
      </div>` : ""}

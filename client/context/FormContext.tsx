@@ -6,6 +6,7 @@ import { FormState, initialFormState, FormField, SECTIONS, TOTAL_STEPS } from "@
 export interface EcmMetrics {
   tic: number;
   lcc: number;
+  org_lcc: number;
   kwh_pct_savings: number;
   therms_pct_savings: number;
   org_kwh: number;

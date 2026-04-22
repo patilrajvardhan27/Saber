@@ -10,7 +10,7 @@ export function Select({ options, placeholder, className = "", ...props }: Selec
     <div className="relative">
       <select className={`form-select pr-8 ${className}`} {...props}>
         {placeholder && (
-          <option value="" disabled>
+          <option value="">
             {placeholder}
           </option>
         )}

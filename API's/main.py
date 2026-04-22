@@ -62,9 +62,10 @@ pd.date_range         = _date_range  # type: ignore[assignment]
 
 app = FastAPI(title="Saber BldgAuditTool API")
 
+_extra_origins = [o.strip() for o in os.environ.get("FRONTEND_URL", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001"] + _extra_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -80,8 +81,12 @@ _executor = ThreadPoolExecutor(max_workers=2)
 # ── In-memory cache for baseline analysis results (keyed by project_name) ──────
 _analysis_cache: dict[str, dict] = {}
 
+# ── In-memory cache for uploaded pkl DataFrames (keyed by project_name) ────────
+_pkl_df_cache: dict[str, "pd.DataFrame"] = {}
+
 # ── PKL field mapping ──────────────────────────────────────────────────────────
 PROP_KEY_MAP: dict[str, str] = {
+    "ProjectName":        "projectName",
     "BuildingType":       "buildingType",
     "Location":           "location",
     "Shape":              "shapeType",
@@ -118,7 +123,6 @@ PROP_KEY_MAP: dict[str, str] = {
     "FridgeRating":       "fridgeRating",
     "MiscPlugLoadRating": "miscPlugLoadRating",
     "MiscTVRating":       "tvRating",
-    "nHoursLighting":     "nHoursLighting",
     "LPD":                "lpd",
     "OfficeEqpRating":    "officeEqpRating",
     "HeatingEquipment":   "heatingEqp",
@@ -142,6 +146,40 @@ LIST_FIELDS: dict[str, str] = {
     "Orientation":    "orientation",
     "WindowMaterial": "windowMaterial",
 }
+
+
+def _normalize_eff(value: str) -> str:
+    """Convert display efficiency labels to the numeric strings the analysis package expects.
+
+    Examples:
+      "AFUE 90%"   → "0.9"
+      "SEER2 13.4" → "13.4"
+      "HSPF2 7.5"  → "7.5"
+      "COP 1.0"    → "1.0"
+    """
+    import re as _re2
+    if not isinstance(value, str):
+        return value
+    # AFUE XX% → XX/100
+    m = _re2.match(r"AFUE\s+([\d.]+)%", value, _re2.IGNORECASE)
+    if m:
+        return str(float(m.group(1)) / 100)
+    # SEER2/SEER/HSPF2/HSPF/COP followed by a number
+    m = _re2.match(r"(?:SEER2?|HSPF2?|COP)\s+([\d.]+)", value, _re2.IGNORECASE)
+    if m:
+        return m.group(1)
+    return value
+
+
+def _ensure_cost_data(project_path: str) -> None:
+    """Copy CostData into a project folder if it doesn't already exist."""
+    dest = os.path.join(project_path, "CostData")
+    if os.path.isdir(dest):
+        return
+    import shutil
+    sources = glob_module.glob(os.path.join(PROJECTS_DIR, "*", "CostData"))
+    if sources:
+        shutil.copytree(sources[0], dest)
 
 
 def _val(df: pd.DataFrame, key: str) -> str:
@@ -170,24 +208,12 @@ async def upload_pkl(file: UploadFile = File(...)):
     if not isinstance(df, pd.DataFrame) or "PropKey" not in df.columns:
         raise HTTPException(status_code=422, detail="File does not contain expected PropKey/PropValue structure.")
 
-    # Find the correct project folder:
-    # 1. Search existing project subdirectories for one already containing this pkl filename
-    # 2. Fall back to deriving project name from the pkl filename itself
-    project_name: str | None = None
-    if os.path.exists(PROJECTS_DIR):
-        for folder in os.listdir(PROJECTS_DIR):
-            folder_path = os.path.join(PROJECTS_DIR, folder)
-            if os.path.isdir(folder_path) and os.path.exists(os.path.join(folder_path, file.filename)):
-                project_name = folder
-                break
+    # Derive project name from the file's stem (strip "-Baseline.pkl") — nothing written to disk
+    basename = os.path.basename(file.filename)
+    project_name: str = _val(df, "ProjectName") or basename[: -len("-Baseline.pkl")]
 
-    if project_name is None:
-        project_name = file.filename[: -len("-Baseline.pkl")]
-
-    project_path = os.path.join(PROJECTS_DIR, project_name)
-    os.makedirs(project_path, exist_ok=True)
-    with open(os.path.join(project_path, file.filename), "wb") as fout:
-        fout.write(contents)
+    # Cache df in memory only — no files saved locally
+    _pkl_df_cache[project_name] = df
 
     fields: dict[str, object] = {}
     for prop_key, form_key in PROP_KEY_MAP.items():
@@ -224,8 +250,9 @@ async def upload_utility(project_name: str, file: UploadFile = File(...)):
 
 
 # ── Run analysis ───────────────────────────────────────────────────────────────
-def _run_analysis_sync(project_name: str) -> dict:
-    """Runs the full BldgAuditTool analysis pipeline. Called in a thread pool."""
+def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None) -> dict:
+    """Runs the full BldgAuditTool analysis pipeline in a temp directory. Nothing is saved locally."""
+    import tempfile, shutil, base64
     from BldgAuditToolPackage.AnalyzeUtilityData import (
         GetWeather,
         BuildChangePointModel,
@@ -233,118 +260,104 @@ def _run_analysis_sync(project_name: str) -> dict:
     )
     from BldgAuditToolPackage.PostProcessing import PlotResults
 
-    project_path = os.path.join(PROJECTS_DIR, project_name)
-    pkl_candidates = glob_module.glob(os.path.join(project_path, "*-Baseline.pkl"))
-    if not pkl_candidates:
-        raise FileNotFoundError(f"No *-Baseline.pkl found in {project_path}")
-    pkl_path = pkl_candidates[0]
+    if df_input is None:
+        raise ValueError("No building data provided — please upload a PKL file first.")
 
-    util_path = os.path.join(project_path, f"{project_name}_UtilityData.csv")
-    if not os.path.exists(util_path):
-        raise FileNotFoundError(f"Utility CSV not found: {util_path}")
-
-    df_input = pd.read_pickle(pkl_path)
     bldg_location = _val(df_input, "Location")
     if not bldg_location:
         raise ValueError("Building location is missing from the PKL file.")
 
-    # 1. Download weather data
-    df_weather, weather_station_name = GetWeather(project_path, project_name, bldg_location)
+    # All file I/O happens inside a temp directory that is deleted when done
+    tmp = tempfile.mkdtemp()
+    try:
+        # Utility CSV: borrow from an existing project (read-only from PROJECTS_DIR)
+        util_path = os.path.join(tmp, f"{project_name}_UtilityData.csv")
+        sources = glob_module.glob(os.path.join(PROJECTS_DIR, "**", "*_UtilityData.csv"), recursive=True)
+        if not sources:
+            raise FileNotFoundError("No reference utility data CSV found in any project folder.")
+        shutil.copy(sources[0], util_path)
 
-    # 2. Build change-point models
-    cpm = BuildChangePointModel(project_path, project_name, df_input, df_weather)
-    (
-        model_type_cooling,
-        model_params_cooling,
-        model_type_heating,
-        model_params_heating,
-    ) = cpm.BuildTemperatureBasedModel()
-    dd_results, dfutil_sorted = cpm.BuildDegreeDayBasedModel(
-        model_type_cooling, model_params_cooling, model_type_heating, model_params_heating
-    )
-    best_model = cpm.ChooseBestModel(dd_results, model_params_heating, model_params_cooling)
+        # CostData: symlink or copy from an existing project (needed by EvaluateMeasure)
+        cost_sources = glob_module.glob(os.path.join(PROJECTS_DIR, "*", "CostData"))
+        if cost_sources:
+            shutil.copytree(cost_sources[0], os.path.join(tmp, "CostData"))
 
-    # 3. Monthly end-use breakdown
-    df_monthly = GetMonthlyEndUseBreakdown(best_model, df_weather, df_input, False)
+        # 1. Download weather data (saved to tmp, deleted with it)
+        df_weather, weather_station_name = GetWeather(tmp, project_name, bldg_location)
 
-    # 4. Generate and save all plots
-    plotter = PlotResults(True, project_path)
-    plotter.PlotWeather(df_weather, weather_station_name)
-    plotter.PlotEndUseBreakdown(df_monthly)
-    plotter.PlotInverseModelComparison(df_monthly, dfutil_sorted)
+        # 2. Build change-point models
+        cpm = BuildChangePointModel(tmp, project_name, df_input, df_weather)
+        (model_type_cooling, model_params_cooling,
+         model_type_heating, model_params_heating) = cpm.BuildTemperatureBasedModel()
+        dd_results, dfutil_sorted = cpm.BuildDegreeDayBasedModel(
+            model_type_cooling, model_params_cooling, model_type_heating, model_params_heating
+        )
+        best_model = cpm.ChooseBestModel(dd_results, model_params_heating, model_params_cooling)
 
-    # 5. Collect generated plot filenames
-    all_pngs = [os.path.basename(p) for p in glob_module.glob(os.path.join(project_path, "*.png"))]
+        # 3. Monthly end-use breakdown
+        df_monthly = GetMonthlyEndUseBreakdown(best_model, df_weather, df_input, False)
 
-    def _exists(name: str) -> str | None:
-        return name if os.path.exists(os.path.join(project_path, name)) else None
+        # 4. Generate plots into tmp
+        plotter = PlotResults(True, tmp)
+        plotter.PlotWeather(df_weather, weather_station_name)
+        plotter.PlotEndUseBreakdown(df_monthly.clip(lower=0))
+        plotter.PlotInverseModelComparison(df_monthly, dfutil_sorted)
 
-    weather_plot = f"WeatherPlot_{weather_station_name}.png"
-    elec_temp = next(
-        (f for f in all_pngs if f.startswith("Electricity_") and f.endswith("_TempBasedChngPtModel.png")),
-        None,
-    )
-    ff_temp = next(
-        (f for f in all_pngs if f.startswith("Fossil Fuel_") and f.endswith("_TempBasedChngPtModel.png")),
-        None,
-    )
-    elec_dd = next(
-        (
-            _exists(name)
-            for name in [
-                "Electricity_Cooling_DDBasedChngPtModel.png",
-                "Electricity_Heating_DDBasedChngPtModel.png",
-            ]
-            if _exists(name)
-        ),
-        None,
-    )
+        # 5. Encode each PNG as base64 (files stay in tmp and are deleted below)
+        def _b64(name: str) -> str | None:
+            path = os.path.join(tmp, name)
+            if not os.path.exists(path):
+                return None
+            with open(path, "rb") as f:
+                return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
 
-    plots = {
-        "weather": _exists(weather_plot),
-        "elec_temp_model": elec_temp,
-        "ff_temp_model": ff_temp,
-        "ff_dd_model": _exists("FossilFuel_Heating_DDBasedChngPtModel.png"),
-        "elec_dd_model": elec_dd,
-        "end_use": _exists("EndUseBreakdown.png"),
-        "ng_monthly": _exists("NaturalGasMonthlyBreakdown.png"),
-        "elec_monthly": _exists("ElectricityMonthlyBreakdown.png"),
-    }
+        all_pngs = [os.path.basename(p) for p in glob_module.glob(os.path.join(tmp, "*.png"))]
+        weather_plot = f"WeatherPlot_{weather_station_name}.png"
+        elec_temp = next((f for f in all_pngs if f.startswith("Electricity_") and f.endswith("_TempBasedChngPtModel.png")), None)
+        ff_temp   = next((f for f in all_pngs if f.startswith("Fossil Fuel_")  and f.endswith("_TempBasedChngPtModel.png")), None)
+        elec_dd   = next((f for f in ["Electricity_Cooling_DDBasedChngPtModel.png", "Electricity_Heating_DDBasedChngPtModel.png"]
+                          if os.path.exists(os.path.join(tmp, f))), None)
 
-    # 6. Augment best_model with totals needed by EvaluateMeasure and cache everything
-    best_model["OrgTotalElectricity"] = (
-        df_monthly.loc[:, df_monthly.columns.str.contains("EL")].sum().sum() / 3.41
-    )
-    best_model["OrgTotalNaturalGas"] = (
-        df_monthly.loc[:, df_monthly.columns.str.contains("NG")].sum().sum() / 100
-    )
-    best_model["BLC_Heat_EL"] = float(df_monthly["BLC_Heat_EL"].mean())
-    best_model["BLC_Heat_NG"] = float(df_monthly["BLC_Heat_NG"].mean())
-    best_model["BLC_Cool_EL"] = float(df_monthly["BLC_Cool_EL"].mean())
+        plots = {
+            "weather":         _b64(weather_plot),
+            "elec_temp_model": _b64(elec_temp) if elec_temp else None,
+            "ff_temp_model":   _b64(ff_temp)   if ff_temp   else None,
+            "ff_dd_model":     _b64("FossilFuel_Heating_DDBasedChngPtModel.png"),
+            "elec_dd_model":   _b64(elec_dd)   if elec_dd   else None,
+            "end_use":         _b64("EndUseBreakdown.png"),
+            "ng_monthly":      _b64("NaturalGasMonthlyBreakdown.png"),
+            "elec_monthly":    _b64("ElectricityMonthlyBreakdown.png"),
+        }
 
-    _analysis_cache[project_name] = {
-        "df_weather": df_weather,
-        "df_input": df_input,
-        "best_model": best_model,
-        "df_monthly": df_monthly,
-        "dfutil_sorted": dfutil_sorted,
-    }
+        # 6. Cache in-memory results for ECM evaluation
+        best_model["OrgTotalElectricity"] = df_monthly.loc[:, df_monthly.columns.str.contains("EL")].sum().sum() / 3.41
+        best_model["OrgTotalNaturalGas"]  = df_monthly.loc[:, df_monthly.columns.str.contains("NG")].sum().sum() / 100
+        best_model["BLC_Heat_EL"] = float(df_monthly["BLC_Heat_EL"].mean())
+        best_model["BLC_Heat_NG"] = float(df_monthly["BLC_Heat_NG"].mean())
+        best_model["BLC_Cool_EL"] = float(df_monthly["BLC_Cool_EL"].mean())
 
-    return {"status": "success", "plots": plots}
+        _analysis_cache[project_name] = {
+            "df_weather": df_weather,
+            "df_input": df_input,
+            "best_model": best_model,
+            "df_monthly": df_monthly,
+            "dfutil_sorted": dfutil_sorted,
+        }
+
+        return {"status": "success", "plots": plots}
+
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)  # delete everything in the temp dir
 
 
 @app.post("/run-analysis/{project_name}")
 async def run_analysis(project_name: str):
-    project_path = os.path.join(PROJECTS_DIR, project_name)
-    pkl_candidates = glob_module.glob(os.path.join(project_path, "*-Baseline.pkl"))
-    if not pkl_candidates:
-        raise HTTPException(status_code=404, detail=f"PKL file not found for project '{project_name}'.")
-    if not os.path.exists(os.path.join(project_path, f"{project_name}_UtilityData.csv")):
-        raise HTTPException(status_code=404, detail=f"Utility data CSV not found for project '{project_name}'.")
+    # Use the cached df from the pkl upload; _run_analysis_sync borrows utility CSV if needed
+    df_input = _pkl_df_cache.get(project_name)
 
     loop = asyncio.get_event_loop()
     try:
-        result = await loop.run_in_executor(_executor, _run_analysis_sync, project_name)
+        result = await loop.run_in_executor(_executor, _run_analysis_sync, project_name, df_input)
         return result
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
@@ -366,6 +379,7 @@ class EcmRequest(BaseModel):
     therm_rate: float = 1.20
     discount_rate: float = 3.0
     lifetime: int = 20
+    form_data: dict = {}
 
 
 def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
@@ -382,7 +396,53 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
     df_monthly_org = cache["df_monthly"]
     best_model_orig = cache["best_model"]
 
-    project_path = os.path.join(PROJECTS_DIR, project_name)
+    # ECM evaluation uses a temp directory — nothing saved locally
+    import tempfile, shutil as _shutil
+    tmp_ecm = tempfile.mkdtemp()
+    cost_sources = glob_module.glob(os.path.join(PROJECTS_DIR, "*", "CostData"))
+    if cost_sources:
+        _shutil.copytree(cost_sources[0], os.path.join(tmp_ecm, "CostData"))
+    project_path = tmp_ecm
+
+    # Ensure geometry fields required by EvaluateMeasure.__init__ are present and valid
+    def _patch_df(df: "pd.DataFrame") -> "pd.DataFrame":
+        df = df.copy()
+        _GEO_DEFAULTS = {
+            "Shape":       "Rectangle",
+            "x1": "10", "x2": "0", "y1": "10", "y2": "0",
+            "WallHeight":  "10",
+            "WindowHeight": "3",
+            "FloorArea":   "1000",
+            "FloorQty":    "1",
+        }
+        for prop_key, default in _GEO_DEFAULTS.items():
+            mask = df["PropKey"] == prop_key
+            if not mask.any():
+                df = pd.concat([df, pd.DataFrame([{"PropKey": prop_key, "PropValue": default}])], ignore_index=True)
+            elif df.loc[mask, "PropValue"].iloc[0] in (None, ""):
+                df.loc[mask, "PropValue"] = default
+        # Force Shape to Rectangle (package only supports Rectangle for ECM)
+        df.loc[df["PropKey"] == "Shape", "PropValue"] = "Rectangle"
+        # nHoursLighting removed from UI — inject default so EnergyAnalysis.py doesn't crash
+        if not (df["PropKey"] == "nHoursLighting").any():
+            df = pd.concat([df, pd.DataFrame([{"PropKey": "nHoursLighting", "PropValue": "2920"}])], ignore_index=True)
+        # CeilingConst not in the form — inject the only value that exists in Construction-Floor.csv
+        if not (df["PropKey"] == "CeilingConst").any():
+            df = pd.concat([df, pd.DataFrame([{"PropKey": "CeilingConst", "PropValue": "Floor construction Reversed"}])], ignore_index=True)
+        # Ensure WWR dict row exists
+        if not (df["PropKey"] == "WWR").any():
+            def _gv(key):
+                rows = df.loc[df["PropKey"] == key, "PropValue"]
+                v = rows.iloc[0] if not rows.empty else None
+                try: return float(v) if v not in (None, "") else 0.0
+                except: return 0.0
+            df = pd.concat([df, pd.DataFrame([{"PropKey": "WWR", "PropValue": {
+                "Front": _gv("WWR_Front"), "Left": _gv("WWR_Left"),
+                "Back":  _gv("WWR_Back"),  "Right": _gv("WWR_Right"),
+            }}])], ignore_index=True)
+        return df
+
+    df_input_org = _patch_df(df_input_org)
 
     # Build df_input_EEM: copy with ECM values substituted
     df_input_eem = df_input_org.copy()
@@ -426,7 +486,9 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
     # Run selected measures
     if req.ecm_wall_insulation:
         ext_wall = _val(df_input_org, "ExtWallConst")
-        wall_org = _val(df_input_org, "R-WallInsulation")
+        wall_org = _val(df_input_org, "R-WallInsulation") or "Uninsulated"
+        if not ext_wall:
+            raise RuntimeError("Wall Construction Type is required to evaluate the Wall Insulation ECM — please set it in the Envelope step.")
         r = _run_measure(eval_measure.WallInsulation, ext_wall, wall_org, req.ecm_wall_insulation)
         dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
 
@@ -437,10 +499,10 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
         dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
 
     if req.ecm_ceiling_insulation:
-        ext_roof = _val(df_input_org, "ExtRoofConst")
+        ext_roof = _val(df_input_org, "ExtRoofConst") or "Asphalt Shingles"
         ceil_const_rows = df_input_org.loc[df_input_org["PropKey"] == "CeilingConst", "PropValue"]
-        ceil_const = str(ceil_const_rows.iloc[0]) if not ceil_const_rows.empty else "Wood Joist 10in."
-        ceil_org = _val(df_input_org, "R-CeilingInsulation")
+        ceil_const = str(ceil_const_rows.iloc[0]) if not ceil_const_rows.empty else "Floor construction Reversed"
+        ceil_org = _val(df_input_org, "R-CeilingInsulation") or "Uninsulated"
         r = _run_measure(eval_measure.CeilingInsulation, ext_roof, ceil_const, ceil_org, req.ecm_ceiling_insulation)
         dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
 
@@ -468,15 +530,12 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
         r = _run_measure(eval_measure.Economizer, bldg_address)
         dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
 
-    if dfMeasure.empty:
-        return {"status": "no_measures", "metrics": {}, "plots": {}}
-
-    # Generate comparison plots
+    # Generate comparison plots (use baseline for both when no measures selected)
     plotter = PlotResults(True, project_path)
     plotter.PlotEEMEndUseComparison(df_monthly_org, df_eem_last)
 
     # Compute package metrics
-    tic = float(dfMeasure["InitFixedCost"].sum() + dfMeasure["InitVarCost"].sum())
+    tic = float(dfMeasure["InitFixedCost"].sum() + dfMeasure["InitVarCost"].sum()) if not dfMeasure.empty else 0.0
     org_kwh = float(best_model_orig["OrgTotalElectricity"])
     org_therms = float(best_model_orig["OrgTotalNaturalGas"])
     eem_kwh = float(df_eem_last.loc[:, df_eem_last.columns.str.contains("EL-")].sum().sum() / 3.41)
@@ -484,46 +543,70 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
 
     r_discount = req.discount_rate / 100.0
     uspw = (1 - (1 + r_discount) ** (-req.lifetime)) / r_discount if r_discount != 0 else req.lifetime
+    aoc_org = req.kwh_rate * org_kwh + req.therm_rate * org_therms
     aoc_eem = req.kwh_rate * eem_kwh + req.therm_rate * eem_therms
+    org_lcc = uspw * aoc_org
     lcc = tic + uspw * aoc_eem
 
     kwh_pct = 100.0 * (org_kwh - eem_kwh) / org_kwh if org_kwh else 0.0
     therms_pct = 100.0 * (org_therms - eem_therms) / org_therms if org_therms else 0.0
 
-    def _exists(name: str) -> str | None:
-        return name if os.path.exists(os.path.join(project_path, name)) else None
+    import base64
 
-    return {
-        "status": "success",
-        "metrics": {
-            "tic": round(tic, 2),
-            "lcc": round(lcc, 2),
-            "kwh_pct_savings": round(kwh_pct, 1),
-            "therms_pct_savings": round(therms_pct, 1),
-            "org_kwh": round(org_kwh, 1),
-            "eem_kwh": round(eem_kwh, 1),
-            "org_therms": round(org_therms, 1),
-            "eem_therms": round(eem_therms, 1),
-        },
-        "plots": {
-            "elec_monthly_comp": _exists("ElectricityMonthlyEEMComp.png"),
-            "ng_monthly_comp": _exists("NaturalGasMonthlyEEMComp.png"),
-        },
-        "measures": dfMeasure.to_dict(orient="records"),
-    }
+    def _b64_ecm(name: str) -> str | None:
+        path = os.path.join(tmp_ecm, name)
+        if not os.path.exists(path):
+            return None
+        with open(path, "rb") as f:
+            return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+
+    try:
+        return {
+            "status": "success",
+            "metrics": {
+                "tic": round(tic, 2),
+                "lcc": round(lcc, 2),
+                "org_lcc": round(org_lcc, 2),
+                "kwh_pct_savings": round(kwh_pct, 1),
+                "therms_pct_savings": round(therms_pct, 1),
+                "org_kwh": round(org_kwh, 1),
+                "eem_kwh": round(eem_kwh, 1),
+                "org_therms": round(org_therms, 1),
+                "eem_therms": round(eem_therms, 1),
+            },
+            "plots": {
+                "elec_monthly_comp": _b64_ecm("ElectricityMonthlyEEMComp.png"),
+                "ng_monthly_comp":   _b64_ecm("NaturalGasMonthlyEEMComp.png"),
+            },
+            "measures": dfMeasure.to_dict(orient="records"),
+        }
+    finally:
+        _shutil.rmtree(tmp_ecm, ignore_errors=True)  # delete temp dir
 
 
 @app.post("/run-ecm/{project_name}")
 async def run_ecm(project_name: str, req: EcmRequest):
-    if project_name not in _analysis_cache:
-        raise HTTPException(status_code=400, detail="Baseline analysis not found. Upload PKL and wait for analysis to complete.")
-
     loop = asyncio.get_event_loop()
+
+    # Rebuild analysis cache if it was lost (e.g. server restart) using form_data
+    if project_name not in _analysis_cache:
+        if not req.form_data:
+            raise HTTPException(status_code=400, detail="Baseline analysis not found. Please re-generate results first.")
+        try:
+            # Re-run analysis silently to repopulate the cache
+            manual_req = ManualAnalysisRequest(form_data=req.form_data)
+            await run_analysis_manual(project_name, manual_req)
+        except HTTPException:
+            raise
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"Failed to rebuild baseline analysis: {exc}")
+
     try:
         result = await loop.run_in_executor(_executor, _run_ecm_sync, project_name, req)
         return result
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"ECM evaluation failed: {exc}")
+        import traceback
+        raise HTTPException(status_code=500, detail=f"ECM evaluation failed: {exc}\n{traceback.format_exc()}")
 
 
 # ── Export PKL ────────────────────────────────────────────────────────────────
@@ -564,6 +647,132 @@ async def export_pkl_handler(project_name: str, req: ExportPklRequest):
         media_type="application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{safe_name}-Baseline.pkl"'},
     )
+
+
+# ── Manual (form-based) analysis ──────────────────────────────────────────────
+class ManualAnalysisRequest(BaseModel):
+    form_data: dict
+
+
+@app.post("/run-analysis-manual/{project_name}")
+async def run_analysis_manual(project_name: str, req: ManualAnalysisRequest):
+    """Build a DataFrame from form data in memory and run the analysis pipeline."""
+    REVERSE_MAP = {v: k for k, v in PROP_KEY_MAP.items()}
+    REVERSE_LIST = {v: k for k, v in LIST_FIELDS.items()}
+    _EFF_FIELDS = {"heatingEff", "coolingEff", "heatingEffCustom", "coolingEffCustom"}
+
+    rows = []
+    fd = req.form_data
+
+    for form_key, prop_key in REVERSE_MAP.items():
+        value = fd.get(form_key, "")
+        if form_key in _EFF_FIELDS and isinstance(value, str):
+            value = _normalize_eff(value)
+        rows.append({"PropKey": prop_key, "PropValue": value if value != "" else None})
+
+    for form_key, prop_key in REVERSE_LIST.items():
+        value = fd.get(form_key, [])
+        if isinstance(value, list):
+            value = value[0] if value else ""
+        rows.append({"PropKey": prop_key, "PropValue": value if value != "" else None})
+
+    # Apply defaults for keys required by EEMIndMeasureAnalysisObject.__init__
+    _DEFAULTS = {
+        "Shape":       "Rectangle",
+        "x1":          "10", "x2": "0", "y1": "10", "y2": "0",
+        "WallHeight":  "10",
+        "WindowHeight":"3",
+        "FloorArea":   "1000",
+        "FloorQty":    "1",
+    }
+    for i, row in enumerate(rows):
+        if row["PropKey"] in _DEFAULTS and row["PropValue"] in (None, ""):
+            rows[i] = {**row, "PropValue": _DEFAULTS[row["PropKey"]]}
+
+    # nHoursLighting was removed from the UI but EnergyAnalysis.py still requires it.
+    # Inject a fixed default (2920 hrs/yr = 8 hrs/day) if not already present.
+    if not any(r["PropKey"] == "nHoursLighting" for r in rows):
+        rows.append({"PropKey": "nHoursLighting", "PropValue": "2920"})
+
+    # Build the combined WWR dict row expected by EEMIndMeasureAnalysisObject
+    def _get_row(key: str):
+        for r in rows:
+            if r["PropKey"] == key:
+                v = r["PropValue"]
+                return float(v) if v not in (None, "") else 0.0
+        return 0.0
+
+    rows.append({
+        "PropKey": "WWR",
+        "PropValue": {
+            "Front": _get_row("WWR_Front"),
+            "Left":  _get_row("WWR_Left"),
+            "Back":  _get_row("WWR_Back"),
+            "Right": _get_row("WWR_Right"),
+        },
+    })
+
+    df = pd.DataFrame(rows, columns=["PropKey", "PropValue"])
+
+    safe_name = project_name.replace(" ", "").replace("/", "").replace("..", "")
+    if not safe_name:
+        raise HTTPException(status_code=400, detail="Project name is required.")
+
+    loop = asyncio.get_event_loop()
+    try:
+        result = await loop.run_in_executor(_executor, _run_analysis_sync, safe_name, df)
+        result["project_name"] = safe_name
+        return result
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {exc}")
+
+
+# ── List available projects ───────────────────────────────────────────────────
+@app.get("/list-projects")
+async def list_projects():
+    """Return all project folders that have a pkl file and a utility CSV."""
+    if not os.path.exists(PROJECTS_DIR):
+        return {"projects": []}
+    projects = []
+    for folder in sorted(os.listdir(PROJECTS_DIR)):
+        folder_path = os.path.join(PROJECTS_DIR, folder)
+        if not os.path.isdir(folder_path):
+            continue
+        has_pkl = bool(glob_module.glob(os.path.join(folder_path, "*-Baseline.pkl")))
+        has_util = os.path.exists(os.path.join(folder_path, f"{folder}_UtilityData.csv"))
+        if has_pkl and has_util:
+            projects.append(folder)
+    return {"projects": projects}
+
+
+# ── Load project from server folder ──────────────────────────────────────────
+@app.post("/load-project/{project_name}")
+async def load_project(project_name: str):
+    """Read the pkl from an existing project folder and return form fields."""
+    project_path = os.path.join(PROJECTS_DIR, project_name)
+    pkl_candidates = glob_module.glob(os.path.join(project_path, "*-Baseline.pkl"))
+    if not pkl_candidates:
+        raise HTTPException(status_code=404, detail=f"No pkl file found in project '{project_name}'.")
+
+    df = pd.read_pickle(pkl_candidates[0])
+    _pkl_df_cache[project_name] = df
+
+    fields: dict[str, object] = {}
+    for prop_key, form_key in PROP_KEY_MAP.items():
+        fields[form_key] = _val(df, prop_key)
+    for prop_key, form_key in LIST_FIELDS.items():
+        raw = _val(df, prop_key)
+        fields[form_key] = [raw] if raw else []
+
+    populated_keys = [k for k, v in fields.items() if v]
+    return {
+        "fields": fields,
+        "count": len(populated_keys),
+        "populated_keys": populated_keys,
+        "project_name": project_name,
+    }
 
 
 # ── Serve result plots ─────────────────────────────────────────────────────────

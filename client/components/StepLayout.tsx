@@ -125,7 +125,9 @@ export function StepLayout({
             <div className="border-b border-brand-100 mb-6" />
 
             {/* Scrollable form content */}
-            <div className="flex-1 overflow-y-auto pr-1 -mr-1">{children}</div>
+            <div className="flex-1 overflow-y-auto pr-1 -mr-1">
+              <div className="flex flex-col gap-5">{children}</div>
+            </div>
 
             {/* Navigation */}
             <div className="flex items-center justify-between pt-6 mt-4 border-t border-brand-100">

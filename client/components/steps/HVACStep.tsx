@@ -69,6 +69,8 @@ function EquipmentImageCard({
   );
 }
 
+const ASHP = "Air Source Heat Pump";
+
 export function HeatingCoolingStep() {
   const { state, setField } = useForm();
   const coolingEffOptions = COOLING_EFF_OPTIONS[state.coolingEqp] ?? [];
@@ -78,6 +80,28 @@ export function HeatingCoolingStep() {
 
   const coolingImg = state.coolingEqp ? (COOLING_IMAGE_MAP[state.coolingEqp] ?? null) : null;
   const heatingImg = state.heatingEqp ? (HEATING_IMAGE_MAP[state.heatingEqp] ?? null) : null;
+
+  const ashpMismatch =
+    (state.coolingEqp === ASHP && state.heatingEqp && state.heatingEqp !== ASHP && state.heatingEqp !== "NoHeating") ||
+    (state.heatingEqp === ASHP && state.coolingEqp && state.coolingEqp !== ASHP && state.coolingEqp !== "NoCooling");
+
+  function handleCoolingChange(val: string) {
+    setField("coolingEqp", val);
+    setField("coolingEff", "");
+    if (val === ASHP) {
+      setField("heatingEqp", ASHP);
+      setField("heatingEff", "");
+    }
+  }
+
+  function handleHeatingChange(val: string) {
+    setField("heatingEqp", val);
+    setField("heatingEff", "");
+    if (val === ASHP) {
+      setField("coolingEqp", ASHP);
+      setField("coolingEff", "");
+    }
+  }
 
   const imagePanel = (
     <div className="flex flex-col gap-5 w-full h-full">
@@ -115,6 +139,15 @@ export function HeatingCoolingStep() {
   return (
     <StepLayout imagePanel={imagePanel}>
 
+      {ashpMismatch && (
+        <div className="flex items-start gap-2 px-3 py-2.5 mb-1 rounded-lg bg-amber-50 border border-amber-300 text-xs text-amber-800">
+          <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+          </svg>
+          <span><span className="font-semibold">Equipment mismatch:</span> An Air Source Heat Pump provides both heating and cooling. Selecting different equipment for each system may produce inconsistent simulation results.</span>
+        </div>
+      )}
+
       {/* ── Cooling ── */}
       <Card>
         <SectionHeader
@@ -127,10 +160,7 @@ export function HeatingCoolingStep() {
               options={COOLING_EQUIPMENT}
               placeholder="Select cooling equipment…"
               value={state.coolingEqp}
-              onChange={(e) => {
-                setField("coolingEqp", e.target.value);
-                setField("coolingEff", "");
-              }}
+              onChange={(e) => handleCoolingChange(e.target.value)}
             />
           </FormField>
 
@@ -201,10 +231,7 @@ export function HeatingCoolingStep() {
               options={HEATING_EQUIPMENT}
               placeholder="Select heating equipment…"
               value={state.heatingEqp}
-              onChange={(e) => {
-                setField("heatingEqp", e.target.value);
-                setField("heatingEff", "");
-              }}
+              onChange={(e) => handleHeatingChange(e.target.value)}
             />
           </FormField>
 
