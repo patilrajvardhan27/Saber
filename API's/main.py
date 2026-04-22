@@ -62,10 +62,9 @@ pd.date_range         = _date_range  # type: ignore[assignment]
 
 app = FastAPI(title="Saber BldgAuditTool API")
 
-_extra_origins = [o.strip() for o in os.environ.get("FRONTEND_URL", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"] + _extra_origins,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
