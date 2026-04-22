@@ -4,6 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Building Audit Tool",
   description: "Energy Efficiency Evaluation for Buildings",
+  icons: { icon: "data:," },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
