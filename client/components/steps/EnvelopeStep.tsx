@@ -296,7 +296,7 @@ export function FoundationInfiltrationStep() {
               onChange={(e) => setField("foundation", e.target.value)}
             />
           </FormField>
-          <FormField label="Slab Insulation" fieldKey="slabInsulation">
+          <FormField label="Foundation Insulation" fieldKey="slabInsulation" hint="Under-slab or sub-floor insulation R-value">
             <Select
               options={SLAB_INSULATIONS}
               value={state.slabInsulation}

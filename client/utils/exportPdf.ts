@@ -68,36 +68,46 @@ export async function exportPdf(params: {
   state: FormState;
   pklProjectName: string;
   analysisPlots: AnalysisPlots | null;
+  analysisWeatherStation: string;
   ecmMetrics: EcmMetrics | null;
   ecmPlots: EcmPlots | null;
 }): Promise<void> {
-  const { state, pklProjectName, analysisPlots, ecmMetrics, ecmPlots } = params;
+  const { state, pklProjectName, analysisPlots, analysisWeatherStation, ecmMetrics, ecmPlots } = params;
   const projectName = state.projectName || pklProjectName || "Project";
   const origin = window.location.origin;
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
-  // Fetch backend plot images as data URIs
+  // Backend already returns plots as data:image/png;base64,... strings — use directly
   const P: Record<string, string> = {};
-  if (analysisPlots && pklProjectName) {
+  if (analysisPlots) {
     for (const [k, f] of Object.entries(analysisPlots)) {
-      if (f) P[k] = await toDataUri(`${API}/results/${encodeURIComponent(pklProjectName)}/plot/${encodeURIComponent(f)}`);
+      if (f) P[k] = f;
     }
   }
-  if (ecmPlots && pklProjectName) {
+  if (ecmPlots) {
     for (const [k, f] of Object.entries(ecmPlots)) {
-      if (f) P[`ecm_${k}`] = await toDataUri(`${API}/results/${encodeURIComponent(pklProjectName)}/plot/${encodeURIComponent(f)}`);
+      if (f) P[`ecm_${k}`] = f;
     }
   }
 
-  // Local envelope images — use full origin URL
-  const wallSrc = state.extWallConst && WALL_IMG[state.extWallConst] ? `${origin}${WALL_IMG[state.extWallConst]}` : "";
-  const roofSrc = state.extRoofConst
-    ? state.ceilingInsulation && state.ceilingInsulation !== "Uninsulated"
-      ? `${origin}/envelope/Attic Insulation.png`
-      : `${origin}/envelope/Asphalt Shingles.png`
+  // Local envelope images — pre-fetch as data URIs so they render in the popup
+  const wallSrc = state.extWallConst && WALL_IMG[state.extWallConst]
+    ? await toDataUri(`${origin}${WALL_IMG[state.extWallConst]}`)
     : "";
-  const foundSrc = state.foundation && FOUND_IMG[state.foundation] ? `${origin}${FOUND_IMG[state.foundation]}` : "";
-  const winSrc = state.windowMaterial?.[0] && WIN_IMG[state.windowMaterial[0]] ? `${origin}${WIN_IMG[state.windowMaterial[0]]}` : "";
+  const roofSrc = state.extRoofConst
+    ? await toDataUri(
+        state.ceilingInsulation && state.ceilingInsulation !== "Uninsulated"
+          ? `${origin}/envelope/Attic Insulation.png`
+          : `${origin}/envelope/Asphalt Shingles.png`
+      )
+    : "";
+  const foundSrc = state.foundation && FOUND_IMG[state.foundation]
+    ? await toDataUri(`${origin}${FOUND_IMG[state.foundation]}`)
+    : "";
+  const winSrc = state.windowMaterial?.[0] && WIN_IMG[state.windowMaterial[0]]
+    ? await toDataUri(`${origin}${WIN_IMG[state.windowMaterial[0]]}`)
+    : "";
+  const shadingSrc = await toDataUri(`${origin}/windows/shading-overhang.png`);
 
   const fmt = (n: number, d = 0) => n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 
@@ -195,7 +205,7 @@ ${sec("Envelope — Windows & Shading",
   r("Overhang Depth", state.overhang, "ft") +
   r("Window Height", state.windowHt, "ft") +
   r("Windows per Wall", state.nWindow),
-  winSrc ? `<div class="two-col">${imgBox(winSrc, state.windowMaterial?.[0] || "Window")}${imgBox(`${origin}/windows/shading-overhang.png`, "Shading Overhang")}</div>` : ""
+  winSrc ? `<div class="two-col">${imgBox(winSrc, state.windowMaterial?.[0] || "Window")}${imgBox(shadingSrc, "Shading Overhang")}</div>` : ""
 )}
 
 <!-- Section 5: HVAC Systems -->
@@ -300,21 +310,112 @@ ${(() => {
   </div>`;
 })()}
 
-${(P.weather || P.end_use || P.elec_monthly || P.ng_monthly)
+${(() => {
+  const appliedBaselineMap: Record<string, string> = {
+    ecmWallInsulation:    state.wallInsulation    || "Uninsulated",
+    ecmInfiltration:      state.ach50             || "—",
+    ecmCeilingInsulation: state.ceilingInsulation || "Uninsulated",
+    ecmWindowMaterial:    state.windowMaterial?.[0] || "—",
+    ecmNightSetback:      state.nightSetback      || "0",
+    ecmNightSetbackHours: state.nNightSetbackHours|| "0",
+    ecmDaylighting:       state.daylighting       || "No",
+    ecmEconomizer:        state.economizer        || "No",
+    ecmOccupancySensor:   "No",
+    ecmLED:               state.led               || "0",
+    ecmReduceEquipLoad:   "0%",
+    ecmCoolingEff:        state.coolingEff        || "—",
+    ecmHeatingEqp:        state.heatingEqp        || "—",
+    ecmHeatingEff:        state.heatingEff        || "—",
+  };
+  const ecmDescFns: Record<string, (b: string, s: string) => string> = {
+    ecmWallInsulation:    (b, s) => `Wall insulation upgraded from ${b} to ${s}.`,
+    ecmInfiltration:      (b, s) => `Air leakage reduced from ${b} ACH50 to ${s} ACH50.`,
+    ecmCeilingInsulation: (b, s) => `Ceiling insulation upgraded from ${b} to ${s}.`,
+    ecmWindowMaterial:    (b, s) => `Windows upgraded from ${b} to ${s}.`,
+    ecmNightSetback:      (b, s) => `Night setback temperature set to ${s}°F (baseline: ${b}°F).`,
+    ecmNightSetbackHours: (b, s) => `Night setback extended to ${s} hrs/day (baseline: ${b} hrs).`,
+    ecmDaylighting:       () => "Daylighting controls added to reduce lighting energy use.",
+    ecmEconomizer:        () => "Air-side economizer added for free cooling during mild weather.",
+    ecmOccupancySensor:   () => "Occupancy sensors installed to cut lighting when spaces are unoccupied.",
+    ecmLED:               (b, s) => `LED fraction increased from ${b}% to ${s}%.`,
+    ecmReduceEquipLoad:   (_b, s) => `Plug load reduction of ${s} applied through equipment scheduling.`,
+    ecmCoolingEff:        (b, s) => `Cooling efficiency upgraded from ${b} to ${s} SEER2.`,
+    ecmHeatingEqp:        (b, s) => `Heating equipment replaced: ${b} → ${s}.`,
+    ecmHeatingEff:        (b, s) => `Heating efficiency upgraded from ${b} to ${s}.`,
+  };
+  const ecmMeasureList = [
+    { key: "ecmWallInsulation",    label: "Wall Insulation" },
+    { key: "ecmInfiltration",      label: "Infiltration (ACH50)" },
+    { key: "ecmCeilingInsulation", label: "Ceiling Insulation" },
+    { key: "ecmWindowMaterial",    label: "Window Material" },
+    { key: "ecmNightSetback",      label: "Night Setback (°F)" },
+    { key: "ecmNightSetbackHours", label: "Night Setback Hours" },
+    { key: "ecmDaylighting",       label: "Daylighting" },
+    { key: "ecmEconomizer",        label: "Economizer" },
+    { key: "ecmOccupancySensor",   label: "Occupancy Sensor" },
+    { key: "ecmLED",               label: "LED Lighting (%)" },
+    { key: "ecmReduceEquipLoad",   label: "Reduce Equipment Load" },
+    { key: "ecmCoolingEff",        label: "Cooling Efficiency" },
+    { key: "ecmHeatingEqp",        label: "Heating Equipment" },
+    { key: "ecmHeatingEff",        label: "Heating Efficiency" },
+  ];
+  const activeItems = ecmMeasureList
+    .filter((m) => {
+      const val = (state as unknown as Record<string, string>)[m.key];
+      return val && val !== "No change" && val !== "" && val !== "No";
+    })
+    .map((m) => {
+      const val = (state as unknown as Record<string, string>)[m.key];
+      const desc = ecmDescFns[m.key]?.(appliedBaselineMap[m.key], val) ?? `${m.label} changed to ${val}.`;
+      return `<li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px">
+        <span style="min-width:8px;height:8px;border-radius:50%;background:#4a9e4a;margin-top:4px;flex-shrink:0;display:inline-block"></span>
+        <span style="font-size:12px;color:#1a2e1a;line-height:1.5"><strong style="color:#1a3d1a">${m.label}:</strong> ${desc}</span>
+      </li>`;
+    })
+    .join("");
+  if (!activeItems) return "";
+  return `<div class="sec"><h2>Applied ECM Measures</h2><ul style="list-style:none;padding:0;margin:0">${activeItems}</ul></div>`;
+})()}
+
+${(P.weather || P.end_use || P.elec_monthly || P.ng_monthly || P.elec_temp_model || P.ff_temp_model || P.elec_dd_model || P.ff_dd_model)
   ? `<div class="pb"></div>
      <div class="sec"><h2>Analysis Results</h2>
-     ${plotGrid([
-       { label: "Weather Data", src: P.weather ?? "" },
-       { label: "End-Use Breakdown", src: P.end_use ?? "" },
-       { label: "Electricity Monthly", src: P.elec_monthly ?? "" },
-       { label: "Natural Gas Monthly", src: P.ng_monthly ?? "" },
-     ])}
-     ${plotGrid([
-       { label: "Electricity Temperature Model", src: P.elec_temp_model ?? "" },
-       { label: "Fossil Fuel Temperature Model", src: P.ff_temp_model ?? "" },
-       { label: "Electricity Degree-Day Model", src: P.elec_dd_model ?? "" },
-       { label: "Fossil Fuel Degree-Day Model", src: P.ff_dd_model ?? "" },
-     ])}
+     ${analysisWeatherStation ? `<p style="font-size:11px;color:#555;margin-bottom:10px">NOAA Weather Station: <strong style="color:#1a3d1a">${analysisWeatherStation}</strong></p>` : ""}
+
+     ${P.weather ? `
+       <p class="pl" style="font-size:12px;font-weight:700;color:#1a3d1a;margin:12px 0 6px">Weather Data</p>
+       <img src="${P.weather}" alt="Weather Data" style="width:100%;border-radius:6px;border:1px solid #e0eee0;margin-bottom:12px"/>
+     ` : ""}
+
+     ${(P.elec_temp_model || P.ff_temp_model) ? `
+       <p class="pl" style="font-size:12px;font-weight:700;color:#1a3d1a;margin:12px 0 6px">Temperature-Based Change-Point Models</p>
+       ${plotGrid([
+         { label: "Electricity (Cooling)", src: P.elec_temp_model ?? "" },
+         { label: "Fossil Fuel (Heating)",  src: P.ff_temp_model  ?? "" },
+       ])}
+     ` : ""}
+
+     ${(P.ff_dd_model || P.elec_dd_model) ? `
+       <p class="pl" style="font-size:12px;font-weight:700;color:#1a3d1a;margin:12px 0 6px">Degree-Day Models</p>
+       ${plotGrid([
+         { label: "Heating Degree Days (Fossil Fuel)",   src: P.ff_dd_model   ?? "" },
+         { label: "Cooling Degree Days (Electricity)",   src: P.elec_dd_model ?? "" },
+       ])}
+     ` : ""}
+
+     ${P.end_use ? `
+       <p class="pl" style="font-size:12px;font-weight:700;color:#1a3d1a;margin:12px 0 6px">Annual End-Use Energy Breakdown</p>
+       <img src="${P.end_use}" alt="End-Use Breakdown" style="width:100%;border-radius:6px;border:1px solid #e0eee0;margin-bottom:12px"/>
+     ` : ""}
+
+     ${(P.elec_monthly || P.ng_monthly) ? `
+       <p class="pl" style="font-size:12px;font-weight:700;color:#1a3d1a;margin:12px 0 6px">Monthly Model vs. Meter Comparison</p>
+       ${plotGrid([
+         { label: "Electricity (kWh)",       src: P.elec_monthly ?? "" },
+         { label: "Natural Gas (Therms)",    src: P.ng_monthly   ?? "" },
+       ])}
+     ` : ""}
+
      </div>`
   : ""}
 
@@ -330,10 +431,13 @@ ${(ecmMetrics || P.ecm_elec_monthly_comp || P.ecm_ng_monthly_comp)
        <div class="mc"><div class="mv green">${fmt(ecmMetrics.kwh_pct_savings, 1)}%</div><div class="ml">Electricity Savings</div><div class="ms">${fmt(ecmMetrics.org_kwh)} → ${fmt(ecmMetrics.eem_kwh)} kWh</div></div>
        <div class="mc"><div class="mv teal">${fmt(ecmMetrics.therms_pct_savings, 1)}%</div><div class="ml">Natural Gas Savings</div><div class="ms">${fmt(ecmMetrics.org_therms)} → ${fmt(ecmMetrics.eem_therms)} therms</div></div>
      </div>` : ""}
-     ${plotGrid([
-       { label: "Electricity — Baseline vs ECM", src: P.ecm_elec_monthly_comp ?? "" },
-       { label: "Natural Gas — Baseline vs ECM", src: P.ecm_ng_monthly_comp ?? "" },
-     ])}
+     ${(P.ecm_elec_monthly_comp || P.ecm_ng_monthly_comp) ? `
+       <p class="pl" style="font-size:12px;font-weight:700;color:#1a3d1a;margin:12px 0 6px">Monthly Energy Comparison — Baseline vs. ECM Package</p>
+       ${plotGrid([
+         { label: "Electricity (kWh)",    src: P.ecm_elec_monthly_comp ?? "" },
+         { label: "Natural Gas (Therms)", src: P.ecm_ng_monthly_comp   ?? "" },
+       ])}
+     ` : ""}
      </div>`
   : ""}
 
@@ -345,8 +449,7 @@ ${(ecmMetrics || P.ecm_elec_monthly_comp || P.ecm_ng_monthly_comp)
     alert("Allow pop-ups in your browser to generate the PDF report, then try again.");
     return;
   }
-  win.document.write(html);
+  win.document.write(html + `<script>window.addEventListener('load',function(){window.print()});<\/script>`);
   win.document.close();
   win.focus();
-  setTimeout(() => win.print(), 800);
 }

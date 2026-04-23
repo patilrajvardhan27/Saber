@@ -37,7 +37,7 @@ export function ProjectSetupStep() {
               onChange={(e) => setField("buildingType", e.target.value)}
             />
           </FormField>
-          <FormField label="Location / Address" fieldKey="location" className="sm:col-span-2">
+          <FormField label="Location / Address" fieldKey="location" className="sm:col-span-2" hint="Used to find the nearest NOAA weather station for energy analysis">
             <Input
               placeholder="e.g. 123 Main St, Denver, CO"
               value={state.location}

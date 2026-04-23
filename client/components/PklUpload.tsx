@@ -64,7 +64,7 @@ export function PklUpload() {
           throw new Error(err.detail ?? "Analysis failed");
         }
         const aData = await aRes.json();
-        setAnalysisDone(aData.plots as AnalysisPlots);
+        setAnalysisDone(aData.plots as AnalysisPlots, aData.weather_station ?? "");
       }
     } catch (err: unknown) {
       setStatus("error");

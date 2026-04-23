@@ -1,2 +1,6 @@
-﻿InsulationName,Rvalue_IP,Thickness_inch,Lifetime,Costpersft
-Uninsulated,0,,,
+InsulationName,Rvalue_IP,Thickness_inch,Lifetime,Costpersft
+Uninsulated,0.00001,0,999,0.001
+R5 Rigid Foam,5,1,50,0.75
+R10 Rigid Foam,10,2,50,1.40
+R15 Rigid Foam,15,3,50,2.00
+R20 Rigid Foam,20,4,50,2.60

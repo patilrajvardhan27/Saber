@@ -99,7 +99,7 @@ function GenerateResultSection() {
       }
       const data = await res.json();
       setPklMeta(pklProjectName ? pklProjectName : "", 0, data.project_name ?? effectiveProject);
-      setAnalysisDone(data.plots as AnalysisPlots);
+      setAnalysisDone(data.plots as AnalysisPlots, data.weather_station ?? "");
     } catch (err: unknown) {
       setAnalysisError(err instanceof Error ? err.message : "Analysis failed");
     }
@@ -188,7 +188,7 @@ function AnalysisBanner() {
 
 // ── Combined Results Step ─────────────────────────────────────────────────────
 export function AnalysisResultsStep() {
-  const { pklProjectName, analysisStatus, analysisPlots } = useForm();
+  const { pklProjectName, analysisStatus, analysisPlots, analysisWeatherStation } = useForm();
   const isRunning = analysisStatus === "running";
   const isDone = analysisStatus === "done";
 
@@ -201,7 +201,11 @@ export function AnalysisResultsStep() {
       <Card>
         <SectionHeader
           title="Weather Data"
-          description="Hourly weather data from the nearest NOAA station, automatically fetched when the PKL file is uploaded."
+          description={
+            analysisWeatherStation
+              ? `NOAA weather station: ${analysisWeatherStation} — hourly data used for all energy calculations.`
+              : "Location field is used to find the nearest NOAA weather station. The station name appears here after analysis runs."
+          }
         />
         <PlotOrState
           filename={isDone ? analysisPlots?.weather : null}

@@ -42,7 +42,13 @@ export const CEILING_INSULATIONS = [
 
 export const FOUNDATIONS = ["Slab on grade", "Crawlspace", "Basement"];
 
-export const SLAB_INSULATIONS = ["Uninsulated"];
+export const SLAB_INSULATIONS = [
+  "Uninsulated",
+  "R5 Rigid Foam",
+  "R10 Rigid Foam",
+  "R15 Rigid Foam",
+  "R20 Rigid Foam",
+];
 
 export const ACH50_OPTIONS = ["25", "20", "15", "10", "8", "7", "6", "5", "4", "3", "2"];
 
@@ -133,7 +139,7 @@ export const HEATING_EFF_OPTIONS: Record<string, string[]> = {
 
 export const DHW_SYSTEM_TYPES = [
   "NoDHWSystem",
-  "Gas Boiler",
+  "Gas Heater",
   "Electric Heater",
 ];
 

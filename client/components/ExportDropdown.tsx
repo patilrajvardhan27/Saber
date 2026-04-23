@@ -10,7 +10,7 @@ export function ExportDropdown() {
   const [status, setStatus] = useState<"idle" | "pdf" | "pkl">("idle");
   const [error, setError] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-  const { state, pklProjectName, analysisPlots, ecmMetrics, ecmPlots } = useForm();
+  const { state, pklProjectName, analysisPlots, analysisWeatherStation, ecmMetrics, ecmPlots } = useForm();
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -25,7 +25,7 @@ export function ExportDropdown() {
     setError("");
     setStatus("pdf");
     try {
-      await exportPdf({ state, pklProjectName, analysisPlots, ecmMetrics, ecmPlots });
+      await exportPdf({ state, pklProjectName, analysisPlots, analysisWeatherStation, ecmMetrics, ecmPlots });
     } catch (e) {
       setError(e instanceof Error ? e.message : "PDF export failed");
     } finally {

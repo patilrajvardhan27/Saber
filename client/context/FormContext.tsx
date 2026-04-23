@@ -42,12 +42,13 @@ interface FormContextValue {
   utilFileName: string;
   analysisStatus: "idle" | "running" | "done" | "error";
   analysisPlots: AnalysisPlots | null;
+  analysisWeatherStation: string;
   analysisError: string;
   setPklMeta: (fileName: string, fieldCount: number, projectName: string) => void;
   setPklFields: (fields: string[]) => void;
   setUtilUploaded: (fileName: string) => void;
   setAnalysisRunning: () => void;
-  setAnalysisDone: (plots: AnalysisPlots) => void;
+  setAnalysisDone: (plots: AnalysisPlots, weatherStation: string) => void;
   setAnalysisError: (message: string) => void;
   ecmStatus: "idle" | "running" | "done" | "error";
   ecmMetrics: EcmMetrics | null;
@@ -72,7 +73,7 @@ type Action =
   | { type: "SET_PKL_FIELDS"; fields: string[] }
   | { type: "SET_UTIL_UPLOADED"; fileName: string }
   | { type: "SET_ANALYSIS_RUNNING" }
-  | { type: "SET_ANALYSIS_DONE"; plots: AnalysisPlots }
+  | { type: "SET_ANALYSIS_DONE"; plots: AnalysisPlots; weatherStation: string }
   | { type: "SET_ANALYSIS_ERROR"; message: string }
   | { type: "SET_ECM_RUNNING" }
   | { type: "SET_ECM_DONE"; metrics: EcmMetrics; plots: EcmPlots }
@@ -88,6 +89,7 @@ interface State {
   utilFileName: string;
   analysisStatus: "idle" | "running" | "done" | "error";
   analysisPlots: AnalysisPlots | null;
+  analysisWeatherStation: string;
   analysisError: string;
   ecmStatus: "idle" | "running" | "done" | "error";
   ecmMetrics: EcmMetrics | null;
@@ -121,7 +123,7 @@ function reducer(state: State, action: Action): State {
     case "SET_ANALYSIS_RUNNING":
       return { ...state, analysisStatus: "running", analysisError: "" };
     case "SET_ANALYSIS_DONE":
-      return { ...state, analysisStatus: "done", analysisPlots: action.plots, analysisError: "" };
+      return { ...state, analysisStatus: "done", analysisPlots: action.plots, analysisWeatherStation: action.weatherStation, analysisError: "" };
     case "SET_ANALYSIS_ERROR":
       return { ...state, analysisStatus: "error", analysisError: action.message };
     case "SET_ECM_RUNNING":
@@ -148,6 +150,7 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
     utilFileName: "",
     analysisStatus: "idle",
     analysisPlots: null,
+    analysisWeatherStation: "",
     analysisError: "",
     ecmStatus: "idle",
     ecmMetrics: null,
@@ -203,7 +206,8 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
   );
 
   const setAnalysisDone = useCallback(
-    (plots: AnalysisPlots) => dispatch({ type: "SET_ANALYSIS_DONE", plots }),
+    (plots: AnalysisPlots, weatherStation: string) =>
+      dispatch({ type: "SET_ANALYSIS_DONE", plots, weatherStation }),
     []
   );
 
@@ -242,6 +246,7 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
         utilFileName: state.utilFileName,
         analysisStatus: state.analysisStatus,
         analysisPlots: state.analysisPlots,
+        analysisWeatherStation: state.analysisWeatherStation,
         analysisError: state.analysisError,
         setPklMeta,
         setPklFields,

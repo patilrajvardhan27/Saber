@@ -343,7 +343,7 @@ def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None
             "dfutil_sorted": dfutil_sorted,
         }
 
-        return {"status": "success", "plots": plots}
+        return {"status": "success", "plots": plots, "weather_station": weather_station_name}
 
     finally:
         shutil.rmtree(tmp, ignore_errors=True)  # delete everything in the temp dir
@@ -374,6 +374,8 @@ class EcmRequest(BaseModel):
     ecm_led: str = ""
     ecm_daylighting: str = "No"
     ecm_economizer: str = "No"
+    ecm_cooling_eff: str = ""   # e.g. "SEER2 13.4" — normalized to float in backend
+    ecm_heating_eff: str = ""   # e.g. "AFUE 90%"   — normalized to float in backend
     kwh_rate: float = 0.12
     therm_rate: float = 1.20
     discount_rate: float = 3.0
@@ -528,6 +530,34 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
         bldg_address = _val(df_input_org, "Location")
         r = _run_measure(eval_measure.Economizer, bldg_address)
         dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
+
+    if req.ecm_cooling_eff:
+        cooling_eqp_raw = _val(df_input_org, "CoolingEquipment")
+        cooling_eqp_csv = cooling_eqp_raw.replace(" ", "")  # "Air Conditioner" → "AirConditioner"
+        cooling_eff_org_str = _normalize_eff(_val(df_input_org, "CoolingEff") or "1")
+        cooling_eff_eem_str = _normalize_eff(req.ecm_cooling_eff)
+        try:
+            cooling_eff_org = float(cooling_eff_org_str or "1")
+            cooling_eff_eem = float(cooling_eff_eem_str)
+            if cooling_eqp_csv and cooling_eff_eem and cooling_eqp_csv not in ("NoCooling",):
+                r = _run_measure(eval_measure.CoolingEff, cooling_eqp_csv, cooling_eff_org, cooling_eff_eem)
+                dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
+        except Exception:
+            pass  # skip if equipment/efficiency data not available
+
+    if req.ecm_heating_eff:
+        heating_eqp_raw = _val(df_input_org, "HeatingEquipment")
+        heating_eqp_csv = heating_eqp_raw.replace(" ", "")  # "Gas Furnace" → "GasFurnace"
+        heating_eff_org_str = _normalize_eff(_val(df_input_org, "HeatingEff") or "1")
+        heating_eff_eem_str = _normalize_eff(req.ecm_heating_eff)
+        try:
+            heating_eff_org = float(heating_eff_org_str or "1")
+            heating_eff_eem = float(heating_eff_eem_str)
+            if heating_eqp_csv and heating_eff_eem and heating_eqp_csv not in ("NoHeating",):
+                r = _run_measure(eval_measure.HeatingEff, heating_eqp_csv, heating_eff_org, heating_eff_eem)
+                dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
+        except Exception:
+            pass  # skip if equipment/efficiency data not available
 
     # Generate comparison plots (use baseline for both when no measures selected)
     plotter = PlotResults(True, project_path)

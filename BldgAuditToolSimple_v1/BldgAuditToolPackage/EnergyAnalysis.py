@@ -17,19 +17,22 @@ class Energy:
         
         
         
-        if df_input.loc[df_input.PropKey=="HeatingEff","PropValue"].item() == "Other..":
+        _heat_val = df_input.loc[df_input.PropKey=="HeatingEff","PropValue"].iloc[0]
+        if str(_heat_val) == "Other..":
             self.HeatingEff = df_input.loc[df_input.PropKey=="HeatingEffCustom","PropValue"].astype(float).iloc[0]
+        elif pd.notna(_heat_val) and str(_heat_val) not in ("", "None", "nan"):
+            self.HeatingEff = float(_heat_val)
         else:
-            self.HeatingEff = df_input.loc[df_input.PropKey=="HeatingEff","PropValue"].astype(float).iloc[0]
-        # Leave cooling efficiecny in SEER
+            self.HeatingEff = 1
 
-        if df_input.loc[df_input.PropKey=="CoolingEff","PropValue"].item() == "Other..":
+        # Leave cooling efficiency in SEER units
+        _cool_val = df_input.loc[df_input.PropKey=="CoolingEff","PropValue"].iloc[0]
+        if str(_cool_val) == "Other..":
             self.CoolingEff = df_input.loc[df_input.PropKey=="CoolingEffCustom","PropValue"].astype(float).iloc[0]
-        elif df_input.loc[df_input.PropKey=="CoolingEff","PropValue"].iloc[0] != "None": #Ashit: changed else condition to elif
-            #print("Check by Ashit", df_input.loc[df_input.PropKey=="CoolingEff","PropValue"].iloc[0])
-            self.CoolingEff = df_input.loc[df_input.PropKey=="CoolingEff","PropValue"].astype(float).iloc[0]
-        else: #Ashit: Added else statemet to trivialize energy calculation if NoCooling
-            self.CoolingEff = 1
+        elif pd.notna(_cool_val) and str(_cool_val) not in ("", "None", "nan"):
+            self.CoolingEff = float(_cool_val)
+        else:
+            self.CoolingEff = 1  # NoCooling or efficiency not set — value cancels in baseline math
         
             
         HeatingEqp = df_input.loc[df_input.PropKey=="HeatingEquipment","PropValue"].astype(str).item()

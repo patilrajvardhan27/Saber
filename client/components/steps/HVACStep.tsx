@@ -29,7 +29,7 @@ const HEATING_IMAGE_MAP: Record<string, string> = {
 };
 
 const DHW_IMAGE_MAP: Record<string, string> = {
-  "Gas Boiler":     "/hvac/dhw/Gas Boiler.png",
+  "Gas Heater":     "/hvac/dhw/Gas Boiler.png",
   "Electric Heater": "/hvac/dhw/Electric Heater.png",
   "NoDHWSystem":    "/hvac/dhw/NoDHWSystem.png",
 };

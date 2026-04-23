@@ -1,8 +1,8 @@
-﻿Option,CompressorType,SEER,Costperunit,CostperkBtuh,Lifetime
+Option,CompressorType,SEER,Costperunit,CostperkBtuh,Lifetime
 SEER2 13.4,single stage,13.4,2266,42,16
 SEER2 14.3,single stage,14.3,2389,42,16
 SEER2 15.2,two stage,15.2,2513,42,16
-SEER2 16.2,two stage,16.2,2636,42,16
-SEER2 17.1,two stage,17.1,2759,42,16
-SEER2 20.0,two stage,20,3129,42,16
-SEER2 23.2,variable speed,23.3,3560,42,16
+SEER2 16.1,two stage,16.1,2636,42,16
+SEER2 17.0,two stage,17.0,2759,42,16
+SEER2 20.0,two stage,20.0,3129,42,16
+SEER2 23.2,variable speed,23.2,3560,42,16

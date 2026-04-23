@@ -111,6 +111,8 @@ export function ECMSelectionStep() {
       ecm_led:                state.ecmLED               || "",
       ecm_daylighting:        state.ecmDaylighting        || "No",
       ecm_economizer:         state.ecmEconomizer         || "No",
+      ecm_cooling_eff:        state.ecmCoolingEff         || "",
+      ecm_heating_eff:        state.ecmHeatingEff         || "",
       kwh_rate:    parseFloat(state.kWhCost)    || 0.12,
       therm_rate:  parseFloat(state.thermCost)  || 1.20,
       discount_rate: parseFloat(state.discountRate) || 3.0,

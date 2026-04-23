@@ -1,7 +1,7 @@
-﻿Option,HeatingEff,Costperunit,CostperkBtuh,Lifetime
-"Gas, 80%",0.8,1980,2.7,20
-"Gas, 90%",0.9,2159,3.86,20
-"Gas, 92.5%",0.925,2393,3.86,20
-"Gas, 95%",0.95,2626,3.86,20
-"Gas, 96%",0.96,2710,3.86,20
-"Gas, 98%",0.98,2906,3.86,20
+Option,HeatingEff,Costperunit,CostperkBtuh,Lifetime
+AFUE 80%,0.8,1980,2.7,20
+AFUE 85%,0.85,2070,3.28,20
+AFUE 90%,0.9,2159,3.86,20
+AFUE 92%,0.92,2393,3.86,20
+AFUE 95%,0.95,2626,3.86,20
+AFUE 98%,0.98,2906,3.86,20
