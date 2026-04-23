@@ -136,7 +136,7 @@ td{padding:6px 10px;vertical-align:top}
 .img-box img{max-width:100%;max-height:180px;object-fit:contain;padding:8px}
 .img-box p{font-size:10px;color:#666;padding:4px 8px;border-top:1px solid #e8f0e8;background:#f0f8f0}
 .plot-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
-.plot-item img{width:100%;border-radius:6px;border:1px solid #e0eee0}
+.plot-item img{width:100%;height:200px;object-fit:contain;border-radius:6px;border:1px solid #e0eee0}
 .pl{font-size:11px;color:#555;margin-bottom:4px;font-weight:600}
 .metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px;margin-bottom:4px}
 .mc{border:1px solid #d0e8d0;border-radius:10px;padding:14px;text-align:center;background:#f5fbf5}
@@ -384,7 +384,7 @@ ${(P.weather || P.end_use || P.elec_monthly || P.ng_monthly || P.elec_temp_model
 
      ${P.weather ? `
        <p class="pl" style="font-size:12px;font-weight:700;color:#1a3d1a;margin:12px 0 6px">Weather Data</p>
-       <img src="${P.weather}" alt="Weather Data" style="width:100%;border-radius:6px;border:1px solid #e0eee0;margin-bottom:12px"/>
+       <img src="${P.weather}" alt="Weather Data" style="width:100%;height:200px;object-fit:contain;border-radius:6px;border:1px solid #e0eee0;display:block;margin-bottom:12px"/>
      ` : ""}
 
      ${(P.elec_temp_model || P.ff_temp_model) ? `
@@ -405,7 +405,7 @@ ${(P.weather || P.end_use || P.elec_monthly || P.ng_monthly || P.elec_temp_model
 
      ${P.end_use ? `
        <p class="pl" style="font-size:12px;font-weight:700;color:#1a3d1a;margin:12px 0 6px">Annual End-Use Energy Breakdown</p>
-       <img src="${P.end_use}" alt="End-Use Breakdown" style="width:100%;border-radius:6px;border:1px solid #e0eee0;margin-bottom:12px"/>
+       <img src="${P.end_use}" alt="End-Use Breakdown" style="width:100%;height:200px;object-fit:contain;border-radius:6px;border:1px solid #e0eee0;display:block;margin-bottom:12px"/>
      ` : ""}
 
      ${(P.elec_monthly || P.ng_monthly) ? `
