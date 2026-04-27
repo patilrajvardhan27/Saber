@@ -23,8 +23,9 @@ const emptyRow = (): RowData => ({ kwh1: "", therms1: "", kwh2: "", therms2: "",
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 export function UtilityDataEntry() {
-  const { state, setUtilUploaded, setUtilityData } = useForm();
-  const projectName = state.projectName.trim();
+  const { state, pklProjectName, setUtilUploaded, setUtilityData } = useForm();
+  // Use the same project key the analysis engine uses: PKL-derived name takes precedence.
+  const projectName = pklProjectName || state.projectName.trim();
 
   const [year1, setYear1] = useState(THIS_YEAR - 1);
   const [year2, setYear2] = useState(THIS_YEAR - 1);
