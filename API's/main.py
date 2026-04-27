@@ -230,6 +230,63 @@ async def upload_pkl(file: UploadFile = File(...)):
     }
 
 
+# ── Manual utility data entry ──────────────────────────────────────────────────
+class UtilityDataManualRequest(BaseModel):
+    year1: int
+    year2: int | None = None
+    year3: int | None = None
+    rows: list[dict]  # 12 dicts: kwh1, therms1, kwh2, therms2, kwh3, therms3
+
+
+@app.post("/save-utility-data/{project_name}")
+async def save_utility_data(project_name: str, req: UtilityDataManualRequest):
+    import calendar
+
+    if len(req.rows) != 12:
+        raise HTTPException(status_code=400, detail="Exactly 12 monthly rows are required.")
+
+    project_path = os.path.join(PROJECTS_DIR, project_name)
+    os.makedirs(project_path, exist_ok=True)
+
+    y1 = req.year1
+    y2 = req.year2 if req.year2 else y1
+    y3 = req.year3 if req.year3 else y1
+
+    def _num(v):
+        if v is None or v == "":
+            return float("nan")
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return float("nan")
+
+    data: dict[str, list] = {
+        f"Year 1 - kWh{y1}": [],
+        f"Year 1 - Therms{y1}": [],
+        f"Year 2 - kWh{y2}": [],
+        f"Year 2 - Therms{y2}": [],
+        f"Year 3 - kWh{y3}": [],
+        f"Year 3 - Therms{y3}": [],
+        "BillDays": [],
+    }
+
+    for i, row in enumerate(req.rows):
+        month = i + 1
+        data[f"Year 1 - kWh{y1}"].append(_num(row.get("kwh1")))
+        data[f"Year 1 - Therms{y1}"].append(_num(row.get("therms1")))
+        data[f"Year 2 - kWh{y2}"].append(_num(row.get("kwh2")))
+        data[f"Year 2 - Therms{y2}"].append(_num(row.get("therms2")))
+        data[f"Year 3 - kWh{y3}"].append(_num(row.get("kwh3")))
+        data[f"Year 3 - Therms{y3}"].append(_num(row.get("therms3")))
+        data["BillDays"].append(calendar.monthrange(y1, month)[1])
+
+    df = pd.DataFrame(data, index=range(1, 13))
+    save_path = os.path.join(project_path, f"{project_name}_UtilityData.csv")
+    df.to_csv(save_path)
+
+    return {"status": "ok", "saved_as": f"{project_name}_UtilityData.csv"}
+
+
 # ── Utility CSV upload ─────────────────────────────────────────────────────────
 @app.post("/upload-utility/{project_name}")
 async def upload_utility(project_name: str, file: UploadFile = File(...)):

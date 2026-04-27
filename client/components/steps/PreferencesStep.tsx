@@ -8,11 +8,15 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { RadioGroup } from "@/components/ui/RadioGroup";
 import { BUILDING_TYPES } from "@/data/options";
 import { PklUpload } from "@/components/PklUpload";
+import { UtilityUpload } from "@/components/UtilityUpload";
+import { UtilityDataEntry } from "@/components/UtilityDataEntry";
 
 export function ProjectSetupStep() {
   const { state, setField } = useForm();
+
   return (
     <StepLayout nextDisabled={!state.projectName.trim()}>
       {/* Project Information */}
@@ -75,7 +79,49 @@ export function ProjectSetupStep() {
         </div>
       </Card>
 
-      <PklUpload />
+      {/* Utility Data */}
+      <Card>
+        <SectionHeader
+          title="Utility Data"
+          description="Provide 12 months of electricity (kWh) and natural gas (Therms) consumption. Up to 3 years can be entered for a stronger energy model."
+        />
+
+        <div className="mb-4">
+          <RadioGroup
+            name="utilDataSource"
+            direction="row"
+            value={state.utilDataSource}
+            onChange={(v) => setField("utilDataSource", v as "enter" | "existing")}
+            options={[
+              {
+                value: "enter",
+                label: "Enter utility data",
+                description: "Type monthly kWh and Therms directly",
+              },
+              {
+                value: "existing",
+                label: "Use existing file",
+                description: "Upload a previously saved *_UtilityData.csv",
+              },
+            ]}
+          />
+        </div>
+
+        {state.utilDataSource === "enter" ? (
+          <UtilityDataEntry />
+        ) : (
+          <UtilityUpload />
+        )}
+      </Card>
+
+      {/* Building Baseline File */}
+      <Card>
+        <SectionHeader
+          title="Building Baseline File"
+          description="Optional — upload an existing baseline to pre-fill all building properties. Skip this to enter properties manually in the following steps."
+        />
+        <PklUpload />
+      </Card>
     </StepLayout>
   );
 }

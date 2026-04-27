@@ -17,23 +17,6 @@ function ChartBox({ children }: { children: React.ReactNode }) {
   );
 }
 
-function PlaceholderChart({ label }: { label: string }) {
-  return (
-    <ChartBox>
-      <div className="flex flex-col items-center justify-center gap-2 text-app-text-light">
-        <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
-          <rect x="4"  y="28" width="8"  height="16" rx="2" fill="currentColor" opacity="0.4" />
-          <rect x="14" y="20" width="8"  height="24" rx="2" fill="currentColor" opacity="0.6" />
-          <rect x="24" y="10" width="8"  height="34" rx="2" fill="currentColor" opacity="0.8" />
-          <rect x="34" y="16" width="8"  height="28" rx="2" fill="currentColor" opacity="0.5" />
-        </svg>
-        <p className="text-sm font-medium">{label}</p>
-        <p className="text-xs">Run analysis to generate chart</p>
-      </div>
-    </ChartBox>
-  );
-}
-
 function LoadingChart({ label }: { label: string }) {
   return (
     <ChartBox>
@@ -59,7 +42,7 @@ function PlotOrState({
   isRunning: boolean;
 }) {
   if (isRunning) return <LoadingChart label={label} />;
-  if (!filename) return <PlaceholderChart label={label} />;
+  if (!filename) return null;
   return (
     <ChartBox>
       <img
@@ -198,112 +181,134 @@ export function AnalysisResultsStep() {
       <AnalysisBanner />
 
       {/* Weather Data */}
-      <Card>
-        <SectionHeader
-          title="Weather Data"
-          description={
-            analysisWeatherStation
-              ? `NOAA weather station: ${analysisWeatherStation} — hourly data used for all energy calculations.`
-              : "Location field is used to find the nearest NOAA weather station. The station name appears here after analysis runs."
-          }
-        />
-        <PlotOrState
-          filename={isDone ? analysisPlots?.weather : null}
-          label="Annual Temperature Profile"
-          isRunning={isRunning}
-        />
-      </Card>
+      {(isRunning || analysisPlots?.weather) && (
+        <Card>
+          <SectionHeader
+            title="Weather Data"
+            description={
+              analysisWeatherStation
+                ? `NOAA weather station: ${analysisWeatherStation} — hourly data used for all energy calculations.`
+                : "Location field is used to find the nearest NOAA weather station. The station name appears here after analysis runs."
+            }
+          />
+          <PlotOrState
+            filename={isDone ? analysisPlots?.weather : null}
+            label="Annual Temperature Profile"
+            isRunning={isRunning}
+          />
+        </Card>
+      )}
 
       {/* Temperature-Based Change-Point Models */}
-      <Card>
-        <SectionHeader
-          title="Temperature-Based Change-Point Models"
-          description="Electricity and fossil-fuel consumption as a function of outdoor temperature."
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs font-semibold text-primary mb-2">Electricity (Cooling)</p>
-            <PlotOrState
-              filename={isDone ? analysisPlots?.elec_temp_model : null}
-              label="Electricity Temp-Based Model"
-              isRunning={isRunning}
-            />
+      {(isRunning || analysisPlots?.elec_temp_model || analysisPlots?.ff_temp_model) && (
+        <Card>
+          <SectionHeader
+            title="Temperature-Based Change-Point Models"
+            description="Electricity and fossil-fuel consumption as a function of outdoor temperature."
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {(isRunning || analysisPlots?.elec_temp_model) && (
+              <div>
+                <p className="text-xs font-semibold text-primary mb-2">Electricity (Cooling)</p>
+                <PlotOrState
+                  filename={isDone ? analysisPlots?.elec_temp_model : null}
+                  label="Electricity Temp-Based Model"
+                  isRunning={isRunning}
+                />
+              </div>
+            )}
+            {(isRunning || analysisPlots?.ff_temp_model) && (
+              <div>
+                <p className="text-xs font-semibold text-primary mb-2">Fossil Fuel (Heating)</p>
+                <PlotOrState
+                  filename={isDone ? analysisPlots?.ff_temp_model : null}
+                  label="Fossil Fuel Temp-Based Model"
+                  isRunning={isRunning}
+                />
+              </div>
+            )}
           </div>
-          <div>
-            <p className="text-xs font-semibold text-primary mb-2">Fossil Fuel (Heating)</p>
-            <PlotOrState
-              filename={isDone ? analysisPlots?.ff_temp_model : null}
-              label="Fossil Fuel Temp-Based Model"
-              isRunning={isRunning}
-            />
-          </div>
-        </div>
-      </Card>
+        </Card>
+      )}
 
       {/* Degree-Day Models */}
-      <Card>
-        <SectionHeader
-          title="Degree-Day Models"
-          description="Heating and cooling energy correlated with HDD and CDD."
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs font-semibold text-primary mb-2">Heating Degree Days (Fossil Fuel)</p>
-            <PlotOrState
-              filename={isDone ? analysisPlots?.ff_dd_model : null}
-              label="HDD-Based Heating Model"
-              isRunning={isRunning}
-            />
+      {(isRunning || analysisPlots?.ff_dd_model || analysisPlots?.elec_dd_model) && (
+        <Card>
+          <SectionHeader
+            title="Degree-Day Models"
+            description="Heating and cooling energy correlated with HDD and CDD."
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {(isRunning || analysisPlots?.ff_dd_model) && (
+              <div>
+                <p className="text-xs font-semibold text-primary mb-2">Heating Degree Days (Fossil Fuel)</p>
+                <PlotOrState
+                  filename={isDone ? analysisPlots?.ff_dd_model : null}
+                  label="HDD-Based Heating Model"
+                  isRunning={isRunning}
+                />
+              </div>
+            )}
+            {(isRunning || analysisPlots?.elec_dd_model) && (
+              <div>
+                <p className="text-xs font-semibold text-primary mb-2">Cooling Degree Days (Electricity)</p>
+                <PlotOrState
+                  filename={isDone ? analysisPlots?.elec_dd_model : null}
+                  label="CDD-Based Cooling Model"
+                  isRunning={isRunning}
+                />
+              </div>
+            )}
           </div>
-          <div>
-            <p className="text-xs font-semibold text-primary mb-2">Cooling Degree Days (Electricity)</p>
-            <PlotOrState
-              filename={isDone ? analysisPlots?.elec_dd_model : null}
-              label="CDD-Based Cooling Model"
-              isRunning={isRunning}
-            />
-          </div>
-        </div>
-      </Card>
+        </Card>
+      )}
 
       {/* Annual End-Use Breakdown */}
-      <Card>
-        <SectionHeader
-          title="Annual End-Use Energy Breakdown"
-          description="Estimated annual energy breakdown (kBtu) from the calibrated energy model."
-        />
-        <PlotOrState
-          filename={isDone ? analysisPlots?.end_use : null}
-          label="End-Use Energy Breakdown"
-          isRunning={isRunning}
-        />
-      </Card>
+      {(isRunning || analysisPlots?.end_use) && (
+        <Card>
+          <SectionHeader
+            title="Annual End-Use Energy Breakdown"
+            description="Estimated annual energy breakdown (kBtu) from the calibrated energy model."
+          />
+          <PlotOrState
+            filename={isDone ? analysisPlots?.end_use : null}
+            label="End-Use Energy Breakdown"
+            isRunning={isRunning}
+          />
+        </Card>
+      )}
 
       {/* Monthly Model vs. Meter */}
-      <Card>
-        <SectionHeader
-          title="Monthly Model vs. Meter Comparison"
-          description="Simulated energy by end use vs. metered utility data. Percentage error shown above each bar."
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs font-semibold text-primary mb-2">Electricity (kWh)</p>
-            <PlotOrState
-              filename={isDone ? analysisPlots?.elec_monthly : null}
-              label="Electricity Monthly Breakdown"
-              isRunning={isRunning}
-            />
+      {(isRunning || analysisPlots?.elec_monthly || analysisPlots?.ng_monthly) && (
+        <Card>
+          <SectionHeader
+            title="Monthly Model vs. Meter Comparison"
+            description="Simulated energy by end use vs. metered utility data. Percentage error shown above each bar."
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {(isRunning || analysisPlots?.elec_monthly) && (
+              <div>
+                <p className="text-xs font-semibold text-primary mb-2">Electricity (kWh)</p>
+                <PlotOrState
+                  filename={isDone ? analysisPlots?.elec_monthly : null}
+                  label="Electricity Monthly Breakdown"
+                  isRunning={isRunning}
+                />
+              </div>
+            )}
+            {(isRunning || analysisPlots?.ng_monthly) && (
+              <div>
+                <p className="text-xs font-semibold text-primary mb-2">Natural Gas (Therms)</p>
+                <PlotOrState
+                  filename={isDone ? analysisPlots?.ng_monthly : null}
+                  label="Natural Gas Monthly Breakdown"
+                  isRunning={isRunning}
+                />
+              </div>
+            )}
           </div>
-          <div>
-            <p className="text-xs font-semibold text-primary mb-2">Natural Gas (Therms)</p>
-            <PlotOrState
-              filename={isDone ? analysisPlots?.ng_monthly : null}
-              label="Natural Gas Monthly Breakdown"
-              isRunning={isRunning}
-            />
-          </div>
-        </div>
-      </Card>
+        </Card>
+      )}
     </StepLayout>
   );
 }

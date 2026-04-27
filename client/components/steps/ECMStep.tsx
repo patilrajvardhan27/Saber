@@ -69,9 +69,11 @@ export function FinancialsStep() {
 }
 
 // ── Step 15: ECM Selection ────────────────────────────────────────────────────
+const ECM_FIELD_KEYS = ECM_MEASURES.map((m) => m.key) as import("@/types/form").FormField[];
+
 export function ECMSelectionStep() {
   const {
-    state, setField,
+    state, setField, setFields,
     pklProjectName,
     ecmStatus, ecmError,
     setEcmRunning, setEcmDone, setEcmError,
@@ -79,6 +81,11 @@ export function ECMSelectionStep() {
   } = useForm();
 
   const isRunning = ecmStatus === "running";
+
+  function resetSelections() {
+    const cleared = Object.fromEntries(ECM_FIELD_KEYS.map((k) => [k, ""]));
+    setFields(cleared);
+  }
 
   // Baseline display value for each ECM key
   const baselineMap: Record<string, string> = {
@@ -147,26 +154,45 @@ export function ECMSelectionStep() {
             description="Select the upgraded option for each measure, then evaluate the full package."
             className="mb-0"
           />
-          <button
-            type="button"
-            onClick={evaluatePackage}
-            disabled={!pklProjectName || isRunning}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold flex-shrink-0 transition-all ${
-              !pklProjectName || isRunning
-                ? "bg-bg-muted text-app-text-muted cursor-not-allowed border border-border"
-                : "bg-brand-500 text-white hover:bg-brand-600 shadow-sm"
-            }`}
-          >
-            {isRunning ? (
-              <>
-                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                </svg>
-                Evaluating…
-              </>
-            ) : "Evaluate Package"}
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={resetSelections}
+              disabled={isRunning}
+              title="Clear all ECM selections"
+              className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all border ${
+                isRunning
+                  ? "bg-bg-muted text-app-text-muted cursor-not-allowed border-border"
+                  : "bg-white text-app-text border-border hover:border-red-300 hover:text-red-600 hover:bg-red-50"
+              }`}
+            >
+              <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
+                <path d="M2 4h12M5 4V2.5a.5.5 0 01.5-.5h5a.5.5 0 01.5.5V4M6 7v4M10 7v4M3 4l.8 8.5a.5.5 0 00.5.5h7.4a.5.5 0 00.5-.5L13 4"
+                  stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={evaluatePackage}
+              disabled={!pklProjectName || isRunning}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                !pklProjectName || isRunning
+                  ? "bg-bg-muted text-app-text-muted cursor-not-allowed border border-border"
+                  : "bg-brand-500 text-white hover:bg-brand-600 shadow-sm"
+              }`}
+            >
+              {isRunning ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  Evaluating…
+                </>
+              ) : "Evaluate Package"}
+            </button>
+          </div>
         </div>
 
         {ecmStatus === "error" && (
@@ -379,46 +405,54 @@ export function ECMResultsStep() {
       )}
 
       {/* Comparison charts */}
-      <Card>
-        <SectionHeader
-          title="Monthly Energy Comparison"
-          description="Baseline vs. ECM package monthly energy use by end use."
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs font-semibold text-primary mb-2">Electricity (kWh)</p>
-            {isDone && ecmPlots?.elec_monthly_comp ? (
-              <img
-                src={ecmPlots.elec_monthly_comp}
-                alt="Electricity EEM Comparison"
-                className="w-full h-auto rounded-lg border border-brand-100 object-contain bg-white"
-              />
-            ) : (
-              <div className="h-56 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-bg-muted">
-                <p className="text-sm text-app-text-light">
-                  {isRunning ? "Generating…" : "Run ECM evaluation to generate"}
-                </p>
+      {(isRunning || ecmPlots?.elec_monthly_comp || ecmPlots?.ng_monthly_comp) && (
+        <Card>
+          <SectionHeader
+            title="Monthly Energy Comparison"
+            description="Baseline vs. ECM package monthly energy use by end use."
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {(isRunning || ecmPlots?.elec_monthly_comp) && (
+              <div>
+                <p className="text-xs font-semibold text-primary mb-2">Electricity (kWh)</p>
+                {isRunning ? (
+                  <div className="h-56 rounded-lg border border-brand-100 flex items-center justify-center bg-bg-muted">
+                    <svg className="w-6 h-6 text-brand-400 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                  </div>
+                ) : (
+                  <img
+                    src={ecmPlots!.elec_monthly_comp!}
+                    alt="Electricity EEM Comparison"
+                    className="w-full h-auto rounded-lg border border-brand-100 object-contain bg-white"
+                  />
+                )}
+              </div>
+            )}
+            {(isRunning || ecmPlots?.ng_monthly_comp) && (
+              <div>
+                <p className="text-xs font-semibold text-primary mb-2">Natural Gas (Therms)</p>
+                {isRunning ? (
+                  <div className="h-56 rounded-lg border border-brand-100 flex items-center justify-center bg-bg-muted">
+                    <svg className="w-6 h-6 text-brand-400 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                  </div>
+                ) : (
+                  <img
+                    src={ecmPlots!.ng_monthly_comp!}
+                    alt="Natural Gas EEM Comparison"
+                    className="w-full h-auto rounded-lg border border-brand-100 object-contain bg-white"
+                  />
+                )}
               </div>
             )}
           </div>
-          <div>
-            <p className="text-xs font-semibold text-primary mb-2">Natural Gas (Therms)</p>
-            {isDone && ecmPlots?.ng_monthly_comp ? (
-              <img
-                src={ecmPlots.ng_monthly_comp}
-                alt="Natural Gas EEM Comparison"
-                className="w-full h-auto rounded-lg border border-brand-100 object-contain bg-white"
-              />
-            ) : (
-              <div className="h-56 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-bg-muted">
-                <p className="text-sm text-app-text-light">
-                  {isRunning ? "Generating…" : "Run ECM evaluation to generate"}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </Card>
+        </Card>
+      )}
 
     </StepLayout>
   );
