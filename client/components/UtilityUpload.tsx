@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, DragEvent } from "react";
 import { useForm } from "@/context/FormContext";
+import type { UtilityData, UtilityRow } from "@/context/FormContext";
 import { API } from "@/utils/api";
 
 type Status = "idle" | "loading" | "success" | "error";
@@ -10,8 +11,59 @@ interface UtilityUploadProps {
   projectName?: string;
 }
 
+function parseUtilityCsv(text: string): UtilityData | null {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return null;
+
+  const headers = lines[0].split(",");
+
+  // Map "Year N" → column indices for kWh and Therms, plus the actual calendar year
+  const slots: Record<number, { kwhIdx: number; thermIdx: number; calYear: number }> = {};
+
+  headers.forEach((h, i) => {
+    const slotMatch = h.match(/Year\s+(\d+)/i);
+    const calYearMatch = h.match(/(\d{4})/);
+    if (!slotMatch || !calYearMatch) return;
+    const slot = parseInt(slotMatch[1]);     // 1, 2, or 3
+    const calYear = parseInt(calYearMatch[0]);
+    if (!slots[slot]) slots[slot] = { kwhIdx: -1, thermIdx: -1, calYear };
+    if (h.includes("kWh"))   slots[slot].kwhIdx   = i;
+    if (h.includes("Therms")) slots[slot].thermIdx = i;
+  });
+
+  if (!slots[1]) return null;
+
+  const year1 = slots[1]?.calYear ?? new Date().getFullYear() - 1;
+  const year2 = slots[2]?.calYear ?? year1;
+  const year3 = slots[3]?.calYear ?? year1;
+
+  const dataLines = lines.slice(1).filter(l => l.trim());
+  const rows: UtilityRow[] = dataLines.slice(0, 12).map(line => {
+    const cells = line.split(",");
+    const get = (idx: number) => {
+      if (idx < 0) return "";
+      const v = cells[idx]?.trim();
+      return (!v || v.toLowerCase() === "nan" || v === "") ? "" : v;
+    };
+    return {
+      kwh1:    get(slots[1]?.kwhIdx ?? -1),
+      therms1: get(slots[1]?.thermIdx ?? -1),
+      kwh2:    get(slots[2]?.kwhIdx ?? -1),
+      therms2: get(slots[2]?.thermIdx ?? -1),
+      kwh3:    get(slots[3]?.kwhIdx ?? -1),
+      therms3: get(slots[3]?.thermIdx ?? -1),
+    };
+  });
+
+  while (rows.length < 12) {
+    rows.push({ kwh1: "", therms1: "", kwh2: "", therms2: "", kwh3: "", therms3: "" });
+  }
+
+  return { year1, year2, year3, rows };
+}
+
 export function UtilityUpload({ projectName: projectNameProp }: UtilityUploadProps = {}) {
-  const { pklProjectName, setUtilUploaded, utilFileName } = useForm();
+  const { pklProjectName, setUtilUploaded, setUtilityData, utilFileName } = useForm();
   const resolvedProjectName = projectNameProp || pklProjectName;
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>(utilFileName ? "success" : "idle");
@@ -36,6 +88,10 @@ export function UtilityUpload({ projectName: projectNameProp }: UtilityUploadPro
     setStatus("loading");
     setErrorMsg("");
 
+    // Parse CSV content client-side so the data is available for the PDF export
+    const csvText = await file.text();
+    const parsed = parseUtilityCsv(csvText);
+
     const formData = new FormData();
     formData.append("file", file);
 
@@ -52,6 +108,7 @@ export function UtilityUpload({ projectName: projectNameProp }: UtilityUploadPro
 
       setStatus("success");
       setUtilUploaded(file.name);
+      if (parsed) setUtilityData(parsed);
     } catch (err: unknown) {
       setStatus("error");
       setErrorMsg(err instanceof Error ? err.message : "Upload failed");
