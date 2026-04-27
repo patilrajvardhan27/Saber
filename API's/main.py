@@ -147,6 +147,19 @@ LIST_FIELDS: dict[str, str] = {
 }
 
 
+# Frontend display names → exact names in Materials-WindowMaterial.csv
+_WIN_MAT_MAP: dict[str, str] = {
+    "Low-e Double Pane Clear Air Filled":       "Low e Double Pane Medium SHGC Air filled",
+    "Low-e Double Pane Clear Argon Filled":     "Low e Double Pane Medium SHGC Argon filled",
+    "Low-e Double Pane Insulated Air Filled":   "Low e Double Pane Medium SHGC Air filled Insulated",
+    "Low-e Double Pane Insulated Argon Filled": "Low e Double Pane Medium SHGC Argon filled Insulated",
+    "Low-e Triple Pane Clear Air Filled":       "Low e Triple Pane Low SHGC Air filled",
+    "Low-e Triple Pane Clear Argon Filled":     "Low e Triple Pane Low SHGC Argon filled",
+    "Low-e Triple Pane Insulated Air Filled":   "Low e Triple Pane Low SHGC Air filled Insulated",
+    "Low-e Triple Pane Insulated Argon Filled": "Low e Triple Pane Low SHGC Argon filled Insulated",
+}
+
+
 def _normalize_eff(value: str) -> str:
     """Convert display efficiency labels to the numeric strings the analysis package expects.
 
@@ -386,8 +399,10 @@ def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None
         }
 
         # 6. Cache in-memory results for ECM evaluation
-        best_model["OrgTotalElectricity"] = df_monthly.loc[:, df_monthly.columns.str.contains("EL")].sum().sum() / 3.41
-        best_model["OrgTotalNaturalGas"]  = df_monthly.loc[:, df_monthly.columns.str.contains("NG")].sum().sum() / 100
+        # Use "EL-" / "NG-" to match only end-use columns (e.g. "EL-Space Cooling"),
+        # not BLC coefficients ("BLC_Heat_EL") or degree-day columns ("HDD_EL").
+        best_model["OrgTotalElectricity"] = df_monthly.loc[:, df_monthly.columns.str.contains("EL-")].sum().sum() / 3.412
+        best_model["OrgTotalNaturalGas"]  = df_monthly.loc[:, df_monthly.columns.str.contains("NG-")].sum().sum() / 100
         best_model["BLC_Heat_EL"] = float(df_monthly["BLC_Heat_EL"].mean())
         best_model["BLC_Heat_NG"] = float(df_monthly["BLC_Heat_NG"].mean())
         best_model["BLC_Cool_EL"] = float(df_monthly["BLC_Cool_EL"].mean())
@@ -565,9 +580,16 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
         dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
 
     if req.ecm_window_material:
-        win_org = _val(df_input_org, "WindowMaterial")
-        r = _run_measure(eval_measure.WindowMaterial, win_org, req.ecm_window_material)
-        dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
+        win_org = _WIN_MAT_MAP.get(_val(df_input_org, "WindowMaterial"), _val(df_input_org, "WindowMaterial"))
+        win_eem = _WIN_MAT_MAP.get(req.ecm_window_material, req.ecm_window_material)
+        try:
+            r = _run_measure(eval_measure.WindowMaterial, win_org, win_eem)
+            dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
+        except (IndexError, KeyError) as exc:
+            raise RuntimeError(
+                f"Window material '{win_eem}' was not found in the cost database. "
+                f"Verify that the selected ECM window material matches an available option."
+            ) from exc
 
     if req.ecm_occupancy_sensor == "Yes":
         r = _run_measure(eval_measure.OccupancySensor)
@@ -624,7 +646,7 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
     tic = float(dfMeasure["InitFixedCost"].sum() + dfMeasure["InitVarCost"].sum()) if not dfMeasure.empty else 0.0
     org_kwh = float(best_model_orig["OrgTotalElectricity"])
     org_therms = float(best_model_orig["OrgTotalNaturalGas"])
-    eem_kwh = float(df_eem_last.loc[:, df_eem_last.columns.str.contains("EL-")].sum().sum() / 3.41)
+    eem_kwh = float(df_eem_last.loc[:, df_eem_last.columns.str.contains("EL-")].sum().sum() / 3.412)
     eem_therms = float(df_eem_last.loc[:, df_eem_last.columns.str.contains("NG-")].sum().sum() / 100)
 
     r_discount = req.discount_rate / 100.0

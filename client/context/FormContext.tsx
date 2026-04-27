@@ -3,6 +3,19 @@
 import React, { createContext, useContext, useReducer, useCallback } from "react";
 import { FormState, initialFormState, FormField, SECTIONS, TOTAL_STEPS } from "@/types/form";
 
+export interface UtilityRow {
+  kwh1: string; therms1: string;
+  kwh2: string; therms2: string;
+  kwh3: string; therms3: string;
+}
+
+export interface UtilityData {
+  year1: number;
+  year2: number;
+  year3: number;
+  rows: UtilityRow[];
+}
+
 export interface EcmMetrics {
   tic: number;
   lcc: number;
@@ -44,6 +57,8 @@ interface FormContextValue {
   analysisPlots: AnalysisPlots | null;
   analysisWeatherStation: string;
   analysisError: string;
+  utilityData: UtilityData | null;
+  setUtilityData: (data: UtilityData) => void;
   setPklMeta: (fileName: string, fieldCount: number, projectName: string) => void;
   setPklFields: (fields: string[]) => void;
   setUtilUploaded: (fileName: string) => void;
@@ -72,6 +87,7 @@ type Action =
   | { type: "SET_PKL_META"; fileName: string; fieldCount: number; projectName: string }
   | { type: "SET_PKL_FIELDS"; fields: string[] }
   | { type: "SET_UTIL_UPLOADED"; fileName: string }
+  | { type: "SET_UTILITY_DATA"; data: UtilityData }
   | { type: "SET_ANALYSIS_RUNNING" }
   | { type: "SET_ANALYSIS_DONE"; plots: AnalysisPlots; weatherStation: string }
   | { type: "SET_ANALYSIS_ERROR"; message: string }
@@ -87,6 +103,7 @@ interface State {
   pklFields: string[];
   pklProjectName: string;
   utilFileName: string;
+  utilityData: UtilityData | null;
   analysisStatus: "idle" | "running" | "done" | "error";
   analysisPlots: AnalysisPlots | null;
   analysisWeatherStation: string;
@@ -120,6 +137,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, pklFields: action.fields };
     case "SET_UTIL_UPLOADED":
       return { ...state, utilFileName: action.fileName };
+    case "SET_UTILITY_DATA":
+      return { ...state, utilityData: action.data };
     case "SET_ANALYSIS_RUNNING":
       return { ...state, analysisStatus: "running", analysisError: "" };
     case "SET_ANALYSIS_DONE":
@@ -148,6 +167,7 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
     pklFields: [],
     pklProjectName: "",
     utilFileName: "",
+    utilityData: null,
     analysisStatus: "idle",
     analysisPlots: null,
     analysisWeatherStation: "",
@@ -200,6 +220,11 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const setUtilityData = useCallback(
+    (data: UtilityData) => dispatch({ type: "SET_UTILITY_DATA", data }),
+    []
+  );
+
   const setAnalysisRunning = useCallback(
     () => dispatch({ type: "SET_ANALYSIS_RUNNING" }),
     []
@@ -244,6 +269,8 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
         pklFields: state.pklFields,
         pklProjectName: state.pklProjectName,
         utilFileName: state.utilFileName,
+        utilityData: state.utilityData,
+        setUtilityData,
         analysisStatus: state.analysisStatus,
         analysisPlots: state.analysisPlots,
         analysisWeatherStation: state.analysisWeatherStation,

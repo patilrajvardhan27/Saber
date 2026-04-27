@@ -1,5 +1,5 @@
 import type { FormState } from "@/types/form";
-import type { AnalysisPlots, EcmMetrics, EcmPlots } from "@/context/FormContext";
+import type { AnalysisPlots, EcmMetrics, EcmPlots, UtilityData } from "@/context/FormContext";
 import { API } from "@/utils/api";
 
 async function toDataUri(url: string): Promise<string> {
@@ -71,8 +71,9 @@ export async function exportPdf(params: {
   analysisWeatherStation: string;
   ecmMetrics: EcmMetrics | null;
   ecmPlots: EcmPlots | null;
+  utilityData?: UtilityData | null;
 }): Promise<void> {
-  const { state, pklProjectName, analysisPlots, analysisWeatherStation, ecmMetrics, ecmPlots } = params;
+  const { state, pklProjectName, analysisPlots, analysisWeatherStation, ecmMetrics, ecmPlots, utilityData } = params;
   const projectName = state.projectName || pklProjectName || "Project";
   const origin = window.location.origin;
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
@@ -253,7 +254,59 @@ ${sec("Financials & Costs",
   r("Measure Lifetime", state.lifetime, "yrs")
 )}
 
-<!-- Section 8: ECM Selections -->
+<!-- Section 8: Utility Data -->
+${(() => {
+  if (!utilityData) return "";
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const { year1, year2, year3, rows } = utilityData;
+  const hasY2 = rows.some(r => r.kwh2 || r.therms2);
+  const hasY3 = rows.some(r => r.kwh3 || r.therms3);
+  const fv = (v: string) => (v && v !== "") ? parseFloat(v).toLocaleString("en-US", { maximumFractionDigits: 1 }) : "—";
+  const sumCol = (key: keyof typeof rows[0]) =>
+    rows.reduce((acc, r) => acc + (parseFloat(r[key] as string) || 0), 0);
+
+  const headerStyle = "text-align:center;padding:5px 8px;font-size:10px;color:#1a3d1a;background:#e8f4e8;border-bottom:1px solid #d0e8d0;border-right:1px solid #d0e8d0";
+  const cellStyle = "text-align:center;padding:5px 8px;font-size:11px;border-right:1px solid #e0eee0";
+  const lblStyle = "padding:5px 8px;font-size:11px;color:#555;border-right:1px solid #e0eee0";
+  const totalStyle = "text-align:center;padding:5px 8px;font-size:11px;font-weight:700;color:#1a3d1a;border-right:1px solid #e0eee0";
+
+  const thead = `<thead><tr style="background:#e8f4e8">
+    <th style="${headerStyle};text-align:left;width:100px">Month</th>
+    <th style="${headerStyle}">kWh (${year1})</th>
+    <th style="${headerStyle}">Therms (${year1})</th>
+    ${hasY2 ? `<th style="${headerStyle}">kWh (${year2})</th><th style="${headerStyle}">Therms (${year2})</th>` : ""}
+    ${hasY3 ? `<th style="${headerStyle}">kWh (${year3})</th><th style="${headerStyle}">Therms (${year3})</th>` : ""}
+  </tr></thead>`;
+
+  const bodyRows = rows.map((row, i) =>
+    `<tr style="background:${i % 2 === 0 ? "#fff" : "#f5faf5"}">
+      <td style="${lblStyle}">${MONTHS[i]}</td>
+      <td style="${cellStyle}">${fv(row.kwh1)}</td>
+      <td style="${cellStyle}">${fv(row.therms1)}</td>
+      ${hasY2 ? `<td style="${cellStyle}">${fv(row.kwh2)}</td><td style="${cellStyle}">${fv(row.therms2)}</td>` : ""}
+      ${hasY3 ? `<td style="${cellStyle}">${fv(row.kwh3)}</td><td style="${cellStyle}">${fv(row.therms3)}</td>` : ""}
+    </tr>`
+  ).join("");
+
+  const totRow = `<tr style="background:#e8f4e8;border-top:2px solid #c0dcc0">
+    <td style="${totalStyle};text-align:left">Annual</td>
+    <td style="${totalStyle}">${sumCol("kwh1").toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
+    <td style="${totalStyle}">${sumCol("therms1").toLocaleString("en-US", { maximumFractionDigits: 1 })}</td>
+    ${hasY2 ? `<td style="${totalStyle}">${sumCol("kwh2").toLocaleString("en-US", { maximumFractionDigits: 0 })}</td><td style="${totalStyle}">${sumCol("therms2").toLocaleString("en-US", { maximumFractionDigits: 1 })}</td>` : ""}
+    ${hasY3 ? `<td style="${totalStyle}">${sumCol("kwh3").toLocaleString("en-US", { maximumFractionDigits: 0 })}</td><td style="${totalStyle}">${sumCol("therms3").toLocaleString("en-US", { maximumFractionDigits: 1 })}</td>` : ""}
+  </tr>`;
+
+  return `<div class="sec"><h2>Utility Data</h2>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;border:1px solid #d0e8d0">
+        ${thead}
+        <tbody>${bodyRows}${totRow}</tbody>
+      </table>
+    </div>
+  </div>`;
+})()}
+
+<!-- Section 9: ECM Selections -->
 ${(() => {
   const baselineMap: Record<string, string> = {
     ecmWallInsulation:    state.wallInsulation    || "—",

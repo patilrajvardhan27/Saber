@@ -23,7 +23,7 @@ const emptyRow = (): RowData => ({ kwh1: "", therms1: "", kwh2: "", therms2: "",
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 export function UtilityDataEntry() {
-  const { state, setUtilUploaded } = useForm();
+  const { state, setUtilUploaded, setUtilityData } = useForm();
   const projectName = state.projectName.trim();
 
   const [year1, setYear1] = useState(THIS_YEAR - 1);
@@ -68,6 +68,7 @@ export function UtilityDataEntry() {
 
       setSaveStatus("saved");
       setUtilUploaded(`${projectName}_UtilityData.csv`);
+      setUtilityData({ year1, year2, year3, rows });
     } catch (err: unknown) {
       setSaveStatus("error");
       setErrorMsg(err instanceof Error ? err.message : "Save failed");

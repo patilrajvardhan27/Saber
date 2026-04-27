@@ -155,50 +155,54 @@ export function DimensionsStep() {
       {/* Corner Coordinates */}
       <Card>
         <SectionHeader
-          title="Building Corner Coordinates"
+          title="Building Dimensions"
           description={
-            state.shapeType === "L-Shape"
-              ? "For L-shaped floor plans, define the outer corner coordinates."
-              : "For rectangular plans, x1/y1 and x2/y2 define opposite corners."
+            isLShape
+              ? "For L-shaped floor plans, enter the full width (x1), notch width (x2), full depth (y1), and notch depth (y2)."
+              : "Enter the width (x1) and depth (y1) of the rectangular floor plan."
           }
         />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className={`grid gap-3 ${isLShape ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2"}`}>
           <FormField label="x1" fieldKey="x1">
             <Input
               type="number"
-              placeholder="0"
+              placeholder="40"
               unit="ft"
               value={state.x1}
               onChange={(e) => setField("x1", e.target.value)}
             />
           </FormField>
-          <FormField label="x2" fieldKey="x2">
-            <Input
-              type="number"
-              placeholder="40"
-              unit="ft"
-              value={state.x2}
-              onChange={(e) => setField("x2", e.target.value)}
-            />
-          </FormField>
+          {isLShape && (
+            <FormField label="x2" fieldKey="x2">
+              <Input
+                type="number"
+                placeholder="20"
+                unit="ft"
+                value={state.x2}
+                onChange={(e) => setField("x2", e.target.value)}
+              />
+            </FormField>
+          )}
           <FormField label="y1" fieldKey="y1">
             <Input
               type="number"
-              placeholder="0"
+              placeholder="50"
               unit="ft"
               value={state.y1}
               onChange={(e) => setField("y1", e.target.value)}
             />
           </FormField>
-          <FormField label="y2" fieldKey="y2">
-            <Input
-              type="number"
-              placeholder="50"
-              unit="ft"
-              value={state.y2}
-              onChange={(e) => setField("y2", e.target.value)}
-            />
-          </FormField>
+          {isLShape && (
+            <FormField label="y2" fieldKey="y2">
+              <Input
+                type="number"
+                placeholder="25"
+                unit="ft"
+                value={state.y2}
+                onChange={(e) => setField("y2", e.target.value)}
+              />
+            </FormField>
+          )}
         </div>
       </Card>
     </StepLayout>
