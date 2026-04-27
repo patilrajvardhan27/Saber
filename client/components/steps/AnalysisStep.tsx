@@ -62,7 +62,7 @@ function GenerateResultSection() {
     analysisStatus, setPklMeta,
   } = useForm();
 
-  const manualName = state.projectName.trim().replace(/[\s/]/g, "").replace(/\.\./g, "");
+  const manualName = state.projectName.trim();
   const effectiveProject = pklProjectName || manualName;
   const canGenerate = !!effectiveProject && analysisStatus !== "running";
 

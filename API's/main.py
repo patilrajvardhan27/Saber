@@ -339,12 +339,30 @@ def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None
     # All file I/O happens inside a temp directory that is deleted when done
     tmp = tempfile.mkdtemp()
     try:
-        # Utility CSV: borrow from an existing project (read-only from PROJECTS_DIR)
         util_path = os.path.join(tmp, f"{project_name}_UtilityData.csv")
-        sources = glob_module.glob(os.path.join(PROJECTS_DIR, "**", "*_UtilityData.csv"), recursive=True)
-        if not sources:
-            raise FileNotFoundError("No reference utility data CSV found in any project folder.")
-        shutil.copy(sources[0], util_path)
+
+        # 1. Exact match: <PROJECTS_DIR>/<project_name>/<project_name>_UtilityData.csv
+        _specific = os.path.join(PROJECTS_DIR, project_name, f"{project_name}_UtilityData.csv")
+        if os.path.exists(_specific):
+            shutil.copy(_specific, util_path)
+        else:
+            # 2. Fuzzy match: same name after stripping spaces and lowercasing — handles the
+            #    case where the frontend strips spaces from the project name before calling
+            #    /run-analysis-manual but the CSV was saved with the original spaced name.
+            _target = project_name.replace(" ", "").lower()
+            _all = glob_module.glob(os.path.join(PROJECTS_DIR, "**", "*_UtilityData.csv"), recursive=True)
+            _match = next(
+                (s for s in _all
+                 if os.path.basename(s).replace("_UtilityData.csv", "").replace(" ", "").lower() == _target),
+                None,
+            )
+            if _match:
+                shutil.copy(_match, util_path)
+            else:
+                raise FileNotFoundError(
+                    f"No utility data found for project '{project_name}'. "
+                    "Please upload or enter utility data before running the analysis."
+                )
 
         # CostData: symlink or copy from an existing project (needed by EvaluateMeasure)
         cost_sources = glob_module.glob(os.path.join(PROJECTS_DIR, "*", "CostData"))
@@ -822,7 +840,9 @@ async def run_analysis_manual(project_name: str, req: ManualAnalysisRequest):
 
     df = pd.DataFrame(rows, columns=["PropKey", "PropValue"])
 
-    safe_name = project_name.replace(" ", "").replace("/", "").replace("..", "")
+    # Strip only characters that could cause path traversal; preserve spaces so the
+    # name matches the utility CSV filename on disk.
+    safe_name = project_name.replace("..", "").replace("/", "").replace("\\", "").strip()
     if not safe_name:
         raise HTTPException(status_code=400, detail="Project name is required.")
 
