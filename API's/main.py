@@ -341,28 +341,15 @@ def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None
     try:
         util_path = os.path.join(tmp, f"{project_name}_UtilityData.csv")
 
-        # 1. Exact match: <PROJECTS_DIR>/<project_name>/<project_name>_UtilityData.csv
+        # Only use the utility data the user uploaded / entered for this project.
+        # Never fall back to another project's data — that causes wrong results in production.
         _specific = os.path.join(PROJECTS_DIR, project_name, f"{project_name}_UtilityData.csv")
-        if os.path.exists(_specific):
-            shutil.copy(_specific, util_path)
-        else:
-            # 2. Fuzzy match: same name after stripping spaces and lowercasing — handles the
-            #    case where the frontend strips spaces from the project name before calling
-            #    /run-analysis-manual but the CSV was saved with the original spaced name.
-            _target = project_name.replace(" ", "").lower()
-            _all = glob_module.glob(os.path.join(PROJECTS_DIR, "**", "*_UtilityData.csv"), recursive=True)
-            _match = next(
-                (s for s in _all
-                 if os.path.basename(s).replace("_UtilityData.csv", "").replace(" ", "").lower() == _target),
-                None,
+        if not os.path.exists(_specific):
+            raise FileNotFoundError(
+                f"No utility data found for project '{project_name}'. "
+                "Please upload a CSV or enter monthly utility data before running the analysis."
             )
-            if _match:
-                shutil.copy(_match, util_path)
-            else:
-                raise FileNotFoundError(
-                    f"No utility data found for project '{project_name}'. "
-                    "Please upload or enter utility data before running the analysis."
-                )
+        shutil.copy(_specific, util_path)
 
         # CostData: symlink or copy from an existing project (needed by EvaluateMeasure)
         cost_sources = glob_module.glob(os.path.join(PROJECTS_DIR, "*", "CostData"))
