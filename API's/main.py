@@ -139,6 +139,7 @@ PROP_KEY_MAP: dict[str, str] = {
     "LEDECM":             "ecmLED",
     "EquipLoadRed":       "ecmReduceEquipLoad",
     "OccupancySensor":    "ecmOccupancySensor",
+    "nHoursLighting":     "nHoursLighting",   # hours per day — critical for lighting calc
 }
 
 LIST_FIELDS: dict[str, str] = {
@@ -501,9 +502,12 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
                 df.loc[mask, "PropValue"] = default
         # Force Shape to Rectangle (package only supports Rectangle for ECM)
         df.loc[df["PropKey"] == "Shape", "PropValue"] = "Rectangle"
-        # nHoursLighting removed from UI — inject default so EnergyAnalysis.py doesn't crash
-        if not (df["PropKey"] == "nHoursLighting").any():
-            df = pd.concat([df, pd.DataFrame([{"PropKey": "nHoursLighting", "PropValue": "2920"}])], ignore_index=True)
+        # nHoursLighting is hours/day (not hours/year). PKL stores the correct value;
+        # inject 6 hrs/day as a fallback only when the key is absent or empty.
+        _nh = df.loc[df["PropKey"] == "nHoursLighting", "PropValue"]
+        if _nh.empty or str(_nh.iloc[0]) in ("", "nan", "None"):
+            df = df[df["PropKey"] != "nHoursLighting"]
+            df = pd.concat([df, pd.DataFrame([{"PropKey": "nHoursLighting", "PropValue": "6"}])], ignore_index=True)
         # CeilingConst not in the form — inject the only value that exists in Construction-Floor.csv
         if not (df["PropKey"] == "CeilingConst").any():
             df = pd.concat([df, pd.DataFrame([{"PropKey": "CeilingConst", "PropValue": "Floor construction Reversed"}])], ignore_index=True)
@@ -802,10 +806,12 @@ async def run_analysis_manual(project_name: str, req: ManualAnalysisRequest):
         if row["PropKey"] in _DEFAULTS and row["PropValue"] in (None, ""):
             rows[i] = {**row, "PropValue": _DEFAULTS[row["PropKey"]]}
 
-    # nHoursLighting was removed from the UI but EnergyAnalysis.py still requires it.
-    # Inject a fixed default (2920 hrs/yr = 8 hrs/day) if not already present.
-    if not any(r["PropKey"] == "nHoursLighting" for r in rows):
-        rows.append({"PropKey": "nHoursLighting", "PropValue": "2920"})
+    # nHoursLighting is hours/day. PKL value is preserved via PROP_KEY_MAP;
+    # inject 6 hrs/day only when absent or empty (pure manual entry without a PKL).
+    _nh_rows = [r for r in rows if r["PropKey"] == "nHoursLighting"]
+    if not _nh_rows or str(_nh_rows[0].get("PropValue", "")) in ("", "nan", "None"):
+        rows = [r for r in rows if r["PropKey"] != "nHoursLighting"]
+        rows.append({"PropKey": "nHoursLighting", "PropValue": "6"})
 
     # Build the combined WWR dict row expected by EEMIndMeasureAnalysisObject
     def _get_row(key: str):

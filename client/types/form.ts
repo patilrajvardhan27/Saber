@@ -68,6 +68,9 @@ export interface FormState {
   economizer: string;
   swampCooler: string;
 
+  // ── Lighting hours (from PKL, not shown in UI) ───────────────────────────
+  nHoursLighting: string;
+
   // ── Equipment & Lighting ──────────────────────────────────
   cookingFuelType: string;
   cookingRating: string;
@@ -162,6 +165,8 @@ export const initialFormState: FormState = {
   dhwTankVol: "",
   economizer: "No",
   swampCooler: "No",
+
+  nHoursLighting: "",
 
   cookingFuelType: "",
   cookingRating: "",
