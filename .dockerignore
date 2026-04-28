@@ -1,0 +1,11 @@
+client/node_modules
+client/.next
+API's/venv
+API's/__pycache__
+BldgAuditToolSimple_v1/BldgAuditToolLite
+**/__pycache__
+**/*.pyc
+**/*.pyo
+.git
+.gitignore
+railway.toml

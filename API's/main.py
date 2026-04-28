@@ -75,6 +75,11 @@ BLDG_AUDIT_DIR = os.path.normpath(os.path.join(BASE_DIR, "../BldgAuditToolSimple
 PROJECTS_DIR = os.path.join(BLDG_AUDIT_DIR, "Projects")
 sys.path.insert(0, BLDG_AUDIT_DIR)
 
+# UPLOADS_DIR is where user-uploaded utility CSVs and project folders are stored.
+# On Fly.io this is a persistent volume (/data/uploads); locally it falls back to PROJECTS_DIR.
+UPLOADS_DIR = os.environ.get("UPLOADS_DIR", PROJECTS_DIR)
+os.makedirs(UPLOADS_DIR, exist_ok=True)
+
 _executor = ThreadPoolExecutor(max_workers=2)
 
 # ── In-memory cache for baseline analysis results (keyed by project_name) ──────
@@ -259,7 +264,7 @@ async def save_utility_data(project_name: str, req: UtilityDataManualRequest):
     if len(req.rows) != 12:
         raise HTTPException(status_code=400, detail="Exactly 12 monthly rows are required.")
 
-    project_path = os.path.join(PROJECTS_DIR, project_name)
+    project_path = os.path.join(UPLOADS_DIR, project_name)
     os.makedirs(project_path, exist_ok=True)
 
     y1 = req.year1
@@ -308,7 +313,7 @@ async def upload_utility(project_name: str, file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
 
     contents = await file.read()
-    project_path = os.path.join(PROJECTS_DIR, project_name)
+    project_path = os.path.join(UPLOADS_DIR, project_name)
     os.makedirs(project_path, exist_ok=True)
 
     # Always save as {ProjectName}_UtilityData.csv (what the analysis engine expects)
@@ -342,15 +347,20 @@ def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None
     try:
         util_path = os.path.join(tmp, f"{project_name}_UtilityData.csv")
 
-        # Only use the utility data the user uploaded / entered for this project.
-        # Never fall back to another project's data — that causes wrong results in production.
-        _specific = os.path.join(PROJECTS_DIR, project_name, f"{project_name}_UtilityData.csv")
-        if not os.path.exists(_specific):
+        # Check UPLOADS_DIR (persistent volume / user uploads) first, then
+        # fall back to PROJECTS_DIR (pre-seeded repo data, e.g. LakewoodTestCase).
+        # Never fall back to a *different* project's data.
+        _upload_csv  = os.path.join(UPLOADS_DIR,   project_name, f"{project_name}_UtilityData.csv")
+        _seeded_csv  = os.path.join(PROJECTS_DIR,  project_name, f"{project_name}_UtilityData.csv")
+        if os.path.exists(_upload_csv):
+            shutil.copy(_upload_csv, util_path)
+        elif os.path.exists(_seeded_csv):
+            shutil.copy(_seeded_csv, util_path)
+        else:
             raise FileNotFoundError(
                 f"No utility data found for project '{project_name}'. "
                 "Please upload a CSV or enter monthly utility data before running the analysis."
             )
-        shutil.copy(_specific, util_path)
 
         # CostData: symlink or copy from an existing project (needed by EvaluateMeasure)
         cost_sources = glob_module.glob(os.path.join(PROJECTS_DIR, "*", "CostData"))
