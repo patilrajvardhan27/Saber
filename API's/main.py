@@ -87,10 +87,16 @@ try:
     _orig_inv_fit = _InverseModel.fit
 
     def _safe_inv_fit(self):
-        _orig_inv_fit(self)
+        try:
+            _orig_inv_fit(self)
+        except Exception:
+            pass
         if not hasattr(self, 'p'):
-            avg_temp = float(_np_patch.mean(self.temperature))
-            avg_eui  = float(_np_patch.mean(self.eui))
+            if hasattr(self, 'temperature') and hasattr(self, 'eui'):
+                avg_temp = float(_np_patch.nanmean(self.temperature))
+                avg_eui  = float(_np_patch.nanmean(self.eui))
+            else:
+                avg_temp, avg_eui = 50.0, 0.0
             self.p   = _np_patch.array([avg_temp - 5.0, avg_temp + 5.0, avg_eui, 0.0, 0.0])
             self.e   = _np_patch.zeros((5, 5))
             self.hcp, self.ccp, self.base, self.hsl, self.csl = self.p
@@ -104,10 +110,13 @@ try:
     _orig_inv_fit_model = _InverseModel.fit_model
 
     def _safe_inv_fit_model(self, has_fit=False, threshold=0.1):
-        result = _orig_inv_fit_model(self, has_fit, threshold)
-        if not isinstance(result, tuple):
-            return (False, "No fit", _np_patch.array([0.0, 0.0, 0.0, 0.0, 0.0]))
-        return result
+        try:
+            result = _orig_inv_fit_model(self, has_fit, threshold)
+            if not isinstance(result, tuple):
+                return (False, "No fit", getattr(self, 'p', _np_patch.zeros(5)))
+            return result
+        except Exception:
+            return (False, "No fit", getattr(self, 'p', _np_patch.zeros(5)))
 
     _InverseModel.fit_model = _safe_inv_fit_model
 except Exception:
