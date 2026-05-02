@@ -75,6 +75,45 @@ BLDG_AUDIT_DIR = os.path.normpath(os.path.join(BASE_DIR, "../BldgAuditToolSimple
 PROJECTS_DIR = os.path.join(BLDG_AUDIT_DIR, "Projects")
 sys.path.insert(0, BLDG_AUDIT_DIR)
 
+# ── InverseModel safety patches ────────────────────────────────────────────────
+# Bug 1: model.py fit() swallows curve_fit failures but leaves self.p unset;
+#        fit_model() then crashes with AttributeError at `self.p_init = self.p`.
+# Bug 2: fit_model() returns bare False (not a tuple) when R² < threshold, but
+#        BuildTemperatureBasedModel always unpacks 3 values from the result.
+try:
+    import numpy as _np_patch
+    from BldgAuditToolPackage.model import InverseModel as _InverseModel
+
+    _orig_inv_fit = _InverseModel.fit
+
+    def _safe_inv_fit(self):
+        _orig_inv_fit(self)
+        if not hasattr(self, 'p'):
+            avg_temp = float(_np_patch.mean(self.temperature))
+            avg_eui  = float(_np_patch.mean(self.eui))
+            self.p   = _np_patch.array([avg_temp - 5.0, avg_temp + 5.0, avg_eui, 0.0, 0.0])
+            self.e   = _np_patch.zeros((5, 5))
+            self.hcp, self.ccp, self.base, self.hsl, self.csl = self.p
+            self.p_base = 1.0
+            self.p_hsl  = 1.0
+            self.p_csl  = 1.0
+            self.has_fit = False
+
+    _InverseModel.fit = _safe_inv_fit
+
+    _orig_inv_fit_model = _InverseModel.fit_model
+
+    def _safe_inv_fit_model(self, has_fit=False, threshold=0.1):
+        result = _orig_inv_fit_model(self, has_fit, threshold)
+        if not isinstance(result, tuple):
+            return (False, "No fit", _np_patch.array([0.0, 0.0, 0.0, 0.0, 0.0]))
+        return result
+
+    _InverseModel.fit_model = _safe_inv_fit_model
+except Exception:
+    pass
+# ──────────────────────────────────────────────────────────────────────────────
+
 # UPLOADS_DIR is where user-uploaded utility CSVs and project folders are stored.
 # On Fly.io this is a persistent volume (/data/uploads); locally it falls back to PROJECTS_DIR.
 UPLOADS_DIR = os.environ.get("UPLOADS_DIR", PROJECTS_DIR)
