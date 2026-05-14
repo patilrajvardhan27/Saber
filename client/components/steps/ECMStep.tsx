@@ -150,7 +150,7 @@ export function ECMSelectionStep() {
       <Card>
         <div className="flex items-start justify-between gap-4 mb-4">
           <SectionHeader
-            title="ECM Selection"
+            title="Retrofit Analysis"
             description="Select the upgraded option for each measure, then evaluate the full package."
             className="mb-0"
           />

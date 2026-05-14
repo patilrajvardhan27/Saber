@@ -227,10 +227,10 @@ export const SECTIONS: SectionConfig[] = [
   { id: 1, label: "Project Info",         shortLabel: "Info",      firstStep: 1,  lastStep: 1  },
   { id: 2, label: "Building Shape",       shortLabel: "Shape",     firstStep: 2,  lastStep: 3  },
   { id: 3, label: "Building Envelope",    shortLabel: "Envelope",  firstStep: 4,  lastStep: 6  },
-  { id: 4, label: "HVAC Systems",         shortLabel: "HVAC",      firstStep: 7,  lastStep: 8  },
-  { id: 5, label: "Equipment & Lighting", shortLabel: "Equipment", firstStep: 9,  lastStep: 10 },
-  { id: 6, label: "Analysis Results",     shortLabel: "Results",   firstStep: 11, lastStep: 11 },
-  { id: 7, label: "ECM Evaluation",       shortLabel: "ECM",       firstStep: 12, lastStep: 14 },
+  { id: 4, label: "Equipment & Lighting", shortLabel: "Equipment", firstStep: 7,  lastStep: 8  },
+  { id: 5, label: "HVAC Systems",         shortLabel: "HVAC",      firstStep: 9,  lastStep: 10 },
+  { id: 6, label: "Post Retrofit Analysis", shortLabel: "Results",   firstStep: 11, lastStep: 11 },
+  { id: 7, label: "Retrofit Analysis",     shortLabel: "Retrofit",  firstStep: 12, lastStep: 14 },
 ];
 
 export const SUB_STEPS: SubStepConfig[] = [
@@ -240,13 +240,13 @@ export const SUB_STEPS: SubStepConfig[] = [
   { id: 4,  section: 3, label: "Walls & Roof"             },
   { id: 5,  section: 3, label: "Foundation & Infiltration"},
   { id: 6,  section: 3, label: "Windows & Shading"        },
-  { id: 7,  section: 4, label: "Heating & Cooling"        },
-  { id: 8,  section: 4, label: "Hot Water & Other"        },
-  { id: 9,  section: 5, label: "Appliances"               },
-  { id: 10, section: 5, label: "Lighting & Plug Loads"    },
-  { id: 11, section: 6, label: "Analysis Results"         },
+  { id: 7,  section: 4, label: "Appliances"               },
+  { id: 8,  section: 4, label: "Lighting & Plug Loads"    },
+  { id: 9,  section: 5, label: "Heating & Cooling"        },
+  { id: 10, section: 5, label: "Hot Water & Other"        },
+  { id: 11, section: 6, label: "Post Retrofit Analysis"    },
   { id: 12, section: 7, label: "Financials & Costs"       },
-  { id: 13, section: 7, label: "ECM Selection"            },
+  { id: 13, section: 7, label: "Retrofit Analysis"         },
   { id: 14, section: 7, label: "Results Summary"          },
 ];
 

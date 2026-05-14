@@ -106,20 +106,6 @@ export function HeatingCoolingStep() {
   const imagePanel = (
     <div className="flex flex-col gap-5 w-full h-full">
       <EquipmentImageCard
-        label="Cooling System"
-        subtitle={
-          state.coolingEqp === "NoCooling"
-            ? "No cooling system"
-            : state.coolingEqp
-              ? state.coolingEff
-                ? `${state.coolingEqp} · ${state.coolingEff}`
-                : state.coolingEqp
-              : undefined
-        }
-        imgSrc={coolingImg}
-        emptyText="Select cooling equipment to preview"
-      />
-      <EquipmentImageCard
         label="Heating System"
         subtitle={
           state.heatingEqp === "NoHeating"
@@ -132,6 +118,20 @@ export function HeatingCoolingStep() {
         }
         imgSrc={heatingImg}
         emptyText="Select heating equipment to preview"
+      />
+      <EquipmentImageCard
+        label="Cooling System"
+        subtitle={
+          state.coolingEqp === "NoCooling"
+            ? "No cooling system"
+            : state.coolingEqp
+              ? state.coolingEff
+                ? `${state.coolingEqp} · ${state.coolingEff}`
+                : state.coolingEqp
+              : undefined
+        }
+        imgSrc={coolingImg}
+        emptyText="Select cooling equipment to preview"
       />
     </div>
   );
@@ -147,77 +147,6 @@ export function HeatingCoolingStep() {
           <span><span className="font-semibold">Equipment mismatch:</span> An Air Source Heat Pump provides both heating and cooling. Selecting different equipment for each system may produce inconsistent simulation results.</span>
         </div>
       )}
-
-      {/* ── Cooling ── */}
-      <Card>
-        <SectionHeader
-          title="Cooling"
-          description="Define the cooling equipment type, efficiency rating, and thermostat setpoint."
-        />
-        <div className="flex flex-col gap-4">
-          <FormField label="Cooling Equipment" fieldKey="coolingEqp" required>
-            <Select
-              options={COOLING_EQUIPMENT}
-              placeholder="Select cooling equipment…"
-              value={state.coolingEqp}
-              onChange={(e) => handleCoolingChange(e.target.value)}
-            />
-          </FormField>
-
-          {state.coolingEqp && state.coolingEqp !== "NoCooling" && (
-            <div className="grid grid-cols-2 gap-3">
-              <FormField label="Cooling Efficiency (SEER2)" fieldKey="coolingEff" hint="Higher SEER2 = more efficient">
-                <Select
-                  options={coolingEffOptions}
-                  placeholder="Select efficiency…"
-                  value={state.coolingEff}
-                  onChange={(e) => setField("coolingEff", e.target.value)}
-                />
-              </FormField>
-
-              {showCoolingCustom ? (
-                <FormField label="Custom SEER2 Value" fieldKey="coolingEffCustom">
-                  <Input
-                    type="number"
-                    placeholder="15.0"
-                    value={state.coolingEffCustom}
-                    onChange={(e) => setField("coolingEffCustom", e.target.value)}
-                  />
-                </FormField>
-              ) : (
-                <FormField label="Cooling Setpoint" fieldKey="tspc" hint="Thermostat cooling set temperature">
-                  <Input
-                    type="number"
-                    placeholder="75"
-                    unit="°F"
-                    value={state.tspc}
-                    onChange={(e) => setField("tspc", e.target.value)}
-                  />
-                </FormField>
-              )}
-            </div>
-          )}
-
-          {state.coolingEqp && state.coolingEqp !== "NoCooling" && showCoolingCustom && (
-            <FormField label="Cooling Setpoint" fieldKey="tspc" hint="Thermostat cooling set temperature">
-              <Input
-                type="number"
-                placeholder="75"
-                unit="°F"
-                value={state.tspc}
-                onChange={(e) => setField("tspc", e.target.value)}
-              />
-            </FormField>
-          )}
-
-          {state.coolingEqp === "NoCooling" && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
-              <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
-              No mechanical cooling — building relies on natural ventilation
-            </div>
-          )}
-        </div>
-      </Card>
 
       {/* ── Heating ── */}
       <Card>
@@ -306,6 +235,77 @@ export function HeatingCoolingStep() {
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-50 border border-orange-200 text-xs text-orange-700">
               <span className="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
               No heating system — high energy loss risk in cold climates
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* ── Cooling ── */}
+      <Card>
+        <SectionHeader
+          title="Cooling"
+          description="Define the cooling equipment type, efficiency rating, and thermostat setpoint."
+        />
+        <div className="flex flex-col gap-4">
+          <FormField label="Cooling Equipment" fieldKey="coolingEqp" required>
+            <Select
+              options={COOLING_EQUIPMENT}
+              placeholder="Select cooling equipment…"
+              value={state.coolingEqp}
+              onChange={(e) => handleCoolingChange(e.target.value)}
+            />
+          </FormField>
+
+          {state.coolingEqp && state.coolingEqp !== "NoCooling" && (
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Cooling Efficiency (SEER2)" fieldKey="coolingEff" hint="Higher SEER2 = more efficient">
+                <Select
+                  options={coolingEffOptions}
+                  placeholder="Select efficiency…"
+                  value={state.coolingEff}
+                  onChange={(e) => setField("coolingEff", e.target.value)}
+                />
+              </FormField>
+
+              {showCoolingCustom ? (
+                <FormField label="Custom SEER2 Value" fieldKey="coolingEffCustom">
+                  <Input
+                    type="number"
+                    placeholder="15.0"
+                    value={state.coolingEffCustom}
+                    onChange={(e) => setField("coolingEffCustom", e.target.value)}
+                  />
+                </FormField>
+              ) : (
+                <FormField label="Cooling Setpoint" fieldKey="tspc" hint="Thermostat cooling set temperature">
+                  <Input
+                    type="number"
+                    placeholder="75"
+                    unit="°F"
+                    value={state.tspc}
+                    onChange={(e) => setField("tspc", e.target.value)}
+                  />
+                </FormField>
+              )}
+            </div>
+          )}
+
+          {state.coolingEqp && state.coolingEqp !== "NoCooling" && showCoolingCustom && (
+            <FormField label="Cooling Setpoint" fieldKey="tspc" hint="Thermostat cooling set temperature">
+              <Input
+                type="number"
+                placeholder="75"
+                unit="°F"
+                value={state.tspc}
+                onChange={(e) => setField("tspc", e.target.value)}
+              />
+            </FormField>
+          )}
+
+          {state.coolingEqp === "NoCooling" && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
+              <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
+              No mechanical cooling — building relies on natural ventilation
             </div>
           )}
         </div>

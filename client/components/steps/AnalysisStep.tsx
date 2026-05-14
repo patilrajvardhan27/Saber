@@ -176,7 +176,7 @@ export function AnalysisResultsStep() {
   const isDone = analysisStatus === "done";
 
   return (
-    <StepLayout nextLabel="Proceed to ECM Evaluation">
+    <StepLayout nextLabel="Proceed to Retrofit Analysis">
       <GenerateResultSection />
       <AnalysisBanner />
 

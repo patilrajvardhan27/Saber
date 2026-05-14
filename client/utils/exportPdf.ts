@@ -212,14 +212,14 @@ ${sec("Envelope — Windows & Shading",
 <!-- Section 5: HVAC Systems -->
 <div class="pb"></div>
 ${sec("HVAC — Heating & Cooling",
-  r("Cooling Equipment", state.coolingEqp) +
-  r("Cooling Efficiency", state.coolingEffCustom || state.coolingEff) +
-  r("Cooling Setpoint", state.tspc, "°F") +
   r("Heating Equipment", state.heatingEqp) +
   r("Heating Efficiency", state.heatingEffCustom || state.heatingEff) +
   r("Heating Setpoint", state.tsph, "°F") +
   r("Night Setback", state.nightSetback, "°F") +
-  r("Setback Hours", state.nNightSetbackHours, "hrs")
+  r("Setback Hours", state.nNightSetbackHours, "hrs") +
+  r("Cooling Equipment", state.coolingEqp) +
+  r("Cooling Efficiency", state.coolingEffCustom || state.coolingEff) +
+  r("Cooling Setpoint", state.tspc, "°F")
 )}
 ${sec("HVAC — Hot Water & Other",
   r("DHW System Type", state.dhwSystemType) +
@@ -306,7 +306,7 @@ ${(() => {
   </div>`;
 })()}
 
-<!-- Section 9: ECM Selections -->
+<!-- Section 9: Retrofit Analysis -->
 ${(() => {
   const baselineMap: Record<string, string> = {
     ecmWallInsulation:    state.wallInsulation    || "—",
@@ -351,7 +351,7 @@ ${(() => {
       <td class="val" style="width:35%;color:${selected === "No change" ? "#aaa" : "#1a7d1a"};font-weight:${selected === "No change" ? "400" : "600"}">${selected}</td>
     </tr>`;
   }).join("");
-  return `<div class="sec"><h2>ECM Selections</h2>
+  return `<div class="sec"><h2>Retrofit Analysis</h2>
     <table>
       <thead><tr style="background:#e8f4e8">
         <th style="text-align:left;padding:6px 10px;font-size:11px;color:#1a3d1a;width:35%">Measure</th>
@@ -432,7 +432,7 @@ ${(() => {
 
 ${(P.weather || P.end_use || P.elec_monthly || P.ng_monthly || P.elec_temp_model || P.ff_temp_model || P.elec_dd_model || P.ff_dd_model)
   ? `<div class="pb"></div>
-     <div class="sec"><h2>Analysis Results</h2>
+     <div class="sec"><h2>Post Retrofit Analysis</h2>
      ${analysisWeatherStation ? `<p style="font-size:11px;color:#555;margin-bottom:10px">NOAA Weather Station: <strong style="color:#1a3d1a">${analysisWeatherStation}</strong></p>` : ""}
 
      ${P.weather ? `
