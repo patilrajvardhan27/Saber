@@ -8,7 +8,7 @@ import { WallsRoofStep, FoundationInfiltrationStep, WindowsShadingStep } from "@
 import { HeatingCoolingStep, HotWaterOtherStep } from "@/components/steps/HVACStep";
 import { AppliancesStep, LightingPlugLoadsStep } from "@/components/steps/EquipmentStep";
 import { AnalysisResultsStep } from "@/components/steps/AnalysisStep";
-import { FinancialsStep, ECMSelectionStep, ECMResultsStep } from "@/components/steps/ECMStep";
+import { FinancialsStep, ECMSelectionStep, ECMOptionCostStep, ECMResultsStep } from "@/components/steps/ECMStep";
 
 const STEP_COMPONENTS: Record<number, React.ComponentType> = {
   1:  ProjectSetupStep,
@@ -24,7 +24,8 @@ const STEP_COMPONENTS: Record<number, React.ComponentType> = {
   11: AnalysisResultsStep,
   12: FinancialsStep,
   13: ECMSelectionStep,
-  14: ECMResultsStep,
+  14: ECMOptionCostStep,
+  15: ECMResultsStep,
 };
 
 function AppContent() {

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useForm } from "@/context/FormContext";
-import type { EcmMetrics, EcmPlots } from "@/context/FormContext";
+import type { EcmMetrics, EcmPlots, EcmMeasureRow } from "@/context/FormContext";
 import { StepLayout } from "@/components/StepLayout";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
@@ -138,7 +138,7 @@ export function ECMSelectionStep() {
         throw new Error(err.detail ?? "ECM evaluation failed");
       }
       const data = await res.json();
-      setEcmDone(data.metrics as EcmMetrics, data.plots as EcmPlots);
+      setEcmDone(data.metrics as EcmMetrics, data.plots as EcmPlots, (data.measures ?? []) as EcmMeasureRow[]);
       setTimeout(() => goToStep(14), 800);
     } catch (err: unknown) {
       setEcmError(err instanceof Error ? err.message : "ECM evaluation failed");
@@ -240,7 +240,192 @@ export function ECMSelectionStep() {
   );
 }
 
-// ── Step 16: Results Summary ──────────────────────────────────────────────────
+// ── Step 14: ECM Options & Cost ───────────────────────────────────────────────
+const MEASURE_LABELS: Record<string, string> = {
+  WallInsulation:      "Wall Insulation",
+  Infiltration:        "Infiltration",
+  CeilingInsulation:   "Ceiling Insulation",
+  WindowMaterial:      "Window Material",
+  NightSetBack:        "Night Setback",
+  DaylightingSensor:   "Daylighting",
+  Economizer:          "Economizer",
+  OccupancySensor:     "Occupancy Sensor",
+  LEDLighting:         "LED Lighting",
+  ReduceEquipmentLoad: "Reduce Equipment Load",
+  CoolingEff:          "Cooling Efficiency",
+  HeatingEff:          "Heating Efficiency",
+  HeatPumpAddition:    "Heat Pump Addition",
+};
+
+export function ECMOptionCostStep() {
+  const { ecmStatus, ecmMeasures, ecmMetrics, ecmError, goToStep } = useForm();
+  const isDone = ecmStatus === "done";
+  const isRunning = ecmStatus === "running";
+
+  const fmt = (n: number, decimals = 0) =>
+    n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+
+  const fmtCost = (n: number) =>
+    n === 0 ? "—" : `$${fmt(n, 0)}`;
+
+  return (
+    <StepLayout>
+      {isRunning && (
+        <div className="flex items-center gap-3 px-4 py-3 mb-4 rounded-lg bg-brand-50 border border-brand-200 text-sm text-brand-800">
+          <svg className="w-4 h-4 animate-spin flex-shrink-0 text-brand-500" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+          Running ECM evaluation…
+        </div>
+      )}
+      {ecmStatus === "error" && (
+        <div className="flex items-start gap-2 px-3 py-2 mb-4 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+          <span className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0 mt-0.5" />
+          <span><span className="font-semibold">Error:</span> {ecmError}</span>
+        </div>
+      )}
+
+      <Card>
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <SectionHeader
+            title="ECM Options & Cost Breakdown"
+            description="Per-measure cost and energy savings for the evaluated retrofit package."
+            className="mb-0"
+          />
+          <button
+            type="button"
+            onClick={() => goToStep(15)}
+            className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-brand-500 text-white hover:bg-brand-600 shadow-sm"
+          >
+            View Results
+            <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
+              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+
+        {!isDone || ecmMeasures.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
+            <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10 text-app-text-light">
+              <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" strokeWidth="2" />
+              <path d="M16 24h16M16 30h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M16 18h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <p className="text-sm text-app-text-muted">
+              No evaluation results yet. Select ECM options on the previous step and click{" "}
+              <span className="font-semibold text-app-text">Evaluate Package</span>.
+            </p>
+            <button
+              type="button"
+              onClick={() => goToStep(13)}
+              className="mt-1 px-4 py-2 rounded-xl text-sm font-semibold border border-border hover:border-brand-300 hover:text-brand-700 hover:bg-brand-50 transition-all"
+            >
+              Go to Retrofit Analysis
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-bg-muted border-b border-border">
+                    <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Measure</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Baseline</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Selected Option</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Fixed Cost</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Var. Cost</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Total Cost</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Elec. Savings</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Gas Savings</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ecmMeasures.map((row, i) => {
+                    const elecSavings = row.OrgTotalElectricity - row.EEMTotalElectricity;
+                    const gasSavings  = row.OrgTotalNaturalGas  - row.EEMTotalNaturalGas;
+                    const totalCost   = row.InitFixedCost + row.InitVarCost;
+                    return (
+                      <tr key={i} className={i % 2 === 0 ? "bg-bg-card" : "bg-bg-muted"}>
+                        <td className="px-4 py-2 font-medium text-app-text text-xs">
+                          {MEASURE_LABELS[row.Measure] ?? row.Measure}
+                        </td>
+                        <td className="px-4 py-2 text-xs text-app-text-muted font-mono">
+                          {String(row.OrgPropValue)}
+                        </td>
+                        <td className="px-4 py-2 text-xs text-primary font-medium">
+                          {String(row.NewPropValue)}
+                        </td>
+                        <td className="px-4 py-2 text-xs text-right font-mono text-app-text">
+                          {fmtCost(row.InitFixedCost)}
+                        </td>
+                        <td className="px-4 py-2 text-xs text-right font-mono text-app-text">
+                          {fmtCost(row.InitVarCost)}
+                        </td>
+                        <td className="px-4 py-2 text-xs text-right font-mono font-semibold text-app-text">
+                          {fmtCost(totalCost)}
+                        </td>
+                        <td className={`px-4 py-2 text-xs text-right font-mono ${elecSavings > 0 ? "text-success" : "text-app-text-muted"}`}>
+                          {elecSavings > 0 ? `${fmt(elecSavings, 0)} kWh` : "—"}
+                        </td>
+                        <td className={`px-4 py-2 text-xs text-right font-mono ${gasSavings > 0 ? "text-accent" : "text-app-text-muted"}`}>
+                          {gasSavings > 0 ? `${fmt(gasSavings, 1)} therms` : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                {ecmMeasures.length > 1 && ecmMetrics && (
+                  <tfoot>
+                    <tr className="border-t-2 border-border bg-bg-muted">
+                      <td colSpan={5} className="px-4 py-2.5 text-xs font-semibold text-app-text">
+                        Package Total
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-right font-mono font-bold text-warning">
+                        ${fmt(ecmMetrics.tic, 0)}
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-right font-mono font-semibold text-success">
+                        {fmt(ecmMetrics.org_kwh - ecmMetrics.eem_kwh, 0)} kWh
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-right font-mono font-semibold text-accent">
+                        {fmt(ecmMetrics.org_therms - ecmMetrics.eem_therms, 1)} therms
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-xl border border-border bg-bg-muted p-3 text-center">
+                <p className="text-xs text-app-text-muted">Measures Selected</p>
+                <p className="text-lg font-bold text-app-text mt-0.5">{ecmMeasures.length}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-bg-muted p-3 text-center">
+                <p className="text-xs text-app-text-muted">Total Installed Cost</p>
+                <p className="text-lg font-bold text-warning mt-0.5">${fmt(ecmMetrics?.tic ?? 0, 0)}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-bg-muted p-3 text-center">
+                <p className="text-xs text-app-text-muted">Elec. Savings</p>
+                <p className="text-lg font-bold text-success mt-0.5">
+                  {fmt(ecmMetrics ? ecmMetrics.kwh_pct_savings : 0, 1)}%
+                </p>
+              </div>
+              <div className="rounded-xl border border-border bg-bg-muted p-3 text-center">
+                <p className="text-xs text-app-text-muted">Gas Savings</p>
+                <p className="text-lg font-bold text-accent mt-0.5">
+                  {fmt(ecmMetrics ? ecmMetrics.therms_pct_savings : 0, 1)}%
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+      </Card>
+    </StepLayout>
+  );
+}
+
+// ── Step 15: Results Summary ──────────────────────────────────────────────────
 function MetricCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color: string }) {
   return (
     <div className="rounded-2xl border border-brand-100 bg-white p-5 flex flex-col items-center text-center shadow-sm">

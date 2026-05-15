@@ -33,6 +33,22 @@ export interface EcmPlots {
   ng_monthly_comp: string | null;
 }
 
+export interface EcmMeasureRow {
+  Measure: string;
+  OrgPropValue: number | string;
+  NewPropValue: number | string;
+  InitFixedCost: number;
+  UnitVarCost: number;
+  Unit: number;
+  InitVarCost: number;
+  RetrofitCost: number;
+  Salvage: number;
+  OrgTotalElectricity: number;
+  OrgTotalNaturalGas: number;
+  EEMTotalElectricity: number;
+  EEMTotalNaturalGas: number;
+}
+
 export interface AnalysisPlots {
   weather: string | null;
   elec_temp_model: string | null;
@@ -68,9 +84,10 @@ interface FormContextValue {
   ecmStatus: "idle" | "running" | "done" | "error";
   ecmMetrics: EcmMetrics | null;
   ecmPlots: EcmPlots | null;
+  ecmMeasures: EcmMeasureRow[];
   ecmError: string;
   setEcmRunning: () => void;
-  setEcmDone: (metrics: EcmMetrics, plots: EcmPlots) => void;
+  setEcmDone: (metrics: EcmMetrics, plots: EcmPlots, measures: EcmMeasureRow[]) => void;
   setEcmError: (message: string) => void;
   setField: (field: FormField, value: FormState[FormField]) => void;
   setFields: (fields: Partial<FormState>) => void;
@@ -92,7 +109,7 @@ type Action =
   | { type: "SET_ANALYSIS_DONE"; plots: AnalysisPlots; weatherStation: string }
   | { type: "SET_ANALYSIS_ERROR"; message: string }
   | { type: "SET_ECM_RUNNING" }
-  | { type: "SET_ECM_DONE"; metrics: EcmMetrics; plots: EcmPlots }
+  | { type: "SET_ECM_DONE"; metrics: EcmMetrics; plots: EcmPlots; measures: EcmMeasureRow[] }
   | { type: "SET_ECM_ERROR"; message: string };
 
 interface State {
@@ -111,6 +128,7 @@ interface State {
   ecmStatus: "idle" | "running" | "done" | "error";
   ecmMetrics: EcmMetrics | null;
   ecmPlots: EcmPlots | null;
+  ecmMeasures: EcmMeasureRow[];
   ecmError: string;
 }
 
@@ -148,7 +166,7 @@ function reducer(state: State, action: Action): State {
     case "SET_ECM_RUNNING":
       return { ...state, ecmStatus: "running", ecmError: "" };
     case "SET_ECM_DONE":
-      return { ...state, ecmStatus: "done", ecmMetrics: action.metrics, ecmPlots: action.plots, ecmError: "" };
+      return { ...state, ecmStatus: "done", ecmMetrics: action.metrics, ecmPlots: action.plots, ecmMeasures: action.measures, ecmError: "" };
     case "SET_ECM_ERROR":
       return { ...state, ecmStatus: "error", ecmError: action.message };
     default:
@@ -175,6 +193,7 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
     ecmStatus: "idle",
     ecmMetrics: null,
     ecmPlots: null,
+    ecmMeasures: [],
     ecmError: "",
   });
 
@@ -244,7 +263,8 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
   const setEcmRunning = useCallback(() => dispatch({ type: "SET_ECM_RUNNING" }), []);
 
   const setEcmDone = useCallback(
-    (metrics: EcmMetrics, plots: EcmPlots) => dispatch({ type: "SET_ECM_DONE", metrics, plots }),
+    (metrics: EcmMetrics, plots: EcmPlots, measures: EcmMeasureRow[]) =>
+      dispatch({ type: "SET_ECM_DONE", metrics, plots, measures }),
     []
   );
 
@@ -284,6 +304,7 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
         ecmStatus: state.ecmStatus,
         ecmMetrics: state.ecmMetrics,
         ecmPlots: state.ecmPlots,
+        ecmMeasures: state.ecmMeasures,
         ecmError: state.ecmError,
         setEcmRunning,
         setEcmDone,
