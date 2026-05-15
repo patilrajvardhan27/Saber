@@ -224,7 +224,7 @@ export interface SubStepConfig {
 }
 
 export const SECTIONS: SectionConfig[] = [
-  { id: 1, label: "Project Info",         shortLabel: "Info",      firstStep: 1,  lastStep: 1  },
+  { id: 1, label: "Utility Data",          shortLabel: "Utility",   firstStep: 1,  lastStep: 1  },
   { id: 2, label: "Building Shape",       shortLabel: "Shape",     firstStep: 2,  lastStep: 3  },
   { id: 3, label: "Building Envelope",    shortLabel: "Envelope",  firstStep: 4,  lastStep: 6  },
   { id: 4, label: "Equipment & Lighting", shortLabel: "Equipment", firstStep: 7,  lastStep: 8  },
