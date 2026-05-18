@@ -179,6 +179,8 @@ class InverseModel:
         #print("model fitting")
         ### Fit change-point model
         self.fit()  # Initial guess
+        if not hasattr(self, 'p'):
+            return False, "No fit", np.zeros(5)
         self.p_init = self.p
         #print("fit_model",self.p_init)
 
@@ -197,7 +199,7 @@ class InverseModel:
             #print("R_squared", self.R_Squared())
             #print('No fit found')
             # Cannot accept model immediately. No meaningful correlation found.
-            return (has_fit)
+            return False, "No fit", self.p
         else:
             self.optimize_slopes()
             self.optimize_cp_limit("L")
