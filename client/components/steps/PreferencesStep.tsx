@@ -79,6 +79,15 @@ export function ProjectSetupStep() {
         </div>
       </Card>
 
+      {/* Building Baseline File */}
+      <Card>
+        <SectionHeader
+          title="Building Baseline File"
+          description="Optional — upload an existing baseline to pre-fill all building properties. Skip this to enter properties manually in the following steps."
+        />
+        <PklUpload />
+      </Card>
+
       {/* Utility Data */}
       <Card>
         <SectionHeader
@@ -112,15 +121,6 @@ export function ProjectSetupStep() {
         ) : (
           <UtilityUpload />
         )}
-      </Card>
-
-      {/* Building Baseline File */}
-      <Card>
-        <SectionHeader
-          title="Building Baseline File"
-          description="Optional — upload an existing baseline to pre-fill all building properties. Skip this to enter properties manually in the following steps."
-        />
-        <PklUpload />
       </Card>
     </StepLayout>
   );

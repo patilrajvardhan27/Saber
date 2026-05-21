@@ -63,8 +63,8 @@ function parseUtilityCsv(text: string): UtilityData | null {
 }
 
 export function UtilityUpload({ projectName: projectNameProp }: UtilityUploadProps = {}) {
-  const { pklProjectName, setUtilUploaded, setUtilityData, utilFileName } = useForm();
-  const resolvedProjectName = projectNameProp || pklProjectName;
+  const { state, pklProjectName, setUtilUploaded, setUtilityData, utilFileName } = useForm();
+  const resolvedProjectName = projectNameProp || pklProjectName || state.projectName;
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>(utilFileName ? "success" : "idle");
   const [fileName, setFileName] = useState<string>(utilFileName);
