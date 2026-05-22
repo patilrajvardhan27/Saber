@@ -52,11 +52,12 @@ function parseUtilityCsv(text: string): UtilityData | null {
       therms2: get(slots[2]?.thermIdx ?? -1),
       kwh3:    get(slots[3]?.kwhIdx ?? -1),
       therms3: get(slots[3]?.thermIdx ?? -1),
+      billDays: "",
     };
   });
 
   while (rows.length < 12) {
-    rows.push({ kwh1: "", therms1: "", kwh2: "", therms2: "", kwh3: "", therms3: "" });
+    rows.push({ kwh1: "", therms1: "", kwh2: "", therms2: "", kwh3: "", therms3: "", billDays: "" });
   }
 
   return { year1, year2, year3, rows };
