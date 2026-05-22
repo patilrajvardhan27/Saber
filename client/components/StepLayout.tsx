@@ -28,8 +28,8 @@ export function StepLayout({
 
   const subStep = SUB_STEPS[currentStep - 1];
   const section = SECTIONS.find((s) => s.id === subStep?.section)!;
-  const sectionSubStepIndex = currentStep - section.firstStep + 1;
   const sectionTotalSubSteps = section.lastStep - section.firstStep + 1;
+  const sectionSubSteps = SUB_STEPS.filter((s) => s.section === section.id);
 
   const isFirst = currentStep === 1;
   const isLast = currentStep === TOTAL_STEPS;
@@ -116,13 +116,55 @@ export function StepLayout({
             )}
 
             {/* Step title */}
-            <div className="mb-3">
+            <div className="mb-4">
               <h1 className="text-2xl font-bold text-primary tracking-tight">{subStep?.label}</h1>
-              <p className="text-sm text-app-text-muted mt-1">
-                {section?.shortLabel} · {sectionSubStepIndex} of {sectionTotalSubSteps}
-              </p>
+              {sectionTotalSubSteps === 1 && (
+                <p className="text-sm text-app-text-muted mt-1">{section?.shortLabel}</p>
+              )}
             </div>
-            <div className="border-b border-brand-100 mb-6" />
+
+            <div className="border-b border-brand-100 mb-5" />
+
+            {/* Sub-step navigation — after divider, square pill buttons */}
+            {sectionTotalSubSteps > 1 && (
+              <div className="flex justify-center gap-2 mb-6">
+                {sectionSubSteps.map((sub, i) => {
+                  const isSubActive = currentStep === sub.id;
+                  const isSubDone = currentStep > sub.id;
+                  return (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => goToStep(sub.id)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all border ${
+                        isSubActive
+                          ? "bg-primary text-white border-primary shadow-sm"
+                          : isSubDone
+                          ? "bg-brand-50 text-brand-700 border-brand-300 hover:bg-brand-100"
+                          : "bg-white text-app-text-muted border-brand-100 hover:border-brand-300 hover:text-brand-700"
+                      }`}
+                    >
+                      <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
+                        isSubActive
+                          ? "bg-white text-primary"
+                          : isSubDone
+                          ? "bg-brand-500 text-white"
+                          : "bg-brand-100 text-brand-500"
+                      }`}>
+                        {isSubDone ? (
+                          <svg viewBox="0 0 16 16" fill="none" className="w-2.5 h-2.5">
+                            <path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        ) : (
+                          i + 1
+                        )}
+                      </span>
+                      {sub.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Scrollable form content */}
             <div className="flex-1 overflow-y-auto pr-1 -mr-1">

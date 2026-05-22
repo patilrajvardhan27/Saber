@@ -19,6 +19,35 @@ export function ProjectSetupStep() {
 
   return (
     <StepLayout nextDisabled={!state.projectName.trim()}>
+      {/* Building Baseline File */}
+      <Card>
+        <SectionHeader
+          title="Building Baseline File"
+          description="Pre-fill all building properties from a saved baseline, or enter properties manually in the following steps."
+        />
+        <div className="mb-4">
+          <RadioGroup
+            name="inputMethod"
+            direction="row"
+            value={state.inputMethod}
+            onChange={(v) => setField("inputMethod", v as "new" | "existing")}
+            options={[
+              {
+                value: "new",
+                label: "Enter manually",
+                description: "Fill in building properties step by step",
+              },
+              {
+                value: "existing",
+                label: "Upload baseline file",
+                description: "Upload a .pkl file to auto-populate fields",
+              },
+            ]}
+          />
+        </div>
+        {state.inputMethod === "existing" && <PklUpload />}
+      </Card>
+
       {/* Project Information */}
       <Card>
         <SectionHeader
@@ -77,15 +106,6 @@ export function ProjectSetupStep() {
             />
           </FormField>
         </div>
-      </Card>
-
-      {/* Building Baseline File */}
-      <Card>
-        <SectionHeader
-          title="Building Baseline File"
-          description="Optional — upload an existing baseline to pre-fill all building properties. Skip this to enter properties manually in the following steps."
-        />
-        <PklUpload />
       </Card>
 
       {/* Utility Data */}

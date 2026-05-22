@@ -7,6 +7,7 @@ export interface UtilityRow {
   kwh1: string; therms1: string;
   kwh2: string; therms2: string;
   kwh3: string; therms3: string;
+  billDays: string;
 }
 
 export interface UtilityData {

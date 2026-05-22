@@ -12,6 +12,7 @@ import pandas as pd
 import io
 import os
 import sys
+import math
 import glob as glob_module
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
@@ -345,7 +346,8 @@ async def save_utility_data(project_name: str, req: UtilityDataManualRequest):
         data[f"Year 2 - Therms{y2}"].append(_num(row.get("therms2")))
         data[f"Year 3 - kWh{y3}"].append(_num(row.get("kwh3")))
         data[f"Year 3 - Therms{y3}"].append(_num(row.get("therms3")))
-        data["BillDays"].append(calendar.monthrange(y1, month)[1])
+        provided = _num(row.get("billDays"))
+        data["BillDays"].append(provided if not math.isnan(provided) else calendar.monthrange(y1, month)[1])
 
     df = pd.DataFrame(data, index=range(1, 13))
     save_path = os.path.join(project_path, f"{project_name}_UtilityData.csv")

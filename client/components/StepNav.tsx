@@ -2,8 +2,8 @@
 
 import React from "react";
 import { useForm } from "@/context/FormContext";
-import { SECTIONS, TOTAL_STEPS } from "@/types/form";
-import type { SectionConfig } from "@/types/form";
+import { SECTIONS, SUB_STEPS, TOTAL_STEPS } from "@/types/form";
+import type { SectionConfig, SubStepConfig } from "@/types/form";
 
 export function StepNav() {
   const { currentStep, goToStep } = useForm();
@@ -16,30 +16,32 @@ export function StepNav() {
         </p>
       </div>
 
-      <ol className="flex flex-col gap-1 px-2">
+      <ol className="flex flex-col px-2">
         {SECTIONS.map((section: SectionConfig) => {
           const isActive = currentStep >= section.firstStep && currentStep <= section.lastStep;
           const isCompleted = currentStep > section.lastStep;
+          const sectionSubSteps = SUB_STEPS.filter((s: SubStepConfig) => s.section === section.id);
+          const hasMultipleSubSteps = sectionSubSteps.length > 1;
 
           return (
             <li key={section.id}>
+              {/* Section header row */}
               <button
                 type="button"
                 onClick={() => goToStep(section.firstStep)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors duration-150 group
                   ${isActive
-                    ? "bg-bg-sidebar-active text-app-text-white"
-                    : "text-app-text-sidebar-inactive hover:bg-bg-sidebar-hover hover:text-app-text-white"
+                    ? "bg-bg-sidebar-active"
+                    : "hover:bg-bg-sidebar-hover"
                   }`}
               >
-                {/* Section indicator */}
                 <span
                   className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-colors
                     ${isActive
                       ? "bg-accent text-app-text-white"
                       : isCompleted
                       ? "bg-success text-app-text-white"
-                      : "bg-bg-sidebar-hover text-app-text-sidebar-inactive group-hover:bg-bg-sidebar-active"
+                      : "bg-bg-sidebar-hover text-app-text-sidebar-inactive group-hover:bg-bg-sidebar-active group-hover:text-app-text-white"
                     }`}
                 >
                   {isCompleted ? (
@@ -50,13 +52,65 @@ export function StepNav() {
                     section.id
                   )}
                 </span>
-
-                <div className="min-w-0">
-                  <p className={`text-sm font-medium leading-tight ${isActive ? "text-app-text-white" : ""}`}>
-                    {section.label}
-                  </p>
-                </div>
+                <span className={`text-sm font-semibold leading-tight flex-1 min-w-0
+                  ${isActive ? "text-app-text-white" : isCompleted ? "text-app-text-sidebar-inactive" : "text-app-text-sidebar-inactive group-hover:text-app-text-white"}`}
+                >
+                  {section.label}
+                </span>
               </button>
+
+              {/* Sub-step rows — styled like main steps, always visible when section has multiple */}
+              {hasMultipleSubSteps && (
+                <ol className="mt-0.5 mb-1.5 ml-3 pl-3 border-l-2 border-bg-sidebar-hover flex flex-col gap-0.5">
+                  {sectionSubSteps.map((sub: SubStepConfig, idx: number) => {
+                    const isSubActive = currentStep === sub.id;
+                    const isSubDone = currentStep > sub.id;
+
+                    return (
+                      <li key={sub.id}>
+                        <button
+                          type="button"
+                          onClick={() => goToStep(sub.id)}
+                          className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors duration-150 group/sub
+                            ${isSubActive
+                              ? "bg-bg-sidebar-hover"
+                              : "hover:bg-bg-sidebar-hover"
+                            }`}
+                        >
+                          {/* Sub-step badge — square/rounded to distinguish from section circles */}
+                          <span
+                            className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 text-xs font-bold transition-colors
+                              ${isSubActive
+                                ? "bg-accent text-app-text-white"
+                                : isSubDone
+                                ? "bg-success text-app-text-white"
+                                : "bg-bg-sidebar-hover text-app-text-sidebar-inactive group-hover/sub:bg-bg-sidebar-active group-hover/sub:text-app-text-white"
+                              }`}
+                          >
+                            {isSubDone ? (
+                              <svg viewBox="0 0 16 16" fill="none" className="w-3 h-3">
+                                <path d="M3 8l4 4 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            ) : (
+                              idx + 1
+                            )}
+                          </span>
+                          <span className={`text-xs font-medium leading-tight flex-1 min-w-0
+                            ${isSubActive
+                              ? "text-app-text-white"
+                              : isSubDone
+                              ? "text-app-text-sidebar-inactive"
+                              : "text-app-text-sidebar-inactive group-hover/sub:text-app-text-white"
+                            }`}
+                          >
+                            {sub.label}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
             </li>
           );
         })}

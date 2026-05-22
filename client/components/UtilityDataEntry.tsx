@@ -16,9 +16,12 @@ interface RowData {
   kwh1: string; therms1: string;
   kwh2: string; therms2: string;
   kwh3: string; therms3: string;
+  billDays: string;
 }
 
-const emptyRow = (): RowData => ({ kwh1: "", therms1: "", kwh2: "", therms2: "", kwh3: "", therms3: "" });
+const emptyRow = (): RowData => ({ kwh1: "", therms1: "", kwh2: "", therms2: "", kwh3: "", therms3: "", billDays: "" });
+
+const FIELDS: (keyof RowData)[] = ["kwh1", "therms1", "kwh2", "therms2", "kwh3", "therms3", "billDays"];
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -38,6 +41,41 @@ export function UtilityDataEntry() {
     setRows((prev) => {
       const next = [...prev];
       next[monthIdx] = { ...next[monthIdx], [field]: value };
+      return next;
+    });
+  }, []);
+
+  const handlePaste = useCallback((
+    e: React.ClipboardEvent<HTMLInputElement>,
+    startRow: number,
+    startField: keyof RowData,
+  ) => {
+    const text = e.clipboardData.getData("text");
+    // Parse into 2D grid: rows split by newline, columns by tab
+    const grid = text
+      .trim()
+      .split(/\r?\n/)
+      .map((row) => row.split("\t"));
+
+    // Single-cell paste — let the browser handle it normally
+    if (grid.length === 1 && grid[0].length === 1) return;
+
+    e.preventDefault();
+    const startCol = FIELDS.indexOf(startField);
+
+    setRows((prev) => {
+      const next = prev.map((r) => ({ ...r }));
+      grid.forEach((pastedRow, ri) => {
+        const rowIdx = startRow + ri;
+        if (rowIdx >= MONTHS.length) return;
+        pastedRow.forEach((val, ci) => {
+          const colIdx = startCol + ci;
+          if (colIdx >= FIELDS.length) return;
+          // Strip commas and whitespace; keep digits, dot, minus
+          const cleaned = val.trim().replace(/,/g, "");
+          next[rowIdx] = { ...next[rowIdx], [FIELDS[colIdx]]: cleaned };
+        });
+      });
       return next;
     });
   }, []);
@@ -112,14 +150,15 @@ export function UtilityDataEntry() {
               <th className="px-2 py-2 text-center font-semibold text-app-text-muted">Y2 Therms</th>
               <th className="px-2 py-2 text-center font-semibold text-app-text-muted border-l border-border">Y3 kWh</th>
               <th className="px-2 py-2 text-center font-semibold text-app-text-muted">Y3 Therms</th>
+              <th className="px-2 py-2 text-center font-semibold text-brand-700 border-l border-border">Bill Days</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-brand-50">
             {MONTHS.map((month, i) => (
               <tr key={month} className="hover:bg-brand-50/40 transition-colors">
                 <td className="px-3 py-1.5 font-medium text-app-text whitespace-nowrap">{month}</td>
-                {(["kwh1", "therms1", "kwh2", "therms2", "kwh3", "therms3"] as (keyof RowData)[]).map((field, fi) => (
-                  <td key={field} className={`px-1.5 py-1 ${fi === 2 || fi === 4 ? "border-l border-border" : ""}`}>
+                {(["kwh1", "therms1", "kwh2", "therms2", "kwh3", "therms3", "billDays"] as (keyof RowData)[]).map((field, fi) => (
+                  <td key={field} className={`px-1.5 py-1 ${fi === 2 || fi === 4 || fi === 6 ? "border-l border-border" : ""}`}>
                     <input
                       type="number"
                       min="0"
@@ -127,6 +166,7 @@ export function UtilityDataEntry() {
                       placeholder="–"
                       value={rows[i][field]}
                       onChange={(e) => updateCell(i, field, e.target.value)}
+                      onPaste={(e) => handlePaste(e, i, field)}
                       className="w-full min-w-[64px] rounded-md border border-transparent bg-transparent px-2 py-1 text-center text-app-text
                         focus:border-brand-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-200
                         hover:border-border transition-all placeholder-app-text-muted/40"
