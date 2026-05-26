@@ -2,7 +2,6 @@
 
 import React, { useRef, useState, DragEvent } from "react";
 import { useForm } from "@/context/FormContext";
-import type { AnalysisPlots } from "@/context/FormContext";
 import type { FormState } from "@/types/form";
 import { API } from "@/utils/api";
 
@@ -11,7 +10,6 @@ type Status = "idle" | "loading" | "success" | "error";
 export function PklUpload() {
   const {
     setFields, setPklMeta, setPklFields,
-    setAnalysisRunning, setAnalysisDone, setAnalysisError,
   } = useForm();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -55,21 +53,9 @@ export function PklUpload() {
       setPklMeta(file.name, count, projectName);
       setPklFields(((data.populated_keys as string[]) ?? []).filter((k) => k !== "projectName"));
 
-      // Run analysis directly from the uploaded pkl data
-      if (projectName) {
-        setAnalysisRunning();
-        const aRes = await fetch(`${API}/run-analysis/${encodeURIComponent(projectName)}`, { method: "POST" });
-        if (!aRes.ok) {
-          const err = await aRes.json().catch(() => ({ detail: "Unknown error" }));
-          throw new Error(err.detail ?? "Analysis failed");
-        }
-        const aData = await aRes.json();
-        setAnalysisDone(aData.plots as AnalysisPlots, aData.weather_station ?? "");
-      }
     } catch (err: unknown) {
       setStatus("error");
       setErrorMsg(err instanceof Error ? err.message : "Upload failed");
-      setAnalysisError(err instanceof Error ? err.message : "Upload failed");
     }
   }
 
@@ -156,7 +142,7 @@ export function PklUpload() {
             <p className="text-sm font-semibold text-brand-700">
               {fieldCount} fields populated from <span className="font-bold">{fileName}</span>
             </p>
-            <p className="text-xs text-brand-500">Analysis running — results will appear in the Results section.</p>
+            <p className="text-xs text-brand-500">Go to the Results step and click "Generate Result" to run the analysis.</p>
             <button type="button" onClick={reset}
               className="text-xs text-brand-400 hover:text-brand-600 underline underline-offset-2">
               Upload a different file

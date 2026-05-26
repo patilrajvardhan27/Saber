@@ -404,13 +404,23 @@ def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None
         _seeded_csv  = os.path.join(PROJECTS_DIR,  project_name, f"{project_name}_UtilityData.csv")
         if os.path.exists(_upload_csv):
             shutil.copy(_upload_csv, util_path)
+            has_utility_data = True
         elif os.path.exists(_seeded_csv):
             shutil.copy(_seeded_csv, util_path)
+            has_utility_data = True
         else:
-            raise FileNotFoundError(
-                f"No utility data found for project '{project_name}'. "
-                "Please upload a CSV or enter monthly utility data before running the analysis."
-            )
+            # No utility data — write a zero-value stub so the pipeline can still run.
+            # The change-point model will produce "No fit" / zero parameters, which is
+            # handled gracefully by BuildDegreeDayBasedModel (NaN→0 replacement on its
+            # last line) and by Energy (zero change-points → zero heating/cooling).
+            import csv as _csv
+            bill_days = [31,28,31,30,31,30,31,31,30,31,30,31]
+            with open(util_path, "w", newline="") as _f:
+                w = _csv.writer(_f)
+                w.writerow(["", "Year 1 - kWh2024", "Year 1 - Therms2024", "BillDays"])
+                for i, bd in enumerate(bill_days, start=1):
+                    w.writerow([i, 0, 0, bd])
+            has_utility_data = False
 
         # CostData: symlink or copy from an existing project (needed by EvaluateMeasure)
         cost_sources = glob_module.glob(os.path.join(PROJECTS_DIR, "*", "CostData"))
@@ -436,7 +446,8 @@ def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None
         plotter = PlotResults(True, tmp)
         plotter.PlotWeather(df_weather, weather_station_name)
         plotter.PlotEndUseBreakdown(df_monthly.clip(lower=0))
-        plotter.PlotInverseModelComparison(df_monthly, dfutil_sorted)
+        if has_utility_data:
+            plotter.PlotInverseModelComparison(df_monthly, dfutil_sorted)
 
         # 5. Encode each PNG as base64 (files stay in tmp and are deleted below)
         def _b64(name: str) -> str | None:
