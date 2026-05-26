@@ -2,6 +2,7 @@
 import React from "react";
 import { useForm } from "@/context/FormContext";
 import { SECTIONS, SUB_STEPS, TOTAL_STEPS } from "@/types/form";
+import { Footer } from "@/components/Footer";
 
 interface StepLayoutProps {
   children: React.ReactNode;
@@ -226,6 +227,7 @@ export function StepLayout({
             </div>
           )}
         </div>
+        <Footer />
       </div>
     </div>
   );
