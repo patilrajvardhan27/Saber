@@ -168,16 +168,8 @@ PROP_KEY_MAP: dict[str, str] = {
     "Tspc":               "tspc",
     "DHWSystemType":      "dhwSystemType",
     "DHWTankVol":         "dhwTankVol",
-    "DryerRating":        "dryerRating",
-    "WasherRating":       "washerRating",
-    "CookingFuelType":    "cookingFuelType",
-    "CookingRangeRating": "cookingRating",
-    "DishwasherRating":   "dishWasherRating",
-    "FridgeRating":       "fridgeRating",
-    "MiscPlugLoadRating": "miscPlugLoadRating",
-    "MiscTVRating":       "tvRating",
+    "EquipPowerDensity":  "epd",
     "LPD":                "lpd",
-    "OfficeEqpRating":    "officeEqpRating",
     "HeatingEquipment":   "heatingEqp",
     "CoolingEquipment":   "coolingEqp",
     "CoolingEff":         "coolingEff",
@@ -866,12 +858,13 @@ async def run_analysis_manual(project_name: str, req: ManualAnalysisRequest):
 
     # Apply defaults for keys required by EEMIndMeasureAnalysisObject.__init__
     _DEFAULTS = {
-        "Shape":       "Rectangle",
-        "x1":          "10", "x2": "0", "y1": "10", "y2": "0",
-        "WallHeight":  "10",
-        "WindowHeight":"3",
-        "FloorArea":   "1000",
-        "FloorQty":    "1",
+        "Shape":             "Rectangle",
+        "x1":                "10", "x2": "0", "y1": "10", "y2": "0",
+        "WallHeight":        "10",
+        "WindowHeight":      "3",
+        "FloorArea":         "1000",
+        "FloorQty":          "1",
+        "EquipPowerDensity": "1.0",
     }
     for i, row in enumerate(rows):
         if row["PropKey"] in _DEFAULTS and row["PropValue"] in (None, ""):

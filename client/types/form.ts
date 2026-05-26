@@ -72,15 +72,7 @@ export interface FormState {
   nHoursLighting: string;
 
   // ── Equipment & Lighting ──────────────────────────────────
-  cookingFuelType: string;
-  cookingRating: string;
-  fridgeRating: string;
-  dishWasherRating: string;
-  washerRating: string;
-  dryerRating: string;
-  tvRating: string;
-  officeEqpRating: string;
-  miscPlugLoadRating: string;
+  epd: string;
   lpd: string;
   daylighting: string;
   led: string;
@@ -168,15 +160,7 @@ export const initialFormState: FormState = {
 
   nHoursLighting: "",
 
-  cookingFuelType: "",
-  cookingRating: "",
-  fridgeRating: "",
-  dishWasherRating: "",
-  washerRating: "",
-  dryerRating: "",
-  tvRating: "",
-  officeEqpRating: "",
-  miscPlugLoadRating: "",
+  epd: "1.0",
   lpd: "",
   daylighting: "No",
   led: "0.0",

@@ -229,16 +229,8 @@ ${sec("HVAC — Hot Water & Other",
 )}
 
 <!-- Section 6: Equipment & Lighting -->
-${sec("Equipment & Appliances",
-  r("Cooking Fuel", state.cookingFuelType) +
-  r("Cooking Range", state.cookingRating, "W") +
-  r("Refrigerator", state.fridgeRating, "W") +
-  r("Dishwasher", state.dishWasherRating, "W") +
-  r("Clothes Washer", state.washerRating, "W") +
-  r("Clothes Dryer", state.dryerRating, "W") +
-  r("Television", state.tvRating, "W") +
-  r("Office Equipment", state.officeEqpRating, "W") +
-  r("Misc Plug Loads", state.miscPlugLoadRating, "W")
+${sec("Equipment",
+  r("Equipment Power Density (EPD)", state.epd, "W/ft²")
 )}
 ${sec("Lighting",
   r("Lighting Power Density", state.lpd, "W/ft²") +
