@@ -648,6 +648,13 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
         ceil_const_rows = df_input_org.loc[df_input_org["PropKey"] == "CeilingConst", "PropValue"]
         ceil_const = str(ceil_const_rows.iloc[0]) if not ceil_const_rows.empty else "Floor construction Reversed"
         ceil_org = _val(df_input_org, "R-CeilingInsulation") or "Uninsulated"
+        _ceil_csv = pd.read_csv(os.path.join(BLDG_AUDIT_DIR, "Projects", os.listdir(os.path.join(BLDG_AUDIT_DIR, "Projects"))[0], "CostData", "Materials-CeilingInsulation.csv"))
+        _valid_ceil = set(_ceil_csv["InsulationName"].tolist())
+        if req.ecm_ceiling_insulation not in _valid_ceil:
+            raise RuntimeError(
+                f"Ceiling insulation '{req.ecm_ceiling_insulation}' is not in the cost database. "
+                f"Valid options: {sorted(_valid_ceil)}"
+            )
         r = _run_measure(eval_measure.CeilingInsulation, ext_roof, ceil_const, ceil_org, req.ecm_ceiling_insulation)
         dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
 

@@ -31,7 +31,6 @@ export const EXT_ROOF_CONSTRUCTIONS = ["Asphalt Shingles"];
 export const CEILING_INSULATIONS = [
   "Uninsulated",
   "R7 Fiberglass",
-  "R11 Fiberglass",
   "R13 Fiberglass",
   "R19 Fiberglass",
   "R30 Fiberglass",
