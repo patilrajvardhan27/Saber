@@ -29,7 +29,7 @@
      </font>
     </property>
     <property name="currentIndex">
-     <number>6</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -529,7 +529,7 @@
        </rect>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_7">
        <attribute name="title">
@@ -1206,7 +1206,7 @@
        </rect>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_13">
        <attribute name="title">
@@ -1626,611 +1626,278 @@
      <attribute name="title">
       <string>Equipment/Lighting</string>
      </attribute>
-     <widget class="QWidget" name="layoutWidget">
+     <widget class="QGroupBox" name="groupBox_20">
       <property name="geometry">
        <rect>
-        <x>50</x>
-        <y>50</y>
-        <width>741</width>
-        <height>381</height>
+        <x>40</x>
+        <y>210</y>
+        <width>386</width>
+        <height>161</height>
        </rect>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_118" stretch="3,2">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
+      <property name="title">
+       <string>Lighting</string>
+      </property>
+      <widget class="QWidget" name="layoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>50</y>
+         <width>284</width>
+         <height>67</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_28">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_22" stretch="3,3">
+          <item>
+           <widget class="QLabel" name="label_69">
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Lighting Power Density (W/sft)</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="LPD">
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_18">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_25">
+            <item>
+             <widget class="QLabel" name="label_73">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Daylighting</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="Daylighting">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <item>
+               <property name="text">
+                <string>No</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Yes</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="2,1">
+            <item>
+             <widget class="QLabel" name="label_78">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Percentage LED</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="LED">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <item>
+               <property name="text">
+                <string>0.0</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>20.0</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>40.0</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>60.0</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>80.0</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>100.0</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>41</x>
+        <y>41</y>
+        <width>771</width>
+        <height>131</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_19">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_19" stretch="1,1">
-         <item>
-          <widget class="QGroupBox" name="groupBox_17">
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-            </font>
-           </property>
-           <property name="title">
-            <string>Kitchen Appliances</string>
-           </property>
-           <widget class="QWidget" name="layoutWidget">
-            <property name="geometry">
-             <rect>
-              <x>21</x>
-              <y>50</y>
-              <width>321</width>
-              <height>131</height>
-             </rect>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_32">
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_17">
-               <item>
-                <widget class="QLabel" name="label_46">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Cooking Range (W)</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QComboBox" name="CookingFuelType">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <item>
-                  <property name="text">
-                   <string>Electric</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>Gas</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>Induction</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="CookingRating">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_23">
-               <item>
-                <widget class="QLabel" name="label_48">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Refrigerator (W)</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="FridgeRating">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_24">
-               <item>
-                <widget class="QLabel" name="label_51">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Dishwasher (W)</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="DishWasherRating">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-         </item>
-         <item>
-          <widget class="QGroupBox" name="groupBox_18">
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-            </font>
-           </property>
-           <property name="title">
-            <string>Other Equipment</string>
-           </property>
-           <widget class="QWidget" name="layoutWidget_9">
-            <property name="geometry">
-             <rect>
-              <x>20</x>
-              <y>50</y>
-              <width>321</width>
-              <height>131</height>
-             </rect>
-            </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_18">
-             <item>
-              <layout class="QVBoxLayout" name="verticalLayout_41" stretch="1,1,1">
-               <item>
-                <widget class="QLabel" name="label_62">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>TV Rating (W)</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_64">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Office Equipment (W)</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_67">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Misc Plug Loads (W)</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QVBoxLayout" name="verticalLayout_42" stretch="1,1,1">
-               <item>
-                <widget class="QLineEdit" name="TVRating">
-                 <property name="font">
-                  <font>
-                   <pointsize>9</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="OfficeEqpRating">
-                 <property name="font">
-                  <font>
-                   <pointsize>9</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="MiscPlugLoadRating">
-                 <property name="font">
-                  <font>
-                   <pointsize>9</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QGroupBox" name="groupBox_23">
+         <property name="font">
+          <font>
+           <pointsize>11</pointsize>
+          </font>
+         </property>
+         <property name="title">
+          <string>Electric Equipment</string>
+         </property>
+         <widget class="QWidget" name="layoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>21</x>
+            <y>40</y>
+            <width>319</width>
+            <height>32</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_23" stretch="3,3">
+           <item>
+            <widget class="QLabel" name="label_71">
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Electric Power Density (W/sft)</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="EPD">
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_20">
-         <item>
-          <widget class="QGroupBox" name="groupBox_19">
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-            </font>
-           </property>
-           <property name="title">
-            <string>Laundry</string>
-           </property>
-           <widget class="QWidget" name="layoutWidget_11">
-            <property name="geometry">
-             <rect>
-              <x>20</x>
-              <y>30</y>
-              <width>321</width>
-              <height>91</height>
-             </rect>
-            </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_21" stretch="5,4">
-             <item>
-              <layout class="QVBoxLayout" name="verticalLayout_44" stretch="1,1">
-               <item>
-                <widget class="QLabel" name="label_59">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Clothes Washer (W)</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_61">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Clothes Dryer (W)</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QVBoxLayout" name="verticalLayout_45" stretch="1,1">
-               <item>
-                <widget class="QLineEdit" name="WasherRating">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>9</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="DryerRating">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>9</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-         </item>
-         <item>
-          <widget class="QGroupBox" name="groupBox_20">
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-            </font>
-           </property>
-           <property name="title">
-            <string>Lighting</string>
-           </property>
-           <widget class="QWidget" name="layoutWidget">
-            <property name="geometry">
-             <rect>
-              <x>20</x>
-              <y>30</y>
-              <width>321</width>
-              <height>101</height>
-             </rect>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_33">
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_22" stretch="3,3">
-               <item>
-                <widget class="QLabel" name="label_69">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Lighting Power Density (W/sft)</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="LPD">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_25">
-               <item>
-                <widget class="QLabel" name="label_73">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Daylighting</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QComboBox" name="Daylighting">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <item>
-                  <property name="text">
-                   <string>No</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>Yes</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_26">
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_29" stretch="3,3">
-                 <item>
-                  <widget class="QLabel" name="label_70">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Number of hours</string>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="nHoursLighting">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_78">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Percentage LED</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QComboBox" name="LED">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                 <item>
-                  <property name="text">
-                   <string>0.0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>20.0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>40.0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>60.0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>80.0</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>100.0</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QGroupBox" name="groupBox_24">
+         <property name="font">
+          <font>
+           <pointsize>11</pointsize>
+          </font>
+         </property>
+         <property name="title">
+          <string>Other Equipment</string>
+         </property>
+         <widget class="QWidget" name="layoutWidget_6">
+          <property name="geometry">
+           <rect>
+            <x>21</x>
+            <y>40</y>
+            <width>319</width>
+            <height>32</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_24" stretch="3,3">
+           <item>
+            <widget class="QLabel" name="label_72">
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Gas Power Density (W/sft)</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="GPD">
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -2449,9 +2116,9 @@
          <widget class="QLabel" name="label_35">
           <property name="geometry">
            <rect>
-            <x>60</x>
+            <x>120</x>
             <y>360</y>
-            <width>731</width>
+            <width>621</width>
             <height>51</height>
            </rect>
           </property>
@@ -2480,6 +2147,25 @@
            </rect>
           </property>
          </widget>
+         <widget class="QLabel" name="label_43">
+          <property name="geometry">
+           <rect>
+            <x>170</x>
+            <y>360</y>
+            <width>521</width>
+            <height>51</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="pixmap">
+           <pixmap>../LegendFigs/Therm_Labels.png</pixmap>
+          </property>
+          <property name="scaledContents">
+           <bool>true</bool>
+          </property>
+         </widget>
         </widget>
        </widget>
       </widget>
@@ -2489,389 +2175,6 @@
      <attribute name="title">
       <string>EEM Evaluation</string>
      </attribute>
-     <widget class="QComboBox" name="ECMWindowMaterial">
-      <property name="geometry">
-       <rect>
-        <x>330</x>
-        <y>260</y>
-        <width>89</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <item>
-       <property name="text">
-        <string>Single Pane Clear</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Double Pane Clear</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Low e Double Pane Medium SHGC Air filled</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Low e Double Pane Medium SHGC Argon filled</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Low e Double Pane Medium SHGC Air filled Insulated</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Low e Double Pane Medium SHGC Argon filled Insulated</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Low e Triple Pane Low SHGC Air filled</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Low e Triple Pane Low SHGC Argon filled</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Low e Triple Pane Low SHGC Air filled Insulated</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Low e Triple Pane Low SHGC Argon filled Insulated</string>
-       </property>
-      </item>
-     </widget>
-     <widget class="QComboBox" name="ECMDaylighting">
-      <property name="geometry">
-       <rect>
-        <x>330</x>
-        <y>310</y>
-        <width>91</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <item>
-       <property name="text">
-        <string>No</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Yes</string>
-       </property>
-      </item>
-     </widget>
-     <widget class="QComboBox" name="ECMLED">
-      <property name="geometry">
-       <rect>
-        <x>450</x>
-        <y>200</y>
-        <width>101</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <item>
-       <property name="text">
-        <string>0.0</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>20.0</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>40.0</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>60.0</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>80.0</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>100.0</string>
-       </property>
-      </item>
-     </widget>
-     <widget class="QComboBox" name="ECMWallInsulation">
-      <property name="geometry">
-       <rect>
-        <x>331</x>
-        <y>170</y>
-        <width>89</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <item>
-       <property name="text">
-        <string>Uninsulated</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R7 Fiberglass</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R11 Fiberglass</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R13 Fiberglass</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R15 Fiberglass</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R19 Fiberglass</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R21 Fiberglass</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R23 Spray Foam</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R36 Spray Foam</string>
-       </property>
-      </item>
-     </widget>
-     <widget class="QLabel" name="label_135">
-      <property name="geometry">
-       <rect>
-        <x>180</x>
-        <y>340</y>
-        <width>131</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Effect of EEM Package</string>
-      </property>
-     </widget>
-     <widget class="QComboBox" name="ECMEconomizer">
-      <property name="geometry">
-       <rect>
-        <x>330</x>
-        <y>240</y>
-        <width>91</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <item>
-       <property name="text">
-        <string>No</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Yes</string>
-       </property>
-      </item>
-     </widget>
-     <widget class="QComboBox" name="ECMNightSetback">
-      <property name="geometry">
-       <rect>
-        <x>330</x>
-        <y>280</y>
-        <width>91</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <item>
-       <property name="text">
-        <string>0.0</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>1.0</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>2.0</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>3.0</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>4.0</string>
-       </property>
-      </item>
-     </widget>
-     <widget class="QComboBox" name="ECMInfiltration">
-      <property name="geometry">
-       <rect>
-        <x>330</x>
-        <y>200</y>
-        <width>81</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <item>
-       <property name="text">
-        <string>25</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>20</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>15</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>10</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>8</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>7</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>6</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>5</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>4</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>3</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>2</string>
-       </property>
-      </item>
-     </widget>
-     <widget class="QComboBox" name="ECMCeilingInsulation">
-      <property name="geometry">
-       <rect>
-        <x>330</x>
-        <y>230</y>
-        <width>89</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <item>
-       <property name="text">
-        <string>Uninsulated</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R7 Fiberglass</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R13 Fiberglass</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R19 Fiberglass</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R30 Fiberglass</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R38 Fiberglass</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R49 Fiberglass</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>R60 Fiberglass</string>
-       </property>
-      </item>
-     </widget>
-     <widget class="QComboBox" name="ECMOccupancySensor">
-      <property name="geometry">
-       <rect>
-        <x>450</x>
-        <y>170</y>
-        <width>101</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <item>
-       <property name="text">
-        <string>No</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Yes</string>
-       </property>
-      </item>
-     </widget>
      <widget class="QTabWidget" name="tabWidget_3">
       <property name="geometry">
        <rect>
@@ -2882,7 +2185,7 @@
        </rect>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_17">
        <attribute name="title">
@@ -2898,7 +2201,7 @@
          </rect>
         </property>
         <property name="rowCount">
-         <number>14</number>
+         <number>15</number>
         </property>
         <attribute name="horizontalHeaderMinimumSectionSize">
          <number>40</number>
@@ -2979,6 +2282,11 @@
           <string>14</string>
          </property>
         </row>
+        <row>
+         <property name="text">
+          <string>15</string>
+         </property>
+        </row>
         <column>
          <property name="text">
           <string>Measure Selection</string>
@@ -3054,6 +2362,16 @@
           <string>Night SetBack</string>
          </property>
         </item>
+        <item row="4" column="2">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
+        <item row="4" column="3">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
         <item row="4" column="4">
          <property name="text">
           <string/>
@@ -3062,6 +2380,16 @@
         <item row="5" column="0">
          <property name="text">
           <string>Hours of Night SetBack</string>
+         </property>
+        </item>
+        <item row="5" column="2">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
+        <item row="5" column="3">
+         <property name="text">
+          <string>0</string>
          </property>
         </item>
         <item row="6" column="0">
@@ -3109,32 +2437,52 @@
           <string>Reduce Equipment Load</string>
          </property>
         </item>
+        <item row="10" column="2">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
+        <item row="10" column="3">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
         <item row="11" column="0">
          <property name="text">
-          <string>Cooling Efficiency (SEER)</string>
+          <string>Cooling Equipment</string>
          </property>
         </item>
         <item row="11" column="4">
          <property name="text">
-          <string>Capacity (kBtu/h)</string>
+          <string/>
          </property>
         </item>
         <item row="12" column="0">
          <property name="text">
-          <string>Heating Equipment</string>
+          <string>Cooling Efficiency (SEER)</string>
          </property>
         </item>
         <item row="12" column="4">
          <property name="text">
-          <string/>
+          <string>Capacity (kBtu/h)</string>
          </property>
         </item>
         <item row="13" column="0">
          <property name="text">
-          <string>Heating Efficiency (COP)</string>
+          <string>Heating Equipment</string>
          </property>
         </item>
         <item row="13" column="4">
+         <property name="text">
+          <string/>
+         </property>
+        </item>
+        <item row="14" column="0">
+         <property name="text">
+          <string>Heating Efficiency (COP)</string>
+         </property>
+        </item>
+        <item row="14" column="4">
          <property name="text">
           <string>Capacity (kBtu/h)</string>
          </property>
@@ -3758,880 +3106,18 @@
          </property>
         </item>
        </widget>
-      </widget>
-      <widget class="QWidget" name="tab_18">
-       <attribute name="title">
-        <string>Evaluate Measure</string>
-       </attribute>
-       <widget class="QTableWidget" name="ECMBaselineMetrics">
+       <widget class="QComboBox" name="ECMCoolingEqpCostOptions">
         <property name="geometry">
          <rect>
-          <x>30</x>
-          <y>20</y>
-          <width>821</width>
-          <height>71</height>
-         </rect>
-        </property>
-        <attribute name="horizontalHeaderDefaultSectionSize">
-         <number>225</number>
-        </attribute>
-        <row>
-         <property name="text">
-          <string/>
-         </property>
-        </row>
-        <column>
-         <property name="text">
-          <string>Total Electricity Consumption (kWh)</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Total Natural Gas Consumption (Therms)</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Annual Operating Cost ($)</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Life Cycle Cost ($)</string>
-         </property>
-        </column>
-       </widget>
-       <widget class="QTableWidget" name="ECMEval">
-        <property name="geometry">
-         <rect>
-          <x>30</x>
-          <y>110</y>
-          <width>821</width>
-          <height>201</height>
-         </rect>
-        </property>
-        <property name="rowCount">
-         <number>14</number>
-        </property>
-        <attribute name="horizontalHeaderMinimumSectionSize">
-         <number>40</number>
-        </attribute>
-        <attribute name="horizontalHeaderDefaultSectionSize">
-         <number>115</number>
-        </attribute>
-        <attribute name="verticalHeaderMinimumSectionSize">
-         <number>31</number>
-        </attribute>
-        <row>
-         <property name="text">
-          <string>1</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>2</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>3</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>4</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>5</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>6</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>7</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>8</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>9</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>10</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>11</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>12</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>13</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>14</string>
-         </property>
-        </row>
-        <column>
-         <property name="text">
-          <string>Measure Selection</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Base Property</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>New Property</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Savings in kWh</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Savings in Therms</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Total Initial Cost ($)</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Life Cycle Cost ($)</string>
-         </property>
-        </column>
-        <item row="0" column="0">
-         <property name="text">
-          <string>Wall Insulation</string>
-         </property>
-        </item>
-        <item row="1" column="0">
-         <property name="text">
-          <string>Infiltration</string>
-         </property>
-        </item>
-        <item row="2" column="0">
-         <property name="text">
-          <string>Ceiling Insulation</string>
-         </property>
-        </item>
-        <item row="3" column="0">
-         <property name="text">
-          <string>Window Material</string>
-         </property>
-        </item>
-        <item row="4" column="0">
-         <property name="text">
-          <string>Night SetBack</string>
-         </property>
-        </item>
-        <item row="5" column="0">
-         <property name="text">
-          <string>Hours of Night SetBack</string>
-         </property>
-        </item>
-        <item row="6" column="0">
-         <property name="text">
-          <string>Daylighitng</string>
-         </property>
-        </item>
-        <item row="7" column="0">
-         <property name="text">
-          <string>Economizer</string>
-         </property>
-        </item>
-        <item row="8" column="0">
-         <property name="text">
-          <string>Occupancy Sensor</string>
-         </property>
-        </item>
-        <item row="9" column="0">
-         <property name="text">
-          <string>Percentage LED</string>
-         </property>
-        </item>
-        <item row="10" column="0">
-         <property name="text">
-          <string>Reduce Equipment Load</string>
-         </property>
-        </item>
-        <item row="11" column="0">
-         <property name="text">
-          <string>Cooling Efficiency (SEER)</string>
-         </property>
-        </item>
-        <item row="12" column="0">
-         <property name="text">
-          <string>Heating Equipment</string>
-         </property>
-        </item>
-        <item row="13" column="0">
-         <property name="text">
-          <string>Heating Efficiency (COP)</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QWidget" name="layoutWidget_55">
-        <property name="geometry">
-         <rect>
-          <x>460</x>
+          <x>400</x>
           <y>330</y>
-          <width>331</width>
-          <height>81</height>
-         </rect>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_65">
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_116">
-           <item>
-            <widget class="QPushButton" name="EvaluateIndMeasures">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>Evaluate Individal EEM</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="EvaluateMeasurePackage">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>Evaluate EEM Package</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_117">
-           <item>
-            <widget class="QPushButton" name="SaveIndECMResults">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>Save Ind EEM Results</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="SaveECMPackageResults">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>Save EEM Package Results</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="layoutWidget_54">
-        <property name="geometry">
-         <rect>
-          <x>120</x>
-          <y>320</y>
-          <width>281</width>
-          <height>111</height>
-         </rect>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_64" stretch="1,1">
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_114" stretch="1,1,1,1">
-           <item>
-            <widget class="QLabel" name="label_136">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>% Savings in kWh</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_137">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>% Savings in Therms</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_138">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>Total Initial Cost ($)</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_139">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>Life Cycle Cost ($)</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_115" stretch="1,1,1,1">
-           <item>
-            <widget class="QLineEdit" name="PackagekWhPctChange">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="PackageThermsPctChange">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="PackageTIC">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="PackageLCC">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QComboBox" name="ECMNightSetbackOptions">
-        <property name="geometry">
-         <rect>
-          <x>400</x>
-          <y>150</y>
-          <width>91</width>
-          <height>22</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>0.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>1.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>2.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>3.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>4.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>5.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>10.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>15.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>20.0</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QComboBox" name="ECMWindowMatOptions">
-        <property name="geometry">
-         <rect>
-          <x>290</x>
-          <y>260</y>
-          <width>89</width>
-          <height>20</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>Single Pane Clear</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Double Pane Clear</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Low e Double Pane Medium SHGC Air filled</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Low e Double Pane Medium SHGC Argon filled</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Low e Double Pane Medium SHGC Air filled Insulated</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Low e Double Pane Medium SHGC Argon filled Insulated</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Low e Triple Pane Low SHGC Air filled</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Low e Triple Pane Low SHGC Argon filled</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Low e Triple Pane Low SHGC Air filled Insulated</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Low e Triple Pane Low SHGC Argon filled Insulated</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QComboBox" name="ECMOccSensorOptions">
-        <property name="geometry">
-         <rect>
-          <x>400</x>
-          <y>250</y>
           <width>101</width>
           <height>22</height>
          </rect>
         </property>
         <item>
          <property name="text">
-          <string>No</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Yes</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QComboBox" name="ECMCeilInsOptions">
-        <property name="geometry">
-         <rect>
-          <x>290</x>
-          <y>225</y>
-          <width>89</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>Uninsulated</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R7 Fiberglass</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R13 Fiberglass</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R19 Fiberglass</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R30 Fiberglass</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R38 Fiberglass</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R49 Fiberglass</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R60 Fiberglass</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QComboBox" name="ECMLEDOptions">
-        <property name="geometry">
-         <rect>
-          <x>400</x>
-          <y>280</y>
-          <width>101</width>
-          <height>22</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>0.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>20.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>40.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>60.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>80.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>100.0</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QComboBox" name="ECMEconOptions">
-        <property name="geometry">
-         <rect>
-          <x>400</x>
-          <y>220</y>
-          <width>91</width>
-          <height>22</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>No</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Yes</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QComboBox" name="ECMWallInsOptions">
-        <property name="geometry">
-         <rect>
-          <x>290</x>
-          <y>160</y>
-          <width>101</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>Uninsulated</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R7 Fiberglass</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R11 Fiberglass</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R13 Fiberglass</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R15 Fiberglass</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R19 Fiberglass</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R21 Fiberglass</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R23 Spray Foam</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>R36 Spray Foam</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QComboBox" name="ECMInfilOptions">
-        <property name="geometry">
-         <rect>
-          <x>290</x>
-          <y>195</y>
-          <width>91</width>
-          <height>21</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>25</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>20</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>15</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>10</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>8</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>7</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>6</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>5</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>4</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>3</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>2</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QComboBox" name="ECMDaylightingOptions">
-        <property name="geometry">
-         <rect>
-          <x>400</x>
-          <y>190</y>
-          <width>91</width>
-          <height>22</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>No</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Yes</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QComboBox" name="ECMReduceEquipmentLoadOptions">
-        <property name="geometry">
-         <rect>
-          <x>510</x>
-          <y>180</y>
-          <width>131</width>
-          <height>22</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>0.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>10.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>20.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>30.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>40.0</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>50.0</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QComboBox" name="ECMCoolingEffOptions">
-        <property name="geometry">
-         <rect>
-          <x>510</x>
-          <y>200</y>
-          <width>131</width>
-          <height>22</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QComboBox" name="ECMHeatingEffOptions">
-        <property name="geometry">
-         <rect>
-          <x>510</x>
-          <y>230</y>
-          <width>131</width>
-          <height>22</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QComboBox" name="ECMHeatingEqpOptions">
-        <property name="geometry">
-         <rect>
-          <x>510</x>
-          <y>260</y>
-          <width>131</width>
-          <height>22</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>Gas Furnace</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Electric Baseboard</string>
+          <string>Air Conditioner</string>
          </property>
         </item>
         <item>
@@ -4640,16 +3126,1081 @@
          </property>
         </item>
        </widget>
-       <widget class="QLineEdit" name="ECMHoursofNightSetbackOptions">
+      </widget>
+      <widget class="QWidget" name="tab_18">
+       <attribute name="title">
+        <string>Evaluate Measure</string>
+       </attribute>
+       <widget class="QGroupBox" name="groupBox_21">
         <property name="geometry">
          <rect>
-          <x>520</x>
-          <y>150</y>
-          <width>113</width>
-          <height>20</height>
+          <x>20</x>
+          <y>10</y>
+          <width>821</width>
+          <height>121</height>
          </rect>
         </property>
+        <property name="title">
+         <string>Baseline</string>
+        </property>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>40</y>
+           <width>771</width>
+           <height>51</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_27" stretch="2,2,1,1">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_26">
+            <item>
+             <widget class="QLabel" name="label_47">
+              <property name="text">
+               <string>Total Electricity Consumption (kWh)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="BaselinekWhConsumption"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_38">
+            <item>
+             <widget class="QLabel" name="label_49">
+              <property name="text">
+               <string>Total Natural Gas Consumption (therms)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="BaselineThermConsumption">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_43">
+            <item>
+             <widget class="QLabel" name="label_52">
+              <property name="text">
+               <string>Annual Operating Cost ($)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="BaselineAnnualOperatingCost"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_47">
+            <item>
+             <widget class="QLabel" name="label_60">
+              <property name="text">
+               <string>Life Cycle Cost ($)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="BaselineLCC"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
        </widget>
+       <widget class="QGroupBox" name="groupBox_22">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>140</y>
+          <width>811</width>
+          <height>311</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>Measures</string>
+        </property>
+        <widget class="QWidget" name="layoutWidget_54">
+         <property name="geometry">
+          <rect>
+           <x>540</x>
+           <y>40</y>
+           <width>251</width>
+           <height>175</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_64" stretch="1,1">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_114" stretch="1,1,1,1">
+            <item>
+             <widget class="QLabel" name="label_136">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>% Change in Electricity</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_137">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>% Change in Natural Gas</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_138">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Total Initial Cost ($)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_139">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Life Cycle Cost ($)</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_115" stretch="1,1,1,1">
+            <item>
+             <widget class="QLineEdit" name="kWhPctChange">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="ThermsPctChange">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="TIC">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="LCC">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QTableWidget" name="ECMEval">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>20</y>
+           <width>511</width>
+           <height>281</height>
+          </rect>
+         </property>
+         <property name="rowCount">
+          <number>13</number>
+         </property>
+         <attribute name="horizontalHeaderMinimumSectionSize">
+          <number>40</number>
+         </attribute>
+         <attribute name="horizontalHeaderDefaultSectionSize">
+          <number>115</number>
+         </attribute>
+         <attribute name="verticalHeaderMinimumSectionSize">
+          <number>31</number>
+         </attribute>
+         <row>
+          <property name="text">
+           <string>1</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>2</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>3</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>4</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>5</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>6</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>7</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>8</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>9</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>10</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>11</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>12</string>
+          </property>
+         </row>
+         <row>
+          <property name="text">
+           <string>13</string>
+          </property>
+         </row>
+         <column>
+          <property name="text">
+           <string>Measure Selection</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Selection</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Base Property</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>New Property</string>
+          </property>
+         </column>
+         <item row="0" column="0">
+          <property name="text">
+           <string>Wall Insulation</string>
+          </property>
+         </item>
+         <item row="1" column="0">
+          <property name="text">
+           <string>Infiltration</string>
+          </property>
+         </item>
+         <item row="2" column="0">
+          <property name="text">
+           <string>Ceiling Insulation</string>
+          </property>
+         </item>
+         <item row="3" column="0">
+          <property name="text">
+           <string>Window Material</string>
+          </property>
+         </item>
+         <item row="4" column="0">
+          <property name="text">
+           <string>Night SetBack</string>
+          </property>
+         </item>
+         <item row="5" column="0">
+          <property name="text">
+           <string>Hours of Night Setback</string>
+          </property>
+         </item>
+         <item row="6" column="0">
+          <property name="text">
+           <string>Daylighting</string>
+          </property>
+         </item>
+         <item row="7" column="0">
+          <property name="text">
+           <string>Economizer</string>
+          </property>
+         </item>
+         <item row="8" column="0">
+          <property name="text">
+           <string>Occupancy Sensor</string>
+          </property>
+         </item>
+         <item row="9" column="0">
+          <property name="text">
+           <string>Percentage LED</string>
+          </property>
+         </item>
+         <item row="10" column="0">
+          <property name="text">
+           <string>Reduce Equipment Load</string>
+          </property>
+         </item>
+         <item row="10" column="1">
+          <property name="text">
+           <string/>
+          </property>
+         </item>
+         <item row="10" column="2">
+          <property name="text">
+           <string/>
+          </property>
+         </item>
+         <item row="11" column="0">
+          <property name="text">
+           <string>Heating Equipment</string>
+          </property>
+         </item>
+         <item row="12" column="0">
+          <property name="text">
+           <string>Cooling Equipment</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QWidget" name="layoutWidget_55">
+         <property name="geometry">
+          <rect>
+           <x>540</x>
+           <y>240</y>
+           <width>251</width>
+           <height>61</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_65" stretch="1,1">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_116">
+            <item>
+             <widget class="QPushButton" name="EvaluateMeasures">
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Evaluate</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_117"/>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QCheckBox" name="ECMWallInsCheck">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>70</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="ECMInfiltrationCheck">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>100</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="ECMCeilInsCheck">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>130</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="ECMWindowMatCheck">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>160</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="ECMNightSetbackCheck">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>190</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="ECMDaylightingCheck">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>220</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="ECMEconomizerCheck">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>250</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="ECMOccSensorCheck">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>280</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="ECMPctLEDCheck">
+         <property name="geometry">
+          <rect>
+           <x>220</x>
+           <y>230</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="ECMHeatingEqpCheck">
+         <property name="geometry">
+          <rect>
+           <x>220</x>
+           <y>260</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="ECMCoolingEqpCheck">
+         <property name="geometry">
+          <rect>
+           <x>220</x>
+           <y>290</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="ECMOccSensor">
+         <property name="geometry">
+          <rect>
+           <x>360</x>
+           <y>80</y>
+           <width>101</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>No</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Yes</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QComboBox" name="ECMNightSetback">
+         <property name="geometry">
+          <rect>
+           <x>250</x>
+           <y>220</y>
+           <width>91</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>0.0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>2.0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>6.0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>8.0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>10.0</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QComboBox" name="ECMCeilingInsulation">
+         <property name="geometry">
+          <rect>
+           <x>240</x>
+           <y>140</y>
+           <width>89</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>Uninsulated</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R7 Fiberglass</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R13 Fiberglass</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R19 Fiberglass</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R30 Fiberglass</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R38 Fiberglass</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R49 Fiberglass</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R60 Fiberglass</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QComboBox" name="ECMWallInsulation">
+         <property name="geometry">
+          <rect>
+           <x>241</x>
+           <y>80</y>
+           <width>89</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>Uninsulated</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R7 Fiberglass</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R11 Fiberglass</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R13 Fiberglass</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R15 Fiberglass</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R19 Fiberglass</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R21 Fiberglass</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R23 Spray Foam</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>R36 Spray Foam</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QComboBox" name="ECMWindowMaterial">
+         <property name="geometry">
+          <rect>
+           <x>250</x>
+           <y>190</y>
+           <width>89</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>Single Pane Clear</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Double Pane Clear</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Low e Double Pane Medium SHGC Air filled</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Low e Double Pane Medium SHGC Argon filled</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Low e Double Pane Medium SHGC Air filled Insulated</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Low e Double Pane Medium SHGC Argon filled Insulated</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Low e Triple Pane Low SHGC Air filled</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Low e Triple Pane Low SHGC Argon filled</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Low e Triple Pane Low SHGC Air filled Insulated</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Low e Triple Pane Low SHGC Argon filled Insulated</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QComboBox" name="ECMEconomizer">
+         <property name="geometry">
+          <rect>
+           <x>330</x>
+           <y>160</y>
+           <width>91</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>No</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Yes</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QComboBox" name="ECMPctLED">
+         <property name="geometry">
+          <rect>
+           <x>360</x>
+           <y>110</y>
+           <width>101</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>0.0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>20.0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>40.0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>60.0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>80.0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>100.0</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QComboBox" name="ECMInfiltration">
+         <property name="geometry">
+          <rect>
+           <x>240</x>
+           <y>110</y>
+           <width>81</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>25</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>20</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>15</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>10</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>8</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>7</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>6</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>5</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>4</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>3</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>2</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QComboBox" name="ECMReduceEqpLoad">
+         <property name="geometry">
+          <rect>
+           <x>390</x>
+           <y>210</y>
+           <width>60</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>10</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>20</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>30</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QComboBox" name="ECMHoursNightSetback">
+         <property name="geometry">
+          <rect>
+           <x>400</x>
+           <y>240</y>
+           <width>60</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>4</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>6</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>8</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>10</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>12</string>
+          </property>
+         </item>
+        </widget>
+        <widget class="QComboBox" name="ECMHeatingEquipment">
+         <property name="geometry">
+          <rect>
+           <x>260</x>
+           <y>250</y>
+           <width>60</width>
+           <height>22</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="ECMCoolingEquipment">
+         <property name="geometry">
+          <rect>
+           <x>340</x>
+           <y>260</y>
+           <width>60</width>
+           <height>22</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="ECMReduceEqpLoadCheck">
+         <property name="geometry">
+          <rect>
+           <x>220</x>
+           <y>200</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="ECMHoursNightSetbackCheck">
+         <property name="geometry">
+          <rect>
+           <x>220</x>
+           <y>180</y>
+           <width>16</width>
+           <height>18</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+        <widget class="QComboBox" name="ECMDaylighting">
+         <property name="geometry">
+          <rect>
+           <x>350</x>
+           <y>60</y>
+           <width>101</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <item>
+          <property name="text">
+           <string>No</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Yes</string>
+          </property>
+         </item>
+        </widget>
+        <zorder>ECMEval</zorder>
+        <zorder>layoutWidget_54</zorder>
+        <zorder>layoutWidget_55</zorder>
+        <zorder>ECMWallInsCheck</zorder>
+        <zorder>ECMInfiltrationCheck</zorder>
+        <zorder>ECMCeilInsCheck</zorder>
+        <zorder>ECMWindowMatCheck</zorder>
+        <zorder>ECMNightSetbackCheck</zorder>
+        <zorder>ECMDaylightingCheck</zorder>
+        <zorder>ECMEconomizerCheck</zorder>
+        <zorder>ECMOccSensorCheck</zorder>
+        <zorder>ECMPctLEDCheck</zorder>
+        <zorder>ECMHeatingEqpCheck</zorder>
+        <zorder>ECMCoolingEqpCheck</zorder>
+        <zorder>ECMOccSensor</zorder>
+        <zorder>ECMNightSetback</zorder>
+        <zorder>ECMCeilingInsulation</zorder>
+        <zorder>ECMWallInsulation</zorder>
+        <zorder>ECMWindowMaterial</zorder>
+        <zorder>ECMEconomizer</zorder>
+        <zorder>ECMPctLED</zorder>
+        <zorder>ECMInfiltration</zorder>
+        <zorder>ECMReduceEqpLoad</zorder>
+        <zorder>ECMHoursNightSetback</zorder>
+        <zorder>ECMHeatingEquipment</zorder>
+        <zorder>ECMCoolingEquipment</zorder>
+        <zorder>ECMReduceEqpLoadCheck</zorder>
+        <zorder>ECMHoursNightSetbackCheck</zorder>
+        <zorder>ECMDaylighting</zorder>
+       </widget>
+       <zorder>groupBox_22</zorder>
+       <zorder>groupBox_21</zorder>
       </widget>
       <widget class="QWidget" name="tab_27">
        <attribute name="title">
@@ -4684,6 +4235,25 @@
            </rect>
           </property>
          </widget>
+         <widget class="QLabel" name="label_42">
+          <property name="geometry">
+           <rect>
+            <x>100</x>
+            <y>350</y>
+            <width>661</width>
+            <height>61</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="pixmap">
+           <pixmap>../LegendFigs/EEM_kWhLabels.png</pixmap>
+          </property>
+          <property name="scaledContents">
+           <bool>true</bool>
+          </property>
+         </widget>
         </widget>
         <widget class="QWidget" name="tab_29">
          <attribute name="title">
@@ -4693,10 +4263,29 @@
           <property name="geometry">
            <rect>
             <x>20</x>
-            <y>30</y>
+            <y>20</y>
             <width>821</width>
             <height>321</height>
            </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_44">
+          <property name="geometry">
+           <rect>
+            <x>180</x>
+            <y>350</y>
+            <width>511</width>
+            <height>61</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="pixmap">
+           <pixmap>../LegendFigs/EEM_ThermLabels.png</pixmap>
+          </property>
+          <property name="scaledContents">
+           <bool>true</bool>
           </property>
          </widget>
         </widget>

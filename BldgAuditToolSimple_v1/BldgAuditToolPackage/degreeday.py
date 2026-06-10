@@ -6,11 +6,8 @@
 
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
 import statsmodels.api as sm
-from scipy.stats import linregress
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 
 #pd.set_option('display.max_rows', None)  # Show all rows
 #pd.set_option('display.max_columns', None)  # Show all columns
@@ -217,7 +214,7 @@ class DegreeDay:
         y_vals = best_intercept + best_slope * x_vals
        
         # Add best-fit line
-        ax.plot(x_vals.flatten(), y_vals.flatten(), label=f"{best_col}°F\nIntercept={best_intercept:.5e} $\\frac{{\\text{{kBtu}}}}{{\\text{{ft}}^2}}$, R²={best_r_squared:.2f}, Slope ={best_slope:.5f} $\\frac{{\\text{{kBtu}}}}{{\\text{{ft}}^2\\text{{day}}\\text{{°F}}}}$", linestyle='solid', linewidth=2, color='black')
+        ax.plot(x_vals.flatten(), y_vals.flatten(), label=f"{best_col}°F\nIntercept={best_intercept:.2e} $\\frac{{\\text{{kBtu}}}}{{\\text{{ft}}^2}}$, R²={best_r_squared:.2f}, Slope ={best_slope:.3f} $\\frac{{\\text{{kBtu}}}}{{\\text{{ft}}^2\\text{{day}}\\text{{°F}}}}$", linestyle='solid', linewidth=2, color='black')
         # Customize plot
         if heatingtype == "NaturalGas":
             ax.set_title("Best Degree Day Heating vs Fossil Fuel Consumption")
@@ -425,7 +422,7 @@ class DegreeDay:
         y_vals = best_intercept + best_slope * x_vals
         
         # Add best-fit line
-        ax.plot(x_vals.flatten(), y_vals.flatten(), label=f"{best_col}°F\nIntercept={best_intercept:.5e} $\\frac{{\\text{{kBtu}}}}{{\\text{{ft}}^2}}$, R²={best_r_squared:.3f}, Slope ={best_slope:.5e} $\\frac{{\\text{{kBtu}}}}{{\\text{{ft}}^2\\text{{day}}\\text{{°F}}}}$", linestyle='solid', linewidth=2, color='black')    
+        ax.plot(x_vals.flatten(), y_vals.flatten(), label=f"{best_col}°F\nIntercept={best_intercept:.2e} $\\frac{{\\text{{kBtu}}}}{{\\text{{ft}}^2}}$, R²={best_r_squared:.3f}, Slope ={best_slope:.2e} $\\frac{{\\text{{kBtu}}}}{{\\text{{ft}}^2\\text{{day}}\\text{{°F}}}}$", linestyle='solid', linewidth=2, color='black')    
         # Customize plot
         ax.set_title("Best Degree Day Cooling vs Electricity Consumption")
         ax.set_xlabel("Degree Day Cooling")

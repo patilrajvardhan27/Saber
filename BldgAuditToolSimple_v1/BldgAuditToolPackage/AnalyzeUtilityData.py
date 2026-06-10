@@ -1,7 +1,4 @@
 import pandas as pd
-import geocoder
-import numpy 
-import matplotlib.pyplot as plt
 import os
 
 # from weather_station import WeatherStation
@@ -69,19 +66,7 @@ def GetWeather(ProjectPath,ProjectName,bldg_location):
     #print(df_new)
     return df_new,weather_station_name
 
-#%% GET MONTHLY ENERGY END USE BREAKDOWN
-def GetMonthlyEndUseBreakdown(BestModelParams,df_weather,df_input,ECMEval):
-    EnergyEndUse = Energy(BestModelParams,df_weather,df_input,ECMEval)
-    #print("AnalyzedUtilityData.py line 74", df_weather.isna().any().any())
-    
-    df_MonthlyEndUse = pd.DataFrame(columns=["NG-Space Heating","EL-Space Heating","NG-DHW Heating","EL-Space Cooling","EL-Lighting","EL-Electric Equipment","BLC_Heat_NG","BLC_Heat_EL","BLC_Cool_EL","HDD_EL","HDD_NG","CDD"])
-    for m in set(df_weather.index.month):
-        df_day_i = df_weather.loc[df_weather.index.month == m].resample("24H").mean()
-        #print("AnalyzedUtilityData.py line 78", df_day_i)
-        df_MonthlyEndUse = pd.concat([df_MonthlyEndUse,pd.DataFrame([EnergyEndUse.EndUseBreakdown(df_day_i)],columns=df_MonthlyEndUse.columns)])
-    
-    df_MonthlyEndUse = df_MonthlyEndUse.astype(float).reset_index(drop=True)
-    return df_MonthlyEndUse
+
 #%% BUILD TEMPERATURE AND DD BASED CHANGE POINT MODELS 
 
 
@@ -134,8 +119,12 @@ class BuildChangePointModel:
 
         if (self.dfutilDataSorted['Electricity/day/sqft'] != 0).all():
             electricity_cp = InverseModel(self.df_month["Temp_F"].values, self.dfutilDataSorted['Electricity/day/sqft'], 'Electricity')
-            has_fit_cooling, model_type_cooling, model_parameters_cooling = electricity_cp.fit_model() #paramter order: hcp,ccp,base,hsl,csl
-            r_sq = Plot_Matplotlib("Electricity", model_type_cooling, model_parameters_cooling, self.df_month["Temp_F"].values,self.dfutilDataSorted['Electricity/day/sqft']).plot_graph_cp(self.ProjectPath)
+            """Edited to make the R2 value correct"""
+            has_fit_cooling, model_type_cooling, model_parameters_cooling, model_r2 = electricity_cp.fit_model() #paramter order: hcp,ccp,base,hsl,csl
+            """Edited to make the R2 value correct"""
+            r_sq = model_r2
+            """Edited to make the R2 value correct"""
+            Plot_Matplotlib("Electricity", model_type_cooling, model_parameters_cooling, model_r2, self.df_month["Temp_F"].values,self.dfutilDataSorted['Electricity/day/sqft']).plot_graph_cp(self.ProjectPath)
             model_parameters_cooling = np.append(model_parameters_cooling, r_sq)  
         else:
            model_type_cooling = "No fit"
@@ -146,8 +135,13 @@ class BuildChangePointModel:
 
         if (self.dfutilDataSorted['Fossil Fuel/day/sqft'] != 0).all():    
             fossilfuel_cp = InverseModel(self.df_month["Temp_F"].values, self.dfutilDataSorted['Fossil Fuel/day/sqft'], 'Fossil Fuel')
-            has_fit_heating, model_type_heating, model_parameters_heating = fossilfuel_cp.fit_model() #paramter order: hcp,ccp,base,hsl,csl
-            r_sq = Plot_Matplotlib("Fossil Fuel", model_type_heating, model_parameters_heating, self.df_month["Temp_F"].values,self.dfutilDataSorted['Fossil Fuel/day/sqft']).plot_graph_cp(self.ProjectPath)
+            """Edited to make the R2 value correct"""
+            has_fit_heating, model_type_heating, model_parameters_heating, model_r2 = fossilfuel_cp.fit_model() #paramter order: hcp,ccp,base,hsl,csl
+            """Edited to make the R2 value correct"""
+            r_sq = model_r2
+            """Edited to make the R2 value correct"""
+            print("model_type_heating", model_type_heating, "model_parameters_heating", model_parameters_heating, "model_r2_heating", model_r2)
+            Plot_Matplotlib("Fossil Fuel", model_type_heating, model_parameters_heating, model_r2, self.df_month["Temp_F"].values,self.dfutilDataSorted['Fossil Fuel/day/sqft']).plot_graph_cp(self.ProjectPath)
             model_parameters_heating = np.append(model_parameters_heating, r_sq)
         else:
             model_type_heating = 'No fit'
@@ -185,7 +179,7 @@ class BuildChangePointModel:
             figure_hcp, baseload_hcp, hcp, slope_hcp, r_squared_hcp = ddh.heating_degree_day("NaturalGas")
             #print(baseload_hcp, hcp, slope_hcp)
             #figure_hcp.show()
-            figure_hcp.savefig(os.path.join(self.ProjectPath,"FossilFuel_Heating_DDBasedChngPtModel.png"), dpi=300)
+            figure_hcp.savefig(os.path.join(self.ProjectPath,"Results","FossilFuel_Heating_DDBasedChngPtModel.png"), dpi=300)
 
             DDResults.update({"NG-HeatingBaseload": baseload_hcp}) #kBtu/sft
             DDResults.update({"NG-HeatingChangePoint": hcp})
@@ -201,7 +195,7 @@ class BuildChangePointModel:
                 ddc = DegreeDay(self.dfutilDataSorted['Electricity/sqft'], self.df_day["Temp_F"].values, model_parameters_cooling, self.df_day, self.start_dates, self.end_dates)
                 figure_ccp, baseload_ccp, ccp, slope_ccp, r_squared_ccp = ddc.cooling_degree_day()
                 #figure_ccp.show()
-                figure_ccp.savefig(os.path.join(self.ProjectPath,"Electricity_Cooling_DDBasedChngPtModel.png"), dpi=300)
+                figure_ccp.savefig(os.path.join(self.ProjectPath,"Results","Electricity_Cooling_DDBasedChngPtModel.png"), dpi=300)
                 DDResults.update({"EL-CoolingBaseload":baseload_ccp}) #kBtu/sft
                 DDResults.update({"EL-CoolingChangePoint": ccp})
                 DDResults.update({"EL-CoolingSlope":slope_ccp})
@@ -213,7 +207,7 @@ class BuildChangePointModel:
                 ddh = DegreeDay(self.dfutilDataSorted['Electricity/sqft'], self.df_day["Temp_F"].values, model_parameters_cooling, self.df_day, self.start_dates, self.end_dates)
                 figure_hcp, baseload_hcp, hcp, slope_hcp, r_squared_hcp = ddh.heating_degree_day("Electric")
                 #figure_ccp.show()
-                figure_hcp.savefig(os.path.join(self.ProjectPath,"Electricity_Heating_DDBasedChngPtModel.png"), dpi = 300)
+                figure_hcp.savefig(os.path.join(self.ProjectPath,"Results","Electricity_Heating_DDBasedChngPtModel.png"), dpi = 300)
                 DDResults.update({"EL-HeatingBaseload":baseload_hcp}) #kBtu/sft
                 DDResults.update({"EL-HeatingChangePoint":hcp})
                 DDResults.update({"EL-HeatingSlope":slope_hcp})
@@ -227,7 +221,7 @@ class BuildChangePointModel:
                 ddc = DegreeDay(self.dfutilDataSorted['Electricity/sqft'], self.df_day["Temp_F"].values, model_parameters_cooling, self.df_day, self.start_dates, self.end_dates)
                 figure_ccp, baseload_ccp, ccp, slope_ccp, r_squared_ccp = ddc.cooling_degree_day (mask = mask)
                 #figure_ccp.show()
-                figure_ccp.savefig(os.path.join(self.ProjectPath,"Electricity_Cooling_DDBasedChngPtModel.png"), dpi = 300)
+                figure_ccp.savefig(os.path.join(self.ProjectPath,"Results","Electricity_Cooling_DDBasedChngPtModel.png"), dpi = 300)
                 DDResults.update({"EL-CoolingBaseload":baseload_ccp}) #kBtu/sft
                 DDResults.update({"EL-CoolingChangePoint": ccp})
                 DDResults.update({"EL-CoolingSlope":slope_ccp})
@@ -239,7 +233,7 @@ class BuildChangePointModel:
                 ddh = DegreeDay(self.dfutilDataSorted['Electricity/sqft'], self.df_day["Temp_F"].values, model_parameters_cooling, self.df_day, self.start_dates, self.end_dates)
                 figure_hcp, baseload_hcp, hcp, slope_hcp, r_squared_hcp = ddh.heating_degree_day("Electric",mask = mask)
                 #figure_ccp.show()
-                figure_hcp.savefig(os.path.join(self.ProjectPath,"Electricity_Heating_DDBasedChngPtModel.png"), dpi = 300)
+                figure_hcp.savefig(os.path.join(self.ProjectPath,"Results","Electricity_Heating_DDBasedChngPtModel.png"), dpi = 300)
                 DDResults.update({"EL-HeatingBaseload": baseload_hcp}) #kBtu/sft
                 DDResults.update({"EL-HeatingChangePoint": hcp})
                 DDResults.update({"EL-HeatingSlope": slope_hcp})
@@ -249,7 +243,7 @@ class BuildChangePointModel:
         # print(DDResults,self.dfutilDataSorted.reset_index(drop=True))
         return DDResults,self.dfutilDataSorted.reset_index(drop=True)
     
-    def ChooseBestModel(self,DDResults,model_parameters_heating,model_parameters_cooling):  #paramter order: hcp,ccp,base,hsl,csl
+    def ChooseBestModel(self,DDResults,model_parameters_heating,model_parameters_cooling,RunDir):  #paramter order: hcp,ccp,base,hsl,csl
         BestModel = DDResults.copy()
         print("MPC",model_parameters_cooling)
         print("MPH",model_parameters_heating)
@@ -273,7 +267,8 @@ class BuildChangePointModel:
             BestModel["EL-HeatingSlope"] = model_parameters_cooling[3]
             BestModel["EL-HeatingR2"] = model_parameters_cooling[-1]
             BestModel["EL-HeatingBaseload"] = model_parameters_cooling[2]*30
-    
+
+        pd.DataFrame([BestModel]).to_csv(os.path.join(RunDir,"BestModelParams.csv"))
         return BestModel
         
 

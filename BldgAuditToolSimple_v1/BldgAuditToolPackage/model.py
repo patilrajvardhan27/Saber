@@ -179,8 +179,6 @@ class InverseModel:
         #print("model fitting")
         ### Fit change-point model
         self.fit()  # Initial guess
-        if not hasattr(self, 'p'):
-            return False, "No fit", np.zeros(5)
         self.p_init = self.p
         #print("fit_model",self.p_init)
 
@@ -195,23 +193,28 @@ class InverseModel:
         # # Save final model coefficients
         # return (has_fit)
         #print("R_squared", self.R_Squared())
-        if (self.R_Squared() < threshold):
-            #print("R_squared", self.R_Squared())
-            #print('No fit found')
-            # Cannot accept model immediately. No meaningful correlation found.
-            return False, "No fit", self.p
-        else:
-            self.optimize_slopes()
-            self.optimize_cp_limit("L")
-            self.optimize_cp_limit("R")
-            self.optimize_slopes()
-            self.inverse_cp()
-            model_type, model_parameters = self.model_type()  # Get model type
-            has_fit = True
-            self.has_fit = has_fit
-            # Save final model coefficients
-            #print("hcp", "ccp", "base","hsl", "csl",self.p)
-            return (has_fit, model_type, model_parameters)
+        # if (self.R_Squared() < threshold):
+        #     print("R_squared", self.R_Squared())
+        #     #print('No fit found')
+        #     # Cannot accept model immediately. No meaningful correlation found.
+        #     return (has_fit, None, None, self.R_Squared() )
+        # else:
+        ##
+        ## Adjusted by Phani on March 11 26. Ignore the threshold for R2 and always return the model type and parameters.
+        self.optimize_slopes()
+        self.optimize_cp_limit("L")
+        self.optimize_cp_limit("R")
+        self.optimize_slopes()
+        self.inverse_cp()
+        """Edited to make the R2 value correct""" 
+        model_type, model_parameters, model_r2 = self.model_type()  # Get model type
+        has_fit = True
+        self.has_fit = has_fit
+        # Save final model coefficients
+        #print("hcp", "ccp", "base","hsl", "csl",self.p)
+        """Edited to make the R2 value correct"""
+        print("model_type", model_type, "model_parameters", model_parameters, "model_r2", model_r2)
+        return (has_fit, model_type, model_parameters, model_r2)
 
     def optimize_slopes(self):
         import math
@@ -252,12 +255,15 @@ class InverseModel:
         # This function clean up the model parameters and assign model type string
         self.cp_txt = []
         self.R_Squared()
+        #print("model type R_squared", self.R_Squared())
         if (self.hcp is None):
             self.model_type_str = 'No fit'
+            #print("model_type", self.model_type_str)
             self.has_fit = False
             self.coeff_validation = {'base': False, 'csl': False, 'ccp': False, 'hsl': False, 'hcp': False}
         elif (self.hcp == self.ccp and self.hsl == 0):
             self.model_type_str = "3P Cooling"
+            #print("model_type", self.model_type_str)
             self.cp_txt = "(" + str(round(self.ccp, 1)) + ", " + str(round(self.base, 1)) + ")"
             self.hcp = self.ccp
             self.hsl = 0
@@ -266,6 +272,7 @@ class InverseModel:
             self.coeff_validation = {'base': True, 'csl': True, 'ccp': True, 'hsl': False, 'hcp': False}
         elif (self.hcp == self.ccp and self.csl == 0):
             self.model_type_str = "3P Heating"
+            #print("model_type", self.model_type_str)
             self.cp_txt = "(" + str(round(self.hcp, 1)) + ", " + str(round(self.base, 1)) + ")"
             self.ccp = self.hcp
             self.csl = 0
@@ -274,17 +281,20 @@ class InverseModel:
             self.coeff_validation = {'base': True, 'csl': False, 'ccp': False, 'hsl': True, 'hcp': True}
         elif (self.hcp == self.ccp and self.csl != 0 and self.hsl != 0):
             self.model_type_str = "4P"
+            #print("model_type", self.model_type_str)
             self.cp_txt = "(" + str(round(self.hcp, 1)) + ", " + str(round(self.base, 1)) + ")"
             self.coeff_validation = {'base': True, 'csl': True, 'ccp': True, 'hsl': True, 'hcp': True}
         elif (self.hcp != self.ccp and self.csl != 0 and self.hsl != 0):
             self.model_type_str = "5P"
+            #print("model_type", self.model_type_str)
             self.cp_txt.append("(" + str(round(self.hcp, 1)) + ", " + str(round(self.base, 1)) + ")")
             self.cp_txt.append("(" + str(round(self.ccp, 1)) + ", " + str(round(self.base, 1)) + ")")
             self.coeff_validation = {'base': True, 'csl': True, 'ccp': True, 'hsl': True, 'hcp': True}
         # Finally assign the model coefficients
         self.coeffs = {'base': self.base, 'csl': self.csl, 'ccp': self.ccp, 'hsl': abs(self.hsl), 'hcp': self.hcp}
         self.model_p = np.array([self.hcp, self.ccp, self.base, self.hsl, self.csl])
-        return(self.model_type_str, self.model_p)
+        """Edited to make the R2 value correct"""
+        return(self.model_type_str, self.model_p, self.R_Squared())
         #print("model type", self.model_type_str, "self.hcp, self.ccp, self.base, self.hsl, self.csl", self.hcp, self.ccp, self.base, self.hsl, self.csl)
 
     def model_lines(self,mts,x,y):

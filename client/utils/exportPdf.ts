@@ -230,7 +230,8 @@ ${sec("HVAC — Hot Water & Other",
 
 <!-- Section 6: Equipment & Lighting -->
 ${sec("Equipment",
-  r("Equipment Power Density (EPD)", state.epd, "W/ft²")
+  r("Equipment Power Density (EPD)", state.epd, "W/ft²") +
+  r("Gas Power Density (GPD)", state.gpd, "W/ft²")
 )}
 ${sec("Lighting",
   r("Lighting Power Density", state.lpd, "W/ft²") +

@@ -73,6 +73,7 @@ export interface FormState {
 
   // ── Equipment & Lighting ──────────────────────────────────
   epd: string;
+  gpd: string;
   lpd: string;
   daylighting: string;
   led: string;
@@ -161,6 +162,7 @@ export const initialFormState: FormState = {
   nHoursLighting: "",
 
   epd: "1.0",
+  gpd: "",
   lpd: "",
   daylighting: "No",
   led: "0.0",

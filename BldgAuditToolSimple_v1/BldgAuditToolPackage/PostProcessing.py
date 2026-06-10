@@ -1,5 +1,4 @@
 import pandas as pd
-import geocoder
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -40,13 +39,15 @@ class PlotResults:
         ax.set_title(f"Station: {weather_station_name}")
         fig.tight_layout()
         if self.save:
-            fig.savefig(os.path.join(self.ProjectPath,f"WeatherPlot_{weather_station_name}.png"),dpi=300)
+            fig.savefig(os.path.join(self.ProjectPath,"Results",f"WeatherPlot_{weather_station_name}.png"),dpi=300)
         # Show plot
         plt.close()
         return
 
-    def PlotEndUseBreakdown(self,df_MonthlyEndUse):
+    def PlotEndUseBreakdown(self,RunDir):
         #%%
+        
+        df_MonthlyEndUse = pd.read_csv(os.path.join(RunDir, "MonthlyEndUseBreakdown.csv"))
         print(df_MonthlyEndUse)
         df_MonthlyEndUse["AL-Space Heating"] = df_MonthlyEndUse["EL-Space Heating"] + df_MonthlyEndUse["NG-Space Heating"]
         df_MonthlyEndUse = df_MonthlyEndUse.loc[:,~df_MonthlyEndUse.columns.isin(['EL-Space Heating','NG-Space Heating','BLC_Heat_NG', 'BLC_Heat_EL', 'BLC_Cool_EL', 'HDD_EL', 'HDD_NG', 'CDD'])]
@@ -62,16 +63,17 @@ class PlotResults:
 
         fig, ax = plt.subplots(figsize=(5, 5))
         print (sizes, labels)
-        ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=['red', 'blue', 'green', 'orange', 'purple'])
+        ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=['red', 'blue', 'green', 'orange', 'purple','yellow'])
         ax.set_title("Annual Energy End Use Breakdown (kBtu)")
         fig.tight_layout()
         if self.save:
-            fig.savefig(os.path.join(self.ProjectPath,"EndUseBreakdown.png"),dpi=300)
+            fig.savefig(os.path.join(self.ProjectPath,"Results","EndUseBreakdown.png"),dpi=300)
         plt.close()
         return
 
-    def PlotInverseModelComparison(self,df_MonthlyEndUse,dfutilDataSorted):
+    def PlotInverseModelComparison(self,RunDir,dfutilDataSorted):
         #%%
+        df_MonthlyEndUse = pd.read_csv(os.path.join(RunDir, "MonthlyEndUseBreakdown.csv"))
         df_MonthlyEndUse = df_MonthlyEndUse.loc[:,~df_MonthlyEndUse.columns.isin(['BLC_Heat_NG', 'BLC_Heat_EL', 'BLC_Cool_EL', 'HDD_EL', 'HDD_NG', 'CDD'])]
         
         ThermRes = df_MonthlyEndUse.loc[:,df_MonthlyEndUse.columns.str.contains("NG")]
@@ -106,6 +108,15 @@ class PlotResults:
         ElecErr = 100*(ElecPred - np.array(ElecMean))/np.array(ElecMean)
         
         #%%
+        ThermPred = ThermRes.sum(axis=1).values
+        print("ThermPred: ",ThermPred)
+        print("ThermAct: ",ThermMean)
+        ThermResidual = ThermMean - ThermPred
+        ThermRMSE = np.sqrt(np.mean(ThermResidual**2))
+        ThermCVRMSE = ThermRMSE/np.mean(ThermMean)*100
+        print("Therm CVRMSE: ",ThermCVRMSE)
+        ThermNMBE = np.mean(ThermResidual)/np.mean(ThermMean)*100
+        print("Therm NMBE: ",ThermNMBE)
         NGColorMap = {"Gas Equipment":"tab:green","DHW Heating":"tab:orange","Space Heating":"red"}
         abbreviated_months = [calendar.month_abbr[i] for i in range(1, 13)]
         fig, ax = plt.subplots(figsize=(8,4))
@@ -116,14 +127,17 @@ class PlotResults:
         # Plot the stacked bar chart on the same axes
         colors = [NGColorMap.get(col, "gray") for col in ThermRes.columns]  # Default to "gray" if not in NGColorMap
         Thermbars = ThermRes.plot(kind='bar', stacked=True, ax=ax, color=colors,edgecolor='black')
+        ax.get_legend().remove()
         
         for i, (height, err) in enumerate(zip(ThermPred, ThermErr)):
             ax.text(i,  height + ThermPred.max()/20, f'{err:.1f}%', ha='center', fontsize=10, color='black')
 
 
         ax.set_ylabel('Natural Gas (Therms)')
-        ax.legend(ncol=2, title="End Uses")
+        
 
+        # ax.legend(ncol=2, title="End Uses")
+        ax.set_title("CV-RMSE: "+str(round(ThermCVRMSE,1))+"%, NMBE: "+str(round(ThermNMBE,1))+"%")
         ax.set_xticks(range(len(ThermRes.index)))
         ax.set_xticklabels(abbreviated_months, rotation=45)
         ax.set_xlabel('')
@@ -131,21 +145,46 @@ class PlotResults:
         # Adjust layout to prevent overlapping elements
         fig.tight_layout()
         if self.save:
-            fig.savefig(os.path.join(self.ProjectPath,"NaturalGasMonthlyBreakdown.png"),dpi=300)
+            fig.savefig(os.path.join(self.ProjectPath,"Results","NaturalGasMonthlyBreakdown.png"),dpi=300)
         plt.close()
+        #### Print the legend box only
+        # Extract legend handles/labels before removing from axes
+        # handles, labels = ax.get_legend_handles_labels()
+        # ng_handles = handles[:len(ThermRes.columns)*2]
+        # ng_labels = labels[:len(ThermRes.columns)*2]
+        # fig_legend = plt.figure(figsize=(6, 0.7))
+        # fig_legend.legend(ng_handles, ng_labels, title="End Uses", ncol=4, loc='center', frameon=True)
+        # fig_legend.tight_layout()
+        # if self.save:
+        #     fig_legend.savefig(os.path.join(RunDir,"NaturalGasLegend.png"), dpi=150, bbox_inches='tight')
+
+        
         #%%
+        ElecPred = ElecRes.sum(axis=1).values
+        print("ElecPred: ",ElecPred)
+        print("ElecAct: ",ElecMean)
+        ElecResidual = ElecMean - ElecPred
+        ElecRMSE = np.sqrt(np.mean(ElecResidual**2))
+        ElecCVRMSE = ElecRMSE/np.mean(ElecMean)*100
+        print("Elec CVRMSE: ",ElecCVRMSE)
+        ElecNMBE = np.mean(ElecResidual)/np.mean(ElecMean)*100
+        print("Elec NMBE: ",ElecNMBE)
         ElecColorMap = {"Electric Equipment":"tab:green","Lighting":"yellow","Space Cooling":"blue","Space Heating":"red","DHW Heating":"tab:orange"}
         abbreviated_months = [calendar.month_abbr[i] for i in range(1, 13)]
         fig, ax = plt.subplots(figsize=(8,4))
         ax.plot(np.arange(0,len(ElecMean)),ElecMean,marker="s",color="k", label="Utility Data")
         colors = [ElecColorMap.get(col, "gray") for col in ElecRes.columns]  # Default to "gray" if not in NGColorMap
-        Elecbars = ElecRes.plot(kind='bar', stacked=True, ax=ax, color=colors,edgecolor='black') 
+        Elecbars = ElecRes.plot(kind='bar', stacked=True, ax=ax, color=colors,edgecolor='black')
+        ax.get_legend().remove()
         
         for i, (height, err) in enumerate(zip(ElecPred, ElecErr)):
             ax.text(i, height +  ElecPred.max()/20, f'{err:.1f}%', ha='center', fontsize=10, color='black')
             
         ax.set_ylabel('Electricity (kWh)')
-        ax.legend(ncol=2, title="End Uses")
+        # ax.legend(ncol=2, title="End Uses")
+
+        
+        ax.set_title("CV-RMSE: "+str(round(ElecCVRMSE,1))+"%, NMBE: "+str(round(ElecNMBE,1))+"%")
 
         ax.set_xticks(range(len(ThermRes.index)))
         ax.set_xticklabels(abbreviated_months, rotation=45)
@@ -153,11 +192,25 @@ class PlotResults:
         ax.set_ylim([0,max(max(ElecMean),ElecPred.max())+max(max(ElecMean),ElecPred.max())/5])
         fig.tight_layout()
         if self.save:
-            fig.savefig(os.path.join(self.ProjectPath,"ElectricityMonthlyBreakdown.png"),dpi=300)
+            fig.savefig(os.path.join(self.ProjectPath,"Results","ElectricityMonthlyBreakdown.png"),dpi=300)
         plt.close()
+
+            #### Print the legend box only
+        # Extract legend handles/labels before removing from axes
+        # handles, labels = ax.get_legend_handles_labels()
+        # elec_handles = handles[:len(ElecRes.columns)*2]
+        # elec_labels = labels[:len(ElecRes.columns)*2]
+        # fig_legend = plt.figure(figsize=(6, 0.7))
+        # fig_legend.legend(elec_handles, elec_labels, title="End Uses", ncol=5, loc='center', frameon=True)
+        # fig_legend.tight_layout()
+        # if self.save:
+        #     fig_legend.savefig(os.path.join(RunDir,"ElectricityLegend.png"), dpi=150, bbox_inches='tight')
+
+        
         return 
-    
-    def PlotEEMEndUseComparison(self,df_MonthlyEndUse,df_MonthlyEndUse_EEM):
+
+    def PlotEEMEndUseComparison(self,RunDir,df_MonthlyEndUse_EEM):
+        df_MonthlyEndUse = pd.read_csv(os.path.join(self.ProjectPath, "MonthlyEndUseBreakdown.csv"))
         df_MonthlyEndUse = df_MonthlyEndUse.loc[:,~df_MonthlyEndUse.columns.isin(['BLC_Heat_NG', 'BLC_Heat_EL', 'BLC_Cool_EL', 'HDD_EL', 'HDD_NG', 'CDD'])]
         
         ThermRes = df_MonthlyEndUse.loc[:,df_MonthlyEndUse.columns.str.contains("NG")]
@@ -230,17 +283,27 @@ class PlotResults:
         ax.set_xlabel('')
         ax.set_ylim([0, ThermPred.max() + ThermPred.max()/5])
         
-        # Manually create legend
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[:len(ThermRes.columns)*2], labels[:len(ThermRes.columns)*2], title="End Uses",ncol=2)
-
         
+
         # Adjust layout to prevent overlapping
         fig.tight_layout()
 
         if self.save:
-            fig.savefig(os.path.join(self.ProjectPath,"NaturalGasMonthlyEEMComp.png"),dpi=300)
+            fig.savefig(os.path.join(RunDir,"NaturalGasMonthlyEEMComp.png"), dpi=150, bbox_inches='tight')
+
         plt.close()
+
+        # Save NG legend as a separate image
+        # Extract legend handles/labels before removing from axes
+        # handles, labels = ax.get_legend_handles_labels()
+        # ng_handles = handles[:len(ThermRes.columns)*2]
+        # ng_labels = labels[:len(ThermRes.columns)*2]
+        # fig_legend = plt.figure(figsize=(6, 0.7))
+        # fig_legend.legend(ng_handles, ng_labels, title="End Uses", ncol=3, loc='center', frameon=True)
+        # fig_legend.tight_layout()
+        # if self.save:
+        #     fig_legend.savefig(os.path.join(RunDir,"NaturalGasLegend.png"), dpi=150, bbox_inches='tight')
+        # plt.close(fig_legend)
         #%%
         ElecColorMap = {"Electric Equipment":"tab:green","Lighting":"yellow","Space Cooling":"blue","Space Heating":"red","DHW Heating":"tab:orange"}
         abbreviated_months = [calendar.month_abbr[i] for i in range(1, 13)]
@@ -278,14 +341,23 @@ class PlotResults:
         ax.set_xlabel('')
         ax.set_ylim([0, max(ElecPred.max(),ElecPred_EEM.max()) + max(ElecPred.max(),ElecPred_EEM.max())/5])
         
-        # Manually create legend
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[:len(ElecRes.columns)*2], labels[:len(ElecRes.columns)*2], title="End Uses",ncol=2)
-
+       
 
         # Adjust layout to prevent overlapping
         fig.tight_layout()
         if self.save:
-            fig.savefig(os.path.join(self.ProjectPath,"ElectricityMonthlyEEMComp.png"),dpi=300)
+            fig.savefig(os.path.join(RunDir,"ElectricityMonthlyEEMComp.png"), dpi=150, bbox_inches='tight')
         plt.close()
+
+        # Save electricity legend as a separate image
+         # Extract legend handles/labels before removing from axes
+        # handles, labels = ax.get_legend_handles_labels()
+        # elec_handles = handles[:len(ElecRes.columns)*2]
+        # elec_labels = labels[:len(ElecRes.columns)*2]
+        # fig_legend = plt.figure(figsize=(8, 0.7))
+        # fig_legend.legend(elec_handles, elec_labels, title="End Uses", ncol=4, loc='center', frameon=True)
+        # fig_legend.tight_layout()
+        # if self.save:
+        #     fig_legend.savefig(os.path.join(RunDir,"ElectricityLegend.png"), dpi=150, bbox_inches='tight')
+        # plt.close(fig_legend)
         return

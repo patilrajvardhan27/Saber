@@ -17,13 +17,13 @@ export function AppliancesStep() {
       <Card>
         <SectionHeader
           title="Equipment Power Density"
-          description="Total installed equipment power per unit floor area. Covers all plug loads — appliances, office equipment, and miscellaneous devices. Default 1.0 W/ft² is appropriate for most residential and small commercial buildings."
+          description="Total installed equipment power per unit floor area. EPD covers all electric plug loads — appliances, office equipment, and miscellaneous devices. GPD covers gas cooking equipment; leave it blank if there is no gas cooking. Default EPD of 1.0 W/ft² is appropriate for most residential and small commercial buildings."
         />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <FormField
             label="Equipment Power Density (EPD)"
             fieldKey="epd"
-            hint="Sum of all plug loads normalised by floor area"
+            hint="Sum of all electric plug loads normalised by floor area"
           >
             <Input
               type="number"
@@ -31,6 +31,19 @@ export function AppliancesStep() {
               unit="W/ft²"
               value={state.epd}
               onChange={(e) => setField("epd", e.target.value)}
+            />
+          </FormField>
+          <FormField
+            label="Gas Power Density (GPD)"
+            fieldKey="gpd"
+            hint="Gas cooking equipment power per floor area — leave blank if none"
+          >
+            <Input
+              type="number"
+              placeholder="0"
+              unit="W/ft²"
+              value={state.gpd}
+              onChange={(e) => setField("gpd", e.target.value)}
             />
           </FormField>
         </div>

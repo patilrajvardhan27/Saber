@@ -9,7 +9,6 @@ NOTICE.  This Software was developed under funding from the U.S. Department of E
 '''
 
 import pandas as pd
-import numpy as np
 
 
 class Constants:

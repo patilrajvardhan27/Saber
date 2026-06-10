@@ -1,2 +1,2 @@
-Option,CompressorType,SEER,Costperunit,CostperkBtuh,Lifetime
-,,0,0,0,0
+﻿System,SEER,Costperunit,CostperkBtuh
+NoCooling,0,0,0

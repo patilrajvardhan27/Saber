@@ -22,7 +22,7 @@ export const WALL_INSULATIONS = [
   "R15 Fiberglass",
   "R19 Fiberglass",
   "R21 Fiberglass",
-  "R23 Fiberglass",
+  "R23 Spray Foam",
   "R36 Spray Foam",
 ];
 
@@ -83,26 +83,27 @@ export const COOLING_EQUIPMENT = [
   "Air Source Heat Pump",
 ];
 
+// Efficiency values must match the package's Measures/System-*.csv files exactly so the
+// backend can map a selection to an upgrade option. SEER values come from
+// System-AirConditioner.csv / System-AirSourceHeatPump.csv.
 export const COOLING_EFF_OPTIONS: Record<string, string[]> = {
   NoCooling: [],
   "Air Conditioner": [
     "SEER2 13.4",
     "SEER2 14.3",
     "SEER2 15.2",
-    "SEER2 16.1",
-    "SEER2 17.0",
+    "SEER2 16.2",
+    "SEER2 19.1",
     "SEER2 20.0",
-    "SEER2 23.2",
+    "SEER2 23.0",
     "Other..",
   ],
   "Air Source Heat Pump": [
-    "SEER2 13.4",
-    "SEER2 14.3",
-    "SEER2 15.2",
-    "SEER2 16.1",
-    "SEER2 17.0",
-    "SEER2 20.0",
-    "SEER2 23.2",
+    "SEER2 15",
+    "SEER2 16",
+    "SEER2 17",
+    "SEER2 18",
+    "SEER2 19",
     "Other..",
   ],
 };
@@ -114,24 +115,27 @@ export const HEATING_EQUIPMENT = [
   "Air Source Heat Pump",
 ];
 
+// Efficiency values must match the package's Measures/System-*.csv files exactly.
+// Gas Furnace AFUE values come from System-GasFurnace.csv (stored as fractions);
+// Air Source Heat Pump HSPF from System-AirSourceHeatPump.csv; Electric COP = 1.
 export const HEATING_EFF_OPTIONS: Record<string, string[]> = {
   NoHeating: [],
   "Gas Furnace": [
     "AFUE 80%",
-    "AFUE 85%",
     "AFUE 90%",
-    "AFUE 92%",
+    "AFUE 92.5%",
     "AFUE 95%",
+    "AFUE 96%",
     "AFUE 98%",
     "Other..",
   ],
   "Electric Baseboard": ["COP 1.0", "Other.."],
   "Air Source Heat Pump": [
-    "HSPF2 6.7",
-    "HSPF2 7.5",
-    "HSPF2 8.2",
+    "HSPF2 8.8",
+    "HSPF2 8.9",
     "HSPF2 9.0",
-    "HSPF2 10.0",
+    "HSPF2 9.6",
+    "HSPF2 9.8",
     "Other..",
   ],
 };

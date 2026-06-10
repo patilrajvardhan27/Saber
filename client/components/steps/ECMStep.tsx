@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { ECM_MEASURES, ECM_MEASURE_OPTIONS } from "@/data/options";
+import { ECM_MEASURES, ECM_MEASURE_OPTIONS, COOLING_EFF_OPTIONS, HEATING_EFF_OPTIONS } from "@/data/options";
 import type { FormField as FormFieldType } from "@/types/form";
 import { ExportDropdown } from "@/components/ExportDropdown";
 import { API } from "@/utils/api";
@@ -213,7 +213,14 @@ export function ECMSelectionStep() {
             </thead>
             <tbody>
               {ECM_MEASURES.map((measure, i) => {
-                const options = ECM_MEASURE_OPTIONS[measure.key] ?? [];
+                // Cooling/heating efficiency options depend on the building's installed
+                // equipment so the values always match the backend's measure database.
+                let options = ECM_MEASURE_OPTIONS[measure.key] ?? [];
+                if (measure.key === "ecmCoolingEff") {
+                  options = (COOLING_EFF_OPTIONS[state.coolingEqp] ?? []).filter((o) => o !== "Other..");
+                } else if (measure.key === "ecmHeatingEff") {
+                  options = (HEATING_EFF_OPTIONS[state.heatingEqp] ?? []).filter((o) => o !== "Other..");
+                }
                 return (
                   <tr key={measure.key} className={i % 2 === 0 ? "bg-bg-card" : "bg-bg-muted"}>
                     <td className="px-4 py-2 font-medium text-app-text text-xs">{measure.label}</td>

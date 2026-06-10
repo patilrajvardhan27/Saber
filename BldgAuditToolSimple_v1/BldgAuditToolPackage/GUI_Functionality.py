@@ -4,13 +4,15 @@ from .GUI_Code import Ui_MainWindow
 from .GUI_UtilityDataWindowCode import Ui_Form
 from .AnalyzeUtilityData import *
 from .PostProcessing import *
-from .EEMPackageMeasureAnalysisObject import MeasurePackageAnalysis
+from .RunSimulationCase import *
+from .MeasureClass import *
+from .MeasurePackageClass import *
+from .MeasureSort import *
+from .RunSimulationCase import *
 
-from PyQt5.QtWidgets import QMainWindow, QFileDialog,QGraphicsScene, QTableWidgetItem, QGraphicsPixmapItem, QWidget
-from PyQt5.QtGui import QPixmap, QPainter, QTransform
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtCore import pyqtSlot
-import pickle
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QGraphicsScene, QTableWidgetItem, QGraphicsPixmapItem, QWidget, QHBoxLayout, QMessageBox
+from PyQt5.QtGui import QPixmap, QTransform
+from PyQt5.QtCore import Qt, QTimer
 from datetime import datetime
 import numpy as np
 import os 
@@ -24,6 +26,13 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         super().__init__()
         
         self.setupUi(self)
+
+        _legend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'LegendFigs')
+        self.label_35.setPixmap(QPixmap(os.path.join(_legend_dir, 'kWh_Labels.png')))
+        self.label_43.setPixmap(QPixmap(os.path.join(_legend_dir, 'Therm_Labels.png')))
+        self.label_42.setPixmap(QPixmap(os.path.join(_legend_dir, 'EEM_kWhLabels.png')))
+        self.label_44.setPixmap(QPixmap(os.path.join(_legend_dir, 'EEM_ThermLabels.png')))
+
         self.df_input = pd.read_csv("Inputs/BldgPropInputsFileTemplate.csv")
         #%% Preferences
         self.BldgPropInputFile.setEnabled(False)
@@ -31,12 +40,12 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
 
         self.MainPath = os.getcwd()
         self.ProjectName.textChanged.connect(self.SetProjectName)
-        
+        self.NewBldgPropInpFile.toggled.connect(self.SetProjectPath)
         #%% Set Utility Data
         self.OpenUtilDataWindow.setEnabled(False)
         self.UtilDataSourceFile.setEnabled(False)
         self.UtilDataSourceFileTool.setEnabled(False)
-        self.NewBldgPropInpFile.toggled.connect(self.SetProjectPath)
+        
         self.LoadUtilityData.setEnabled(False)
         self.EnterUtilData.toggled.connect(self.SetEnterUtilData)
         self.UseExistingUtilityData.toggled.connect(self.SetUseExistingUtilityData)
@@ -74,9 +83,10 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         self.EEMCostTable.setCellWidget(8,1,self.ECMOccSensorCostOptions)
         self.EEMCostTable.setCellWidget(9,1,self.ECMLEDCostOptions)
         self.EEMCostTable.setCellWidget(10,1,self.ECMReduceEquipmentLoadCostOptions)
-        self.EEMCostTable.setCellWidget(11,1,self.ECMCoolingEffCostOptions)
-        self.EEMCostTable.setCellWidget(13,1,self.ECMHeatingEffCostOptions)
-        self.EEMCostTable.setCellWidget(12,1,self.ECMHeatingEqpCostOptions)
+        self.EEMCostTable.setCellWidget(11,1,self.ECMCoolingEqpCostOptions)
+        self.EEMCostTable.setCellWidget(12,1,self.ECMCoolingEffCostOptions)
+        self.EEMCostTable.setCellWidget(13,1,self.ECMHeatingEqpCostOptions)
+        self.EEMCostTable.setCellWidget(14,1,self.ECMHeatingEffCostOptions)
 
         self.ECMWallInsCostOptions.currentIndexChanged.connect(self.SetECMWallInsCostOptions)
         self.ECMInfilCostOptions.currentIndexChanged.connect(self.SetECMInfiltrationCostOptions)
@@ -90,7 +100,7 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         self.ECMLEDCostOptions.currentIndexChanged.connect(self.SetECMLEDLightingCostOptions)
         self.ECMReduceEquipmentLoadCostOptions.currentIndexChanged.connect(self.SetECMReduceEquipmentLoadCostOptions)
         self.ECMCoolingEffCostOptions.currentIndexChanged.connect(self.SetECMCoolingEffCostOptions)
-        
+        self.ECMCoolingEqpCostOptions.currentIndexChanged.connect(self.SetECMCoolingEqpCostOptions)
         self.ECMHeatingEqpCostOptions.currentIndexChanged.connect(self.SetECMHeatingEqpCostOptions)
         self.ECMHeatingEffCostOptions.currentIndexChanged.connect(self.SetECMHeatingEffCostOptions)
 
@@ -98,42 +108,88 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         self.ResetCostData.clicked.connect(self.SetResetCostData)
     #%% ECM Evaluation
 
+        self.ECMEval.setCellWidget(0,3,self.ECMWallInsulation)
+        self.ECMEval.setCellWidget(1,3,self.ECMInfiltration)
+        self.ECMEval.setCellWidget(2,3,self.ECMCeilingInsulation)
+        self.ECMEval.setCellWidget(3,3,self.ECMWindowMaterial)
+        self.ECMEval.setCellWidget(4,3,self.ECMNightSetback)
+        self.ECMEval.setCellWidget(5,3,self.ECMHoursNightSetback)
+        self.ECMEval.setCellWidget(6,3,self.ECMDaylighting)
+        self.ECMEval.setCellWidget(7,3,self.ECMEconomizer)
+        self.ECMEval.setCellWidget(8,3,self.ECMOccSensor)
+        self.ECMEval.setCellWidget(9,3,self.ECMPctLED)
+        self.ECMEval.setCellWidget(10,3,self.ECMReduceEqpLoad)
+        self.ECMEval.setCellWidget(11,3,self.ECMHeatingEquipment)
+        self.ECMEval.setCellWidget(12,3,self.ECMCoolingEquipment)
+
+        checkboxes = [
+            self.ECMWallInsCheck,
+            self.ECMInfiltrationCheck,
+            self.ECMCeilInsCheck,
+            self.ECMWindowMatCheck,
+            self.ECMNightSetbackCheck,
+            self.ECMHoursNightSetbackCheck,
+            self.ECMDaylightingCheck,
+            self.ECMEconomizerCheck,
+            self.ECMOccSensorCheck,
+            self.ECMPctLEDCheck,
+            self.ECMReduceEqpLoadCheck,
+            self.ECMHeatingEqpCheck,
+            self.ECMCoolingEqpCheck
+        ]
+
+        # Assign each checkbox centered in column 1
+        for i, checkbox in enumerate(checkboxes):
+            container = QWidget()
+            layout = QHBoxLayout(container)
+            layout.addWidget(checkbox)
+            layout.setAlignment(Qt.AlignCenter)
+            layout.setContentsMargins(0, 0, 0, 0)
+            self.ECMEval.setCellWidget(i, 1, container)
         
+        self.ECMWallInsulation.setEnabled(False)
+        self.ECMInfiltration.setEnabled(False)
+        self.ECMCeilingInsulation.setEnabled(False)
+        self.ECMWindowMaterial.setEnabled(False)
+        self.ECMNightSetback.setEnabled(False)
+        self.ECMHoursNightSetback.setEnabled(False)
+        self.ECMDaylighting.setEnabled(False)
+        self.ECMEconomizer.setEnabled(False)
+        self.ECMOccSensor.setEnabled(False)
+        self.ECMPctLED.setEnabled(False)
+        self.ECMReduceEqpLoad.setEnabled(False)
+        self.ECMHeatingEquipment.setEnabled(False)
+        self.ECMCoolingEquipment.setEnabled(False)
 
-        self.ECMEval.setCellWidget(0,2,self.ECMWallInsOptions)
-        self.ECMEval.setCellWidget(1,2,self.ECMInfilOptions)
-        self.ECMEval.setCellWidget(2,2,self.ECMCeilInsOptions)
-        self.ECMEval.setCellWidget(3,2,self.ECMWindowMatOptions)
-        self.ECMEval.setCellWidget(4,2,self.ECMNightSetbackOptions)
-        self.ECMEval.setCellWidget(5,2,self.ECMHoursofNightSetbackOptions)
-        self.ECMEval.setCellWidget(6,2,self.ECMDaylightingOptions)
-        self.ECMEval.setCellWidget(7,2,self.ECMEconOptions)
-        self.ECMEval.setCellWidget(8,2,self.ECMOccSensorOptions)
-        self.ECMEval.setCellWidget(9,2,self.ECMLEDOptions)
-        self.ECMEval.setCellWidget(10,2,self.ECMReduceEquipmentLoadOptions)
-        self.ECMEval.setCellWidget(11,2,self.ECMCoolingEffOptions)
-        self.ECMEval.setCellWidget(12,2,self.ECMHeatingEqpOptions)
-        self.ECMEval.setCellWidget(13,2,self.ECMHeatingEffOptions)
+        self.ECMWallInsCheck.stateChanged.connect(self.SetECMWallInsCheck)
+        self.ECMInfiltrationCheck.stateChanged.connect(self.SetECMInfiltrationCheck)
+        self.ECMCeilInsCheck.stateChanged.connect(self.SetECMCeilInsCheck)
+        self.ECMWindowMatCheck.stateChanged.connect(self.SetECMWindowMatCheck)
+        self.ECMNightSetbackCheck.stateChanged.connect(self.SetECMNightSetbackCheck)
+        self.ECMHoursNightSetbackCheck.stateChanged.connect(self.SetECMHoursNightSetbackCheck)
+        self.ECMDaylightingCheck.stateChanged.connect(self.SetECMDaylightingCheck)
+        self.ECMEconomizerCheck.stateChanged.connect(self.SetECMEconomizerCheck)
+        self.ECMOccSensorCheck.stateChanged.connect(self.SetECMOccSensorCheck)
+        self.ECMPctLEDCheck.stateChanged.connect(self.SetECMPctLEDCheck)
+        self.ECMReduceEqpLoadCheck.stateChanged.connect(self.SetECMReduceEqpLoadCheck)
+        self.ECMHeatingEqpCheck.stateChanged.connect(self.SetECMHeatingEqpCheck)
+        self.ECMCoolingEqpCheck.stateChanged.connect(self.SetECMCoolingEqpCheck)
 
-        self.ECMWallInsOptions.currentTextChanged.connect(self.SetWallInsChange)
-        self.ECMInfilOptions.currentTextChanged.connect(self.SetInfilChange)
-        self.ECMCeilInsOptions.currentTextChanged.connect(self.SetCeilInsChange)
-        self.ECMWindowMatOptions.currentTextChanged.connect(self.SetWindowMatChange)
-        self.ECMNightSetbackOptions.currentTextChanged.connect(self.SetNightSetbackChange)
-        self.ECMHoursofNightSetbackOptions.textChanged.connect(self.SetHoursofNightSetbackChange)
-        self.ECMDaylightingOptions.currentTextChanged.connect(self.SetDaylightingChange)
-        self.ECMEconOptions.currentTextChanged.connect(self.SetEconomizerChange)
-        self.ECMOccSensorOptions.currentTextChanged.connect(self.SetOccupancySensorChange)
-        self.ECMLEDOptions.currentTextChanged.connect(self.SetLEDChange)
-        self.ECMReduceEquipmentLoadOptions.currentTextChanged.connect(self.SetReduceEquipmentLoadChange)
-        self.ECMCoolingEffOptions.currentTextChanged.connect(self.SetCoolingEffChange)
-        self.ECMHeatingEffOptions.currentTextChanged.connect(self.SetHeatingEffChange)
-        self.ECMHeatingEqpOptions.currentTextChanged.connect(self.SetHeatingEqpChange)
+        self.ECMWallInsulation.currentTextChanged.connect(self.SetWallInsChange)
+        self.ECMInfiltration.currentTextChanged.connect(self.SetInfilChange)
+        self.ECMCeilingInsulation.currentTextChanged.connect(self.SetCeilInsChange)
+        self.ECMWindowMaterial.currentTextChanged.connect(self.SetWindowMatChange)
+        self.ECMNightSetback.currentTextChanged.connect(self.SetNightSetbackChange)
+        self.ECMHoursNightSetback.currentTextChanged.connect(self.SetHoursNightSetbackChange)
+        self.ECMDaylighting.currentTextChanged.connect(self.SetDaylightingChange)
+        self.ECMEconomizer.currentTextChanged.connect(self.SetEconomizerChange)
+        self.ECMOccSensor.currentTextChanged.connect(self.SetOccupancySensorChange)
+        self.ECMPctLED.currentTextChanged.connect(self.SetLEDChange)
+        self.ECMReduceEqpLoad.currentTextChanged.connect(self.SetReduceEquipmentLoadChange)
+        self.ECMHeatingEquipment.currentTextChanged.connect(self.SetHeatingEqpChange)
+        self.ECMCoolingEquipment.currentTextChanged.connect(self.SetCoolingEqpChange)
 
-        self.EvaluateIndMeasures.clicked.connect(self.SetEvaluateIndMeasure)
-        self.EvaluateMeasurePackage.clicked.connect(self.SetEvaluateMeasurePackage)
-        self.SaveIndECMResults.clicked.connect(self.SetSaveIndECMResults)       
-        self.SaveECMPackageResults.clicked.connect(self.SetSaveECMPackageResults)
+        self.EvaluateMeasures.clicked.connect(self.SetEvaluateMeasures)
         #%%
         self.SetShowBuildingType()
         self.BuildingType.currentIndexChanged.connect(self.SetShowBuildingType)
@@ -171,50 +227,54 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         self.RunDegreeDayAnalysis.clicked.connect(self.SetRunDegreeDayAnalysis)
     #%%
     def SetRunTempChangePointAnalysis(self):
-        self.SetSetSelections()
+        if not self.SetSetSelections():
+            return
         self.CPT = BuildChangePointModel(self.ProjectPath,self.ProjectName.text(),self.df_input,self.df_weather)
         self.model_type_cooling, self.model_parameters_cooling,  self.model_type_heating, self.model_parameters_heating = self.CPT.BuildTemperatureBasedModel()
         self.sceneHeatingTempCPT = QGraphicsScene(self)
         self.HeatingTempResults.setScene(self.sceneHeatingTempCPT)
-        imagePath = os.path.join(self.ProjectPath,f"Fossil Fuel_{self.model_type_heating}_TempBasedChngPtModel.png")
+        imagePath = os.path.join(self.ProjectPath,"Results",f"Fossil Fuel_{self.model_type_heating}_TempBasedChngPtModel.png")
         self.ShowGUIImage(self.sceneHeatingTempCPT,self.HeatingTempResults,imagePath)
 
         self.sceneCoolingTempCPT = QGraphicsScene(self)
         self.CoolingTempResults.setScene(self.sceneCoolingTempCPT)
-        imagePath = os.path.join(self.ProjectPath,f"Electricity_{self.model_type_cooling}_TempBasedChngPtModel.png")
+        imagePath = os.path.join(self.ProjectPath,"Results",f"Electricity_{self.model_type_cooling}_TempBasedChngPtModel.png")
         self.ShowGUIImage(self.sceneCoolingTempCPT,self.CoolingTempResults,imagePath)
 
     def GetMonthlyEndUseBreakdown(self):
-        ECMEval = False
-        self.BestModelParams = self.CPT.ChooseBestModel(self.DDResults,self.model_parameters_heating,self.model_parameters_cooling)
-        #print(self.BestModelParams)
-        self.df_MonthlyEndUse = GetMonthlyEndUseBreakdown(self.BestModelParams,self.df_weather,self.df_input,ECMEval)
-        # print("End Use", self.df_MonthlyEndUse, "Total", self.df_MonthlyEndUse.loc[:,self.df_MonthlyEndUse.columns.str.contains("EL-")].sum())
-        self.BestModelParams["OrgTotalElectricity"] = self.df_MonthlyEndUse.loc[:,self.df_MonthlyEndUse.columns.str.contains("EL-")].sum().sum()/3.41 # Convert to kWh
-        self.BestModelParams["OrgTotalNaturalGas"] = self.df_MonthlyEndUse.loc[:,self.df_MonthlyEndUse.columns.str.contains("NG-")].sum().sum()/100 # Convert to Therms
-        self.BestModelParams["BLC_Heat_EL"] = self.df_MonthlyEndUse["BLC_Heat_EL"].mean()
-        self.BestModelParams["BLC_Heat_NG"] = self.df_MonthlyEndUse["BLC_Heat_NG"].mean()
+        self.BestModelParams = self.CPT.ChooseBestModel(self.DDResults,self.model_parameters_heating,self.model_parameters_cooling,self.ProjectPath)
 
-        self.BestModelParams["BLC_Cool_EL"] = self.df_MonthlyEndUse["BLC_Cool_EL"].mean()
+        GetMonthlyEndUseBreakdown(self.BestModelParams,self.df_weather,self.df_input,self.ProjectPath)
+
+        self.CostData = pd.read_csv(os.path.join(self.ProjectPath,"CostData","BasicCostData.csv")).iloc[0].to_dict()
+        GetSummaryResults(self.ProjectPath,self.CostData)   
+
+        # print("End Use", self.df_MonthlyEndUse, "Total", self.df_MonthlyEndUse.loc[:,self.df_MonthlyEndUse.columns.str.contains("EL-")].sum())
+        # self.BestModelParams["OrgTotalElectricity"] = self.df_MonthlyEndUse.loc[:,self.df_MonthlyEndUse.columns.str.contains("EL-")].sum().sum()/3.41 # Convert to kWh
+        # self.BestModelParams["OrgTotalNaturalGas"] = self.df_MonthlyEndUse.loc[:,self.df_MonthlyEndUse.columns.str.contains("NG-")].sum().sum()/100 # Convert to Therms
+        # self.BestModelParams["BLC_Heat_EL"] = self.df_MonthlyEndUse["BLC_Heat_EL"].mean()
+        # self.BestModelParams["BLC_Heat_NG"] = self.df_MonthlyEndUse["BLC_Heat_NG"].mean()
+
+        # self.BestModelParams["BLC_Cool_EL"] = self.df_MonthlyEndUse["BLC_Cool_EL"].mean()
         #print(self.BestModelParams)
 
         self.PltRes = PlotResults(True,self.ProjectPath)
-        self.PltRes.PlotEndUseBreakdown(self.df_MonthlyEndUse)
-        self.PltRes.PlotInverseModelComparison(self.df_MonthlyEndUse, self.dfutilDataSorted)
+        self.PltRes.PlotEndUseBreakdown(self.ProjectPath)
+        self.PltRes.PlotInverseModelComparison(self.ProjectPath,self.dfutilDataSorted)
 
         self.sceneEndUseBreakdown = QGraphicsScene(self)
         self.ShowEndUseBreakdown.setScene(self.sceneEndUseBreakdown)
-        imagePath = os.path.join(self.ProjectPath,f"EndUseBreakdown.png")
+        imagePath = os.path.join(self.ProjectPath,"Results",f"EndUseBreakdown.png")
         self.ShowGUIImage(self.sceneEndUseBreakdown,self.ShowEndUseBreakdown,imagePath)
 
         self.scenekWhEndUseBreakdown = QGraphicsScene(self)
         self.kWhModelComparison.setScene(self.scenekWhEndUseBreakdown)
-        imagePath = os.path.join(self.ProjectPath,f"ElectricityMonthlyBreakdown.png")
+        imagePath = os.path.join(self.ProjectPath,"Results",f"ElectricityMonthlyBreakdown.png")
         self.ShowGUIImage(self.scenekWhEndUseBreakdown,self.kWhModelComparison,imagePath)
 
         self.sceneThermEndUseBreakdown = QGraphicsScene(self)
         self.ThermModelComparison.setScene(self.sceneThermEndUseBreakdown)
-        imagePath = os.path.join(self.ProjectPath,f"NaturalGasMonthlyBreakdown.png")
+        imagePath = os.path.join(self.ProjectPath,"Results",f"NaturalGasMonthlyBreakdown.png")
         self.ShowGUIImage(self.sceneThermEndUseBreakdown,self.ThermModelComparison,imagePath)
 
 
@@ -230,17 +290,28 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
 
         self.sceneHeatingDDCPT = QGraphicsScene(self)
         self.HeatingDDResults.setScene(self.sceneHeatingDDCPT)
-        imagePath = os.path.join(self.ProjectPath,f"FossilFuel_Heating_DDBasedChngPtModel.png")
+        imagePath = os.path.join(self.ProjectPath,"Results",f"FossilFuel_Heating_DDBasedChngPtModel.png")
         self.ShowGUIImage(self.sceneHeatingDDCPT,self.HeatingDDResults,imagePath)
         
         self.sceneCoolingDDCPT = QGraphicsScene(self)
         self.CoolingDDResults.setScene(self.sceneCoolingDDCPT)
-        imagePath = os.path.join(self.ProjectPath,f"Electricity_Cooling_DDBasedChngPtModel.png")
+        imagePath = os.path.join(self.ProjectPath,"Results",f"Electricity_Cooling_DDBasedChngPtModel.png")
         self.ShowGUIImage(self.sceneCoolingDDCPT,self.CoolingDDResults,imagePath)
 
         self.GetMonthlyEndUseBreakdown()
 
     def SetGetWeatherData(self):
+        ok, _ = self._validate_required_text(self.ProjectName.text(), "Project Name")
+        if not ok:
+            QMessageBox.warning(self, "Input Required", "Please enter a Project Name before fetching weather data.")
+            return
+        ok, _ = self._validate_required_text(self.Location.text(), "Location")
+        if not ok:
+            QMessageBox.warning(self, "Input Required", "Please enter a Location before fetching weather data.")
+            return
+        if not os.path.exists(self.ProjectPath):
+            QMessageBox.warning(self, "Project Path", "Project path does not exist. Please set building properties first.")
+            return
         if any(f.startswith("WeatherData") and f.endswith(".csv") for f in os.listdir(self.ProjectPath)):
             self.df_weather = pd.read_csv(os.path.join(self.ProjectPath,[f for f in os.listdir(self.ProjectPath) if f.startswith("WeatherData") and f.endswith(".csv")][0]))
             self.df_weather = self.df_weather.set_index("Datetime")
@@ -253,7 +324,7 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         PltRes.PlotWeather(self.df_weather,weather_station_name)
         self.sceneWeather = QGraphicsScene(self)
         self.ShowWeatherData.setScene(self.sceneWeather)
-        imagePath = os.path.join(self.ProjectPath,f"WeatherPlot_{weather_station_name}.png")
+        imagePath = os.path.join(self.ProjectPath,"Results",f"WeatherPlot_{weather_station_name}.png")
         self.ShowGUIImage(self.sceneWeather,self.ShowWeatherData,imagePath)
 
 #%%
@@ -276,17 +347,21 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         image = os.path.join("Inputs/ShapeFigures/",self.ShapeType.currentItem().text())
         
         pixmap = QPixmap(image)
-        view_width = self.ShowShape.width()
-        view_height = self.ShowShape.height()
+        # view_width = self.ShowShape.width()
+        # view_height = self.ShowShape.height()
 
-        # Scale the pixmap to fit the view's size while maintaining its aspect ratio
-        scaled_pixmap = pixmap.scaled(view_width, view_height, aspectRatioMode=True, transformMode=Qt.SmoothTransformation)
+        # # Scale the pixmap to fit the view's size while maintaining its aspect ratio
+        # scaled_pixmap = pixmap.scaled(view_width, view_height, aspectRatioMode=True, transformMode=Qt.SmoothTransformation)
         self.sceneOrientation.clear()
 
-        pixmapItem = QGraphicsPixmapItem(scaled_pixmap)
+        pixmapItem = QGraphicsPixmapItem(pixmap)
         self.sceneOrientation.addItem(pixmapItem)
 
-        self.sceneOrientation.setSceneRect(pixmapItem.boundingRect())
+        newBorder = pixmapItem.mapToScene(pixmapItem.boundingRect()).boundingRect()
+        self.sceneOrientation.setSceneRect(newBorder)
+
+        
+
         border = pixmapItem.boundingRect()
 
         centerX = border.width() / 2
@@ -302,10 +377,13 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         self.sceneOrientation.setSceneRect(rotatedBorder)
 
         # Set the scene to the QGraphicsView
-        self.ShowShape.setScene(self.sceneOrientation)
+        # self.ShowShape.setScene(self.sceneOrientation)
+        QTimer.singleShot(0, lambda: self.ShowShape.fitInView(self.sceneOrientation.sceneRect(), mode=1))
+        # self.ShowShape.fitInView(self.sceneOrientation.sceneRect(),mode=1)
         self.ShowShape.centerOn(self.sceneOrientation.sceneRect().center())
-        self.ShowShape.setRenderHint(QPainter.Antialiasing, True)
-        self.ShowShape.setRenderHint(QPainter.SmoothPixmapTransform, True)
+        # self.ShowShape.setRenderHint(QPainter.Antialiasing, True)
+        # self.ShowShape.setRenderHint(QPainter.SmoothPixmapTransform, True)
+
 
     def SetShowExtWall(self):
         self.sceneExtWall = QGraphicsScene(self)
@@ -360,20 +438,26 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         view_width = view.width()
         view_height = view.height()
 
-        # Scale the pixmap to fit the view's size while maintaining its aspect ratio
-        scaled_pixmap = pixmap.scaled(view_width, view_height, aspectRatioMode=True, transformMode=Qt.SmoothTransformation)
         scene.clear()
+        # Scale the pixmap to fit the view's size while maintaining its aspect ratio
+        # scaled_pixmap = pixmap.scaled(view_width, view_height, aspectRatioMode=True, transformMode=Qt.SmoothTransformation)
+        # view_size = self.ThermResults.viewport().size()
+        # pixmap1 = pixmap.scaled(view_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
-        pixmapItem = QGraphicsPixmapItem(scaled_pixmap)
+        pixmapItem = QGraphicsPixmapItem(pixmap)
+        pixmapItem.setTransformationMode(Qt.SmoothTransformation)
         scene.addItem(pixmapItem)
 
-        scene.setSceneRect(pixmapItem.boundingRect())
+        newBorder = pixmapItem.mapToScene(pixmapItem.boundingRect()).boundingRect()
+        scene.setSceneRect(newBorder)
 
         # Set the scene to the QGraphicsView
-        view.setScene(scene)
+
+        QTimer.singleShot(0, lambda: view.fitInView(scene.sceneRect(), mode=1))
+
+        # view.fitInView(scene.sceneRect(),Qt.KeepAspectRatio)#,mode=1)
+        # view.setScene(scene)
         view.centerOn(scene.sceneRect().center())
-        view.setRenderHint(QPainter.Antialiasing, True)
-        view.setRenderHint(QPainter.SmoothPixmapTransform, True)
 #%%
     def SetPathToFile(self, line_edit):
         """
@@ -410,11 +494,18 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
     
             
     def SetLoadData(self):
+        path = self.BldgPropInputFile.text().strip()
+        if not path:
+            QMessageBox.warning(self, "Input Required", "Please specify a building properties input file path.")
+            return
+        if not os.path.isfile(path):
+            QMessageBox.warning(self, "File Not Found", f"The file was not found:\n{path}")
+            return
         try:
-            self.df_input = pd.read_pickle(self.BldgPropInputFile.text())
-            
-        except:
-            print("Please enter a valid properties input file.")
+            self.df_input = pd.read_pickle(path)
+        except Exception as e:
+            QMessageBox.critical(self, "Load Error", f"Could not load the properties file:\n{str(e)}")
+            return
         self.BuildingType.setCurrentText(self.df_input.loc[self.df_input.PropKey=="BuildingType","PropValue"].item())
         self.SetShowBuildingType()
         self.Location.setText(self.df_input.loc[self.df_input.PropKey=="Location","PropValue"].item())
@@ -485,17 +576,11 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         self.DHWSystemType.setCurrentText(self.df_input.loc[self.df_input.PropKey=="DHWSystemType","PropValue"].item()) 
         self.DHWTankVol.setText(self.df_input.loc[self.df_input.PropKey=="DHWTankVol","PropValue"].astype(str).item())
         
-        self.CookingFuelType.setCurrentText(self.df_input.loc[self.df_input.PropKey=="CookingFuelType","PropValue"].item())
-        self.CookingRating.setText(self.df_input.loc[self.df_input.PropKey=="CookingRangeRating","PropValue"].astype(str).item())
-        self.DishWasherRating.setText(self.df_input.loc[self.df_input.PropKey=="DishwasherRating","PropValue"].astype(str).item())
-        self.FridgeRating.setText(self.df_input.loc[self.df_input.PropKey=="FridgeRating","PropValue"].astype(str).item())
-        self.WasherRating.setText(self.df_input.loc[self.df_input.PropKey=="WasherRating","PropValue"].astype(str).item())
-        self.DryerRating.setText(self.df_input.loc[self.df_input.PropKey=="DryerRating","PropValue"].astype(str).item())
-        self.TVRating.setText(self.df_input.loc[self.df_input.PropKey=="MiscTVRating","PropValue"].astype(str).item())
-        self.OfficeEqpRating.setText(self.df_input.loc[self.df_input.PropKey=="OfficeEqpRating","PropValue"].astype(str).item())
-        self.MiscPlugLoadRating.setText(self.df_input.loc[self.df_input.PropKey=="MiscPlugLoadRating","PropValue"].astype(str).item())
+        gpd_raw = self.df_input.loc[self.df_input.PropKey=="GPD","PropValue"].astype(str).item()
+        self.GPD.setText("" if gpd_raw in ("nan", "") else gpd_raw)
         self.LPD.setText(self.df_input.loc[self.df_input.PropKey=="LPD","PropValue"].astype(str).item())
-        self.nHoursLighting.setText(self.df_input.loc[self.df_input.PropKey=="nHoursLighting","PropValue"].astype(str).item())
+        epd_raw = self.df_input.loc[self.df_input.PropKey=="EPD","PropValue"].astype(str).item()
+        self.EPD.setText("" if epd_raw in ("nan", "") else epd_raw)
         self.Daylighting.setCurrentText(self.df_input.loc[self.df_input.PropKey=="Daylighting","PropValue"].astype(str).item())
         if self.df_input.loc[self.df_input.PropKey=="LEDECM","PropValue"].astype(float).item() < self.df_input.loc[self.df_input.PropKey=="LEDCurrent","PropValue"].astype(float).item():
             self.LED.setCurrentText(self.df_input.loc[self.df_input.PropKey=="LEDCurrent","PropValue"].astype(str).item())
@@ -511,8 +596,143 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
             if item.text() == matchstring:
                 listwidget.setCurrentItem(item)
                 break
+
+    def _validate_numeric(self, text, field_name, allow_empty=False, allow_zero=True, min_val=None, max_val=None):
+        """Validate numeric input. Returns (success: bool, value or error_message)."""
+        text = str(text).strip() if text is not None else ""
+        if not text:
+            if allow_empty:
+                return True, None
+            return False, f"'{field_name}' cannot be blank."
+        try:
+            value = float(text)
+        except ValueError:
+            return False, f"'{field_name}' must be a valid number (got '{text}')."
+        if not allow_zero and value == 0:
+            return False, f"'{field_name}' cannot be zero."
+        if min_val is not None and value < min_val:
+            return False, f"'{field_name}' must be at least {min_val}."
+        if max_val is not None and value > max_val:
+            return False, f"'{field_name}' must be at most {max_val}."
+        return True, value
+
+    def _validate_required_text(self, text, field_name):
+        """Validate required non-empty text. Returns (success: bool, value or error_message)."""
+        text = str(text).strip() if text is not None else ""
+        if not text:
+            return False, f"'{field_name}' cannot be blank."
+        return True, text
+
+    def _get_table_cell_text(self, table, row, col, field_name):
+        """Safely get table cell text. Returns (success, text or error_msg)."""
+        item = table.item(row, col)
+        if item is None:
+            return False, f"Cost data for '{field_name}' (row {row}) is empty."
+        text = item.text().strip() if item.text() else ""
+        if not text:
+            return False, f"Cost data for '{field_name}' (row {row}) cannot be blank."
+        try:
+            float(text)  # Must be numeric
+        except ValueError:
+            return False, f"Cost data for '{field_name}' (row {row}) must be a valid number."
+        return True, text
     
     def SetSetSelections(self):
+        errors = []
+
+        # Project name and location
+        ok, _ = self._validate_required_text(self.ProjectName.text(), "Project Name")
+        if not ok:
+            errors.append(_)
+        ok, _ = self._validate_required_text(self.Location.text(), "Location")
+        if not ok:
+            errors.append(_)
+
+        # Orientation and Shape must be selected
+        if self.Orientation.currentItem() is None:
+            errors.append("'Orientation' must be selected.")
+        if self.ShapeType.currentItem() is None:
+            errors.append("'Shape Type' must be selected.")
+        if self.WindowMaterial.currentItem() is None:
+            errors.append("'Window Material' must be selected.")
+
+        # Numeric geometry fields (x1, y1 must be > 0 for division)
+        for widget, name, allow_zero in [
+            (self.FloorArea, "Floor Area", False),
+            (self.FlrQty, "Floor Quantity", False),
+            (self.WallHt, "Wall Height", False),
+            (self.x1, "x1 (Shape dimension)", False),
+            (self.x2, "x2 (Shape dimension)", True),
+            (self.y1, "y1 (Shape dimension)", False),
+            (self.y2, "y2 (Shape dimension)", True),
+        ]:
+            ok, _ = self._validate_numeric(widget.text(), name, allow_zero=allow_zero)
+            if not ok:
+                errors.append(_)
+
+        # WWR, Overhang, Window dimensions
+        for widget, name in [
+            (self.WWR_Front, "WWR Front"), (self.WWR_Left, "WWR Left"),
+            (self.WWR_Back, "WWR Back"), (self.WWR_Right, "WWR Right"),
+            (self.Overhang, "Overhang"), (self.WindowHt, "Window Height"),
+            (self.nWindow, "Number of Windows"),
+        ]:
+            ok, _ = self._validate_numeric(widget.text(), name, allow_empty=False, min_val=0)
+            if not ok:
+                errors.append(_)
+
+        # HVAC and controls
+        for widget, name in [
+            (self.Tsph, "Heating setpoint"), (self.Tspc, "Cooling setpoint"),
+            (self.DHWTankVol, "DHW Tank Volume"),
+        ]:
+            ok, _ = self._validate_numeric(widget.text(), name)
+            if not ok:
+                errors.append(_)
+        ok, _ = self._validate_numeric(self.NightSetback.currentText(), "Night setback")
+        if not ok:
+            errors.append(_)
+        ok, _ = self._validate_numeric(self.nNightSetbackHours.text(), "Night setback hours")
+        if not ok:
+            errors.append(_)
+
+        # Lighting
+        for widget, name in [
+            (self.LPD, "Lighting Power Density"),
+        ]:
+            ok, _ = self._validate_numeric(widget.text(), name, min_val=0)
+            if not ok:
+                errors.append(_)
+        ok, _ = self._validate_numeric(self.LED.currentText(), "LED percentage", min_val=0)
+        if not ok:
+            errors.append(_)
+        if self.EPD.text().strip():
+            ok, _ = self._validate_numeric(self.EPD.text(), "Equipment Power Density", min_val=0)
+            if not ok:
+                errors.append(_)
+        if self.GPD.text().strip():
+            ok, _ = self._validate_numeric(self.GPD.text(), "Gas Power Density", min_val=0)
+            if not ok:
+                errors.append(_)
+
+        # Custom efficiency when "Other.." selected
+        if self.CoolingEff.currentText() == "Other..":
+            ok, _ = self._validate_numeric(self.CoolingEffCustom.text(), "Cooling efficiency (custom)", allow_zero=False)
+            if not ok:
+                errors.append(_)
+        if self.HeatingEff.currentText() == "Other..":
+            ok, _ = self._validate_numeric(self.HeatingEffCustom.text(), "Heating efficiency (custom)", allow_zero=False)
+            if not ok:
+                errors.append(_)
+
+        if errors:
+            QMessageBox.critical(
+                self,
+                "Input Validation Error",
+                "Please correct the following:\n\n• " + "\n• ".join(errors)
+            )
+            return False
+
         self.df_input = pd.read_csv("Inputs/BldgPropInputsFileTemplate.csv")
         self.SetProjectPath()
         self.SetResultFolder()
@@ -572,29 +792,23 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         self.SetDHWSystemType(self.DHWSystemType.currentText())
         self.SetDHWTankVol(self.DHWTankVol.text())
         
-        self.SetCookingFuelType(self.CookingFuelType.currentText())
-        self.SetCookingRating(self.CookingRating.text())
-        self.SetFridgeRating(self.FridgeRating.text())
-        self.SetDishWasherRating(self.DishWasherRating.text())
-        self.SetWasherRating(self.WasherRating.text())
-        self.SetDryerRating(self.DryerRating.text())
-        self.SetTVRating(self.TVRating.text())
-        self.SetOfficeEqpRating(self.OfficeEqpRating.text())
-        self.SetMiscPlugLoadRating(self.MiscPlugLoadRating.text())
+        self.SetGPD(self.GPD.text())
         self.SetLPD(self.LPD.text())
-        self.SetLightingHours(self.nHoursLighting.text())
         self.SetDaylighting(self.Daylighting.currentText())
         self.SetLEDCurrent(self.LED.currentText())
+        self.SetEPD(self.EPD.text())
         #no user input for Reduce Equipment Load only change is in EEMs
 
         self.df_input.to_pickle(os.path.join(self.ProjectPath,"BldgPropInputsFile.pkl"))
         ## Construct the required IDF file and save in Current Directory
+        return True
 
         
     
     def SetOriginalBldgPropFile(self):
-        self.SetSetSelections()
-        self.CopyCostData()
+        if not self.SetSetSelections():
+            return
+        self.LoadCostData()
         self.df_input.to_pickle(os.path.join(self.ProjectPath,"BldgPropInputFile-Baseline.pkl"))
 
     def SetUseExistingUtilityData(self,checked):
@@ -603,14 +817,34 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         self.LoadUtilityData.setEnabled(checked)
 
     def SetOpenUtilityDataWindow(self):
-        self.UtilityDataWindow = UtilityDataWindow(self.ProjectPath,self.ProjectName.text())
+        ok, _ = self._validate_required_text(self.ProjectName.text(), "Project Name")
+        if not ok:
+            QMessageBox.warning(self, "Input Required", "Please enter a Project Name before opening the utility data window.")
+            return
+        self.UtilityDataWindow = UtilityDataWindow(self.ProjectPath, self.ProjectName.text())
         self.UtilityDataWindow.show()
 
     def SetLoadUtilityData(self):
-        self.UtilityDataWindow = UtilityDataWindow(self.ProjectPath,self.ProjectName.text())
+        ok, _ = self._validate_required_text(self.ProjectName.text(), "Project Name")
+        if not ok:
+            QMessageBox.warning(self, "Input Required", "Please enter a Project Name before loading utility data.")
+            return
+        path = self.UtilDataSourceFile.text().strip()
+        if not path:
+            QMessageBox.warning(self, "Input Required", "Please specify a utility data source file path.")
+            return
+        if not os.path.isfile(path):
+            QMessageBox.warning(self, "File Not Found", f"The file was not found:\n{path}")
+            return
+        try:
+            dfutildata = pd.read_csv(path, index_col=0)
+            if "BillDays" in dfutildata.columns:
+                dfutildata = dfutildata.drop(columns={"BillDays"})
+        except Exception as e:
+            QMessageBox.critical(self, "Load Error", f"Could not load the utility data file:\n{str(e)}")
+            return
+        self.UtilityDataWindow = UtilityDataWindow(self.ProjectPath, self.ProjectName.text())
         self.UtilityDataWindow.show()
-        dfutildata = pd.read_csv(self.UtilDataSourceFile.text(),index_col=0)
-        dfutildata = dfutildata.drop(columns={"BillDays"})
         for row in range(len(dfutildata)):
             for col in range(len(dfutildata.columns)):
                 self.UtilityDataWindow.UtilityDataTable.setItem(row, col, QTableWidgetItem(str(dfutildata.iat[row, col])))
@@ -641,9 +875,10 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         
     def SetProjectPath(self):
         os.makedirs(self.ProjectPath,exist_ok=True)
-        
         self.SetResultFolder()
-        self.CopyCostData()
+        if not os.path.exists(os.path.join(self.ProjectPath,"CostData")):
+            self.CopyCostData()
+        self.LoadCostData()
 
     def SetLocation(self,text):
         self.df_input.loc[self.df_input.PropKey=="Location","PropValue"] = text
@@ -851,38 +1086,16 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
     def SetDHWTankVol(self,text):
         self.df_input.loc[self.df_input.PropKey=="DHWTankVol","PropValue"] = float(text)
     
-    def SetCookingFuelType(self,text):
-        self.df_input.loc[self.df_input.PropKey=="CookingFuelType","PropValue"] = text
-    
-    def SetCookingRating(self,text):
-        self.df_input.loc[self.df_input.PropKey=="CookingRangeRating","PropValue"] = float(text)
-    
-    def SetFridgeRating(self,text):
-        self.df_input.loc[self.df_input.PropKey=="FridgeRating","PropValue"] = float(text)
-    
-    def SetDishWasherRating(self,text):
-        self.df_input.loc[self.df_input.PropKey=="DishwasherRating","PropValue"] = float(text)
-    
-    def SetWasherRating(self,text):
-        self.df_input.loc[self.df_input.PropKey=="WasherRating","PropValue"] = float(text)
-    
-    def SetDryerRating(self,text):
-        self.df_input.loc[self.df_input.PropKey=="DryerRating","PropValue"] = float(text)
-    
-    def SetTVRating(self,text):
-        self.df_input.loc[self.df_input.PropKey=="MiscTVRating","PropValue"] = float(text)
-    
-    def SetOfficeEqpRating(self,text):
-        self.df_input.loc[self.df_input.PropKey=="OfficeEqpRating","PropValue"] = float(text)
-    
-    def SetMiscPlugLoadRating(self,text):
-        self.df_input.loc[self.df_input.PropKey=="MiscPlugLoadRating","PropValue"] = float(text)
+    def SetGPD(self, text):
+        text = text.strip()
+        self.df_input.loc[self.df_input.PropKey=="GPD","PropValue"] = float(text) if text else None
     
     def SetLPD(self,text):
         self.df_input.loc[self.df_input.PropKey=="LPD","PropValue"] = float(text)
-    
-    def SetLightingHours(self,text):
-        self.df_input.loc[self.df_input.PropKey=="nHoursLighting","PropValue"] = float(text)
+
+    def SetEPD(self, text):
+        text = text.strip()
+        self.df_input.loc[self.df_input.PropKey=="EPD","PropValue"] = float(text) if text else None
 
     def SetDaylighting(self,text):
         self.df_input.loc[self.df_input.PropKey=="Daylighting","PropValue"] = text    
@@ -905,23 +1118,43 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         for file in os.listdir(os.path.join(self.MainPath,"Measures")):
             if file.endswith(".csv"):
                 shutil.copy(os.path.join(self.MainPath,"Measures",file),os.path.join(self.ProjectPath, "CostData",file))
-        
+        self.LoadCostData()
+
+    def LoadCostData(self):
+        self.SetBasicCostData()
         self.SetECMWallInsCostOptions()
         self.SetECMInfiltrationCostOptions()
         self.SetECMCeilingInsCostOptions()
         self.SetECMWindowMatCostOptions()
         self.SetECMNightSetbackCostOptions()
         self.SetECMHoursofNightSetbackCostOptions()
-        self.SetECMDaylightingCostOptions()
-        self.SetECMEconomizerCostOptions()
-        self.SetECMOccSensorCostOptions()
+        if self.ECMDaylightingCostOptions.currentText() == "Yes":
+            self.SetECMDaylightingCostOptions()
+        
+        if self.ECMEconCostOptions.currentText() == "Yes":
+            self.SetECMEconomizerCostOptions()
+
+        if self.ECMOccSensorCostOptions.currentText() == "Yes":
+            self.SetECMOccSensorCostOptions()
+
         self.SetECMLEDLightingCostOptions()
         self.SetECMReduceEquipmentLoadCostOptions()
         # First add items and set default values 
+        self.SetECMCoolingEqpCostOptions()
         self.SetECMCoolingEffCostOptions()
         
         self.SetECMHeatingEqpCostOptions()
         self.SetECMHeatingEffCostOptions()
+
+    def SetBasicCostData(self):
+        self.CostData = pd.read_csv(os.path.join(self.ProjectPath, "CostData","BasicCostData.csv")).iloc[0].to_dict()
+        self.kWhCost.setText(str(self.CostData["kWhRate"]))
+        self.ThermCost.setText(str(self.CostData["ThermRate"]))
+        self.DiscountRate.setText(str(self.CostData["DiscountRate"]))
+        self.Lifetime.setText(str(self.CostData["Lifetime"]))
+
+        pd.DataFrame([self.CostData]).to_csv(os.path.join(self.ProjectPath,"CostData","BasicCostData.csv"),index=False)
+
 
     def SetECMWallInsCostOptions(self):
         self.WallInsCostOptions = pd.read_csv(os.path.join(self.ProjectPath, "CostData","Materials-WallInsulation.csv"))
@@ -966,24 +1199,24 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
 
     def SetECMDaylightingCostOptions(self):
         self.DaylightingCostOptions = pd.read_csv(os.path.join(self.ProjectPath, "CostData","Equipment-Daylighting.csv"))
-        DaylightingFC = self.DaylightingCostOptions.loc[self.DaylightingCostOptions["Daylighting"] == self.ECMDaylightingCostOptions.currentText()]["FixedCost"].astype(str).item()
-        DaylightingVC = self.DaylightingCostOptions.loc[self.DaylightingCostOptions["Daylighting"] == self.ECMDaylightingCostOptions.currentText()]["Costpersft"].astype(str).item()
+        DaylightingFC = self.DaylightingCostOptions.loc[self.DaylightingCostOptions["Daylighting"].astype(str) == self.ECMDaylightingCostOptions.currentText()]["FixedCost"].astype(str).item()
+        DaylightingVC = self.DaylightingCostOptions.loc[self.DaylightingCostOptions["Daylighting"].astype(str) == self.ECMDaylightingCostOptions.currentText()]["Costpersft"].astype(str).item()
 
         self.EEMCostTable.setItem(6,2,QTableWidgetItem(DaylightingFC))
         self.EEMCostTable.setItem(6,3,QTableWidgetItem(DaylightingVC))
 
     def SetECMEconomizerCostOptions(self):
         self.EconomizerCostOptions = pd.read_csv(os.path.join(self.ProjectPath, "CostData","System-Economizer.csv"))
-        EconomizerFC = self.EconomizerCostOptions.loc[self.EconomizerCostOptions["Economizer"] == self.ECMEconCostOptions.currentText()]["FixedCost"].astype(str).item()
-        EconomizerVC = self.EconomizerCostOptions.loc[self.EconomizerCostOptions["Economizer"] == self.ECMEconCostOptions.currentText()]["Costpersft"].astype(str).item()
+        EconomizerFC = self.EconomizerCostOptions.loc[self.EconomizerCostOptions["Economizer"].astype(str) == self.ECMEconCostOptions.currentText()]["FixedCost"].astype(str).item()
+        EconomizerVC = self.EconomizerCostOptions.loc[self.EconomizerCostOptions["Economizer"].astype(str) == self.ECMEconCostOptions.currentText()]["Costpersft"].astype(str).item()
 
         self.EEMCostTable.setItem(7,2,QTableWidgetItem(EconomizerFC))
         self.EEMCostTable.setItem(7,3,QTableWidgetItem(EconomizerVC))
     
     def SetECMOccSensorCostOptions(self):
         self.OccupancySensorCostOptions = pd.read_csv(os.path.join(self.ProjectPath, "CostData","Equipment-OccupancySensor.csv"))
-        OccupancySensorFC = self.OccupancySensorCostOptions.loc[self.OccupancySensorCostOptions["OccupancySensor"] == self.ECMOccSensorCostOptions.currentText()]["FixedCost"].astype(str).item()
-        OccupancySensorVC = self.OccupancySensorCostOptions.loc[self.OccupancySensorCostOptions["OccupancySensor"] == self.ECMOccSensorCostOptions.currentText()]["Costpersft"].astype(str).item()
+        OccupancySensorFC = self.OccupancySensorCostOptions.loc[self.OccupancySensorCostOptions["OccupancySensor"].astype(str) == self.ECMOccSensorCostOptions.currentText()]["FixedCost"].astype(str).item()
+        OccupancySensorVC = self.OccupancySensorCostOptions.loc[self.OccupancySensorCostOptions["OccupancySensor"].astype(str) == self.ECMOccSensorCostOptions.currentText()]["Costpersft"].astype(str).item()
 
         self.EEMCostTable.setItem(8,2,QTableWidgetItem(OccupancySensorFC))
         self.EEMCostTable.setItem(8,3,QTableWidgetItem(OccupancySensorVC))
@@ -1003,26 +1236,17 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
     def SetECMCoolingEffCostOptions(self):
         if "No" not in self.CoolingEqp.currentText():
             # print(self.Cool◙ingEqp.currentText())
-            self.CoolingEffCostOptions = pd.read_csv(os.path.join(self.ProjectPath, "CostData","System-"+self.CoolingEqp.currentText().replace(" ","")+".csv"))
+            # self.CoolingEffCostOptions = pd.read_csv(os.path.join(self.ProjectPath, "CostData","System-"+self.CoolingEqp.currentText().replace(" ","")+".csv"))
             # print(self.CoolingEffCostOptions)
             # print(self.CoolingEffCostOptions["SEER"].astype(str).tolist())
-            self.ECMCoolingEffCostOptions.addItems(self.CoolingEffCostOptions["SEER"].astype(str).tolist())
+            # self.ECMCoolingEffCostOptions.addItems(self.CoolingEffCostOptions["SEER"].astype(str).tolist())
             
             # print(self.ECMCoolingEffCostOptions.currentText())
-            CoolingEffFC = self.CoolingEffCostOptions.loc[self.CoolingEffCostOptions["SEER"].astype(float) == float(self.ECMCoolingEffCostOptions.currentText())]["Costperunit"].astype(str).item()
-            CoolingEffVC = self.CoolingEffCostOptions.loc[self.CoolingEffCostOptions["SEER"].astype(float) == float(self.ECMCoolingEffCostOptions.currentText())]["CostperkBtuh"].astype(str).item()
+            CoolingEffFC = self.CoolingEqpOptionsTable.loc[self.CoolingEqpOptionsTable["SEER"].astype(float) == float(self.ECMCoolingEffCostOptions.currentText()),"Costperunit"].astype(str).item()
+            CoolingEffVC = self.CoolingEqpOptionsTable.loc[self.CoolingEqpOptionsTable["SEER"].astype(float) == float(self.ECMCoolingEffCostOptions.currentText()),"CostperkBtuh"].astype(str).item()
 
-            self.EEMCostTable.setItem(11,2,QTableWidgetItem(CoolingEffFC))
-            self.EEMCostTable.setItem(11,3,QTableWidgetItem(CoolingEffVC))
-        else:
-            self.CoolingEffCostOptions = pd.read_csv(os.path.join(self.ProjectPath, "CostData","System-"+self.CoolingEqp.currentText().replace(" ","")+".csv"))
-            self.ECMCoolingEffCostOptions.addItems(self.CoolingEffCostOptions["SEER"].astype(str).tolist())
-
-            CoolingEffFC = self.CoolingEffCostOptions.loc[self.CoolingEffCostOptions["SEER"].astype(float) == float(self.ECMCoolingEffCostOptions.currentText())]["Costperunit"].astype(str).item()
-            CoolingEffVC = self.CoolingEffCostOptions.loc[self.CoolingEffCostOptions["SEER"].astype(float) == float(self.ECMCoolingEffCostOptions.currentText())]["CostperkBtuh"].astype(str).item()
-
-            self.EEMCostTable.setItem(11,2,QTableWidgetItem(CoolingEffFC))
-            self.EEMCostTable.setItem(11,3,QTableWidgetItem(CoolingEffVC)) 
+            self.EEMCostTable.setItem(12,2,QTableWidgetItem(CoolingEffFC))
+            self.EEMCostTable.setItem(12,3,QTableWidgetItem(CoolingEffVC))
 
     def SetECMHeatingEffCostOptions(self):
         if "No" not in self.HeatingEqp.currentText():
@@ -1031,9 +1255,18 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
             HeatingEffFC = self.HeatingEqpOptionsTable.loc[self.HeatingEqpOptionsTable["HeatingEff"].astype(float) == float(self.ECMHeatingEffCostOptions.currentText())]["Costperunit"].astype(str).item()
             HeatingEffVC = self.HeatingEqpOptionsTable.loc[self.HeatingEqpOptionsTable["HeatingEff"].astype(float) == float(self.ECMHeatingEffCostOptions.currentText())]["CostperkBtuh"].astype(str).item()
 
-            self.EEMCostTable.setItem(13,2,QTableWidgetItem(HeatingEffFC))
-            self.EEMCostTable.setItem(13,3,QTableWidgetItem(HeatingEffVC))
+            self.EEMCostTable.setItem(14,2,QTableWidgetItem(HeatingEffFC))
+            self.EEMCostTable.setItem(14,3,QTableWidgetItem(HeatingEffVC))
     
+    def SetECMCoolingEqpCostOptions(self):
+        self.GetCoolingSystemOptions(self.ECMCoolingEqpCostOptions.currentText().replace(" ",""))
+        # 
+        self.ECMCoolingEffCostOptions.blockSignals(True)
+        self.ECMCoolingEffCostOptions.clear()
+        self.ECMCoolingEffCostOptions.addItems(self.CoolingEqpOptionsTable["SEER"].astype(str).tolist())
+        self.SetECMCoolingEffCostOptions()
+        self.ECMCoolingEffCostOptions.blockSignals(False)
+
     def SetECMHeatingEqpCostOptions(self):
         self.GetHeatingSystemOptions(self.ECMHeatingEqpCostOptions.currentText().replace(" ",""))
         # 
@@ -1045,6 +1278,41 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
 
         
     def SetSetCostData(self):
+        errors = []
+        for widget, name in [
+            (self.kWhCost, "Electricity rate (kWh)"),
+            (self.ThermCost, "Natural gas rate (Therm)"),
+            (self.DiscountRate, "Discount rate"),
+            (self.Lifetime, "Lifetime"),
+        ]:
+            ok, _ = self._validate_numeric(widget.text(), name, allow_zero=False)
+            if not ok:
+                errors.append(_)
+
+        cost_table_fields = [
+            (0, "Wall insulation"), (1, "Infiltration"), (2, "Ceiling insulation"),
+            (3, "Window material"), (9, "LED"), (12, "Cooling efficiency"),
+            (14, "Heating efficiency"),
+        ]
+        if self.ECMDaylightingCostOptions.currentText() == "Yes":
+            cost_table_fields.append((6, "Daylighting"))
+        if self.ECMEconCostOptions.currentText() == "Yes":
+            cost_table_fields.append((7, "Economizer"))
+        if self.ECMOccSensorCostOptions.currentText() == "Yes":
+            cost_table_fields.append((8, "Occupancy sensor"))
+        for row, name in cost_table_fields:
+            ok, _ = self._get_table_cell_text(self.EEMCostTable, row, 2, name + " fixed cost")
+            if not ok:
+                errors.append(_)
+            else:
+                ok, _ = self._get_table_cell_text(self.EEMCostTable, row, 3, name + " variable cost")
+                if not ok:
+                    errors.append(_)
+
+        if errors:
+            QMessageBox.critical(self, "Cost Data Validation Error", "Please correct the following:\n\n• " + "\n• ".join(errors))
+            return
+
         self.CostData = {}
         self.CostData["kWhRate"] = float(self.kWhCost.text())
         self.CostData["ThermRate"] = float(self.ThermCost.text())
@@ -1062,32 +1330,39 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         self.CeilingInsCostOptions.loc[self.CeilingInsCostOptions["InsulationName"] == self.ECMCeilInsCostOptions.currentText(),"Costpersft"] = self.EEMCostTable.item(2,3).text()
         self.WindowMatCostOptions.loc[self.WindowMatCostOptions["WindowMaterial"] == self.ECMWindowMatCostOptions.currentText(),"FixedCost"] = self.EEMCostTable.item(3,2).text()
         self.WindowMatCostOptions.loc[self.WindowMatCostOptions["WindowMaterial"] == self.ECMWindowMatCostOptions.currentText(),"Costpersft"] = self.EEMCostTable.item(3,3).text()
-        self.DaylightingCostOptions.loc[self.DaylightingCostOptions["Daylighting"] == self.ECMDaylightingCostOptions.currentText(),"FixedCost"] = self.EEMCostTable.item(5,2).text()
-        self.DaylightingCostOptions.loc[self.DaylightingCostOptions["Daylighting"] == self.ECMDaylightingCostOptions.currentText(),"Costpersft"] = self.EEMCostTable.item(5,3).text()
-        self.EconomizerCostOptions.loc[self.EconomizerCostOptions["Economizer"] == self.ECMEconCostOptions.currentText(),"FixedCost"] = self.EEMCostTable.item(6,2).text()
-        self.EconomizerCostOptions.loc[self.EconomizerCostOptions["Economizer"] == self.ECMEconCostOptions.currentText(),"Costpersft"] = self.EEMCostTable.item(6,3).text()
-        self.OccupancySensorCostOptions.loc[self.OccupancySensorCostOptions["OccupancySensor"] == self.ECMOccSensorCostOptions.currentText(),"FixedCost"] = self.EEMCostTable.item(7,2).text()
-        self.OccupancySensorCostOptions.loc[self.OccupancySensorCostOptions["OccupancySensor"] == self.ECMOccSensorCostOptions.currentText(),"Costpersft"] = self.EEMCostTable.item(7,3).text()
-        self.LEDCostOptions.loc[self.LEDCostOptions["PercentageLED"] == self.ECMLEDCostOptions.currentText(),"FixedCost"] = self.EEMCostTable.item(8,2).text()
-        self.LEDCostOptions.loc[self.LEDCostOptions["PercentageLED"] == self.ECMLEDCostOptions.currentText(),"Costpersft"] = self.EEMCostTable.item(8,3).text()
-        self.CoolingEffCostOptions.loc[self.CoolingEffCostOptions["SEER"] == self.ECMCoolingEffCostOptions.currentText(),"Costperunit"] = self.EEMCostTable.item(11,2).text()
-        self.CoolingEffCostOptions.loc[self.CoolingEffCostOptions["SEER"] == self.ECMCoolingEffCostOptions.currentText(),"CostperkBtuh"] = self.EEMCostTable.item(11,3).text()
+
+        if self.ECMDaylightingCostOptions.currentText() == "Yes":
+            self.DaylightingCostOptions.loc[self.DaylightingCostOptions["Daylighting"] == self.ECMDaylightingCostOptions.currentText(),"FixedCost"] = self.EEMCostTable.item(6,2).text()
+            self.DaylightingCostOptions.loc[self.DaylightingCostOptions["Daylighting"] == self.ECMDaylightingCostOptions.currentText(),"Costpersft"] = self.EEMCostTable.item(6,3).text()
+            self.DaylightingCostOptions.to_csv(os.path.join(self.ProjectPath, "CostData","Equipment-Daylighting.csv"),index=False)
+
+        if self.ECMEconCostOptions.currentText() == "Yes":
+            self.EconomizerCostOptions.loc[self.EconomizerCostOptions["Economizer"] == self.ECMEconCostOptions.currentText(),"FixedCost"] = self.EEMCostTable.item(7,2).text()
+            self.EconomizerCostOptions.loc[self.EconomizerCostOptions["Economizer"] == self.ECMEconCostOptions.currentText(),"Costpersft"] = self.EEMCostTable.item(7,3).text()
+            self.EconomizerCostOptions.to_csv(os.path.join(self.ProjectPath, "CostData","System-Economizer.csv"),index=False)
+
+        if self.ECMOccSensorCostOptions.currentText() == "Yes":
+            self.OccupancySensorCostOptions.loc[self.OccupancySensorCostOptions["OccupancySensor"] == self.ECMOccSensorCostOptions.currentText(),"FixedCost"] = self.EEMCostTable.item(8,2).text()
+            self.OccupancySensorCostOptions.loc[self.OccupancySensorCostOptions["OccupancySensor"] == self.ECMOccSensorCostOptions.currentText(),"Costpersft"] = self.EEMCostTable.item(8,3).text()
+            self.OccupancySensorCostOptions.to_csv(os.path.join(self.ProjectPath, "CostData","Equipment-OccupancySensor.csv"),index=False)
+
+        self.LEDCostOptions.loc[self.LEDCostOptions["PercentageLED"] == self.ECMLEDCostOptions.currentText(),"FixedCost"] = self.EEMCostTable.item(9,2).text()
+        self.LEDCostOptions.loc[self.LEDCostOptions["PercentageLED"] == self.ECMLEDCostOptions.currentText(),"Costpersft"] = self.EEMCostTable.item(9,3).text()
+        self.GetCoolingSystemOptions(self.ECMCoolingEqpCostOptions.currentText().replace(" ",""))
+        self.CoolingEqpOptionsTable.loc[self.CoolingEqpOptionsTable["SEER"].astype(float) == float(self.ECMCoolingEffCostOptions.currentText()),"Costperunit"] = self.EEMCostTable.item(12,2).text()
+        self.CoolingEqpOptionsTable.loc[self.CoolingEqpOptionsTable["SEER"].astype(float) == float(self.ECMCoolingEffCostOptions.currentText()),"CostperkBtuh"] = self.EEMCostTable.item(12,3).text()
         self.GetHeatingSystemOptions(self.ECMHeatingEqpCostOptions.currentText().replace(" ",""))
-        self.HeatingEqpOptionsTable.loc[self.HeatingEqpOptionsTable["HeatingEff"] == self.ECMHeatingEffCostOptions.currentText(),"Costperunit"] = self.EEMCostTable.item(13,2).text()
-        self.HeatingEqpOptionsTable.loc[self.HeatingEqpOptionsTable["HeatingEff"] == self.ECMHeatingEffCostOptions.currentText(),"CostperkBtuh"] = self.EEMCostTable.item(13,3).text()
+        self.HeatingEqpOptionsTable.loc[self.HeatingEqpOptionsTable["HeatingEff"].astype(float) == float(self.ECMHeatingEffCostOptions.currentText()),"Costperunit"] = self.EEMCostTable.item(14,2).text()
+        self.HeatingEqpOptionsTable.loc[self.HeatingEqpOptionsTable["HeatingEff"].astype(float) == float(self.ECMHeatingEffCostOptions.currentText()),"CostperkBtuh"] = self.EEMCostTable.item(14,3).text()
         
         self.WallInsCostOptions.to_csv(os.path.join(self.ProjectPath, "CostData","Materials-WallInsulation.csv"),index=False)
         self.InfiltrationCostOptions.to_csv(os.path.join(self.ProjectPath, "CostData","Infiltration.csv"),index=False)
         self.CeilingInsCostOptions.to_csv(os.path.join(self.ProjectPath, "CostData","Materials-CeilingInsulation.csv"),index=False)
         self.WindowMatCostOptions.to_csv(os.path.join(self.ProjectPath, "CostData","Materials-WindowMaterial.csv"),index=False)
-        self.DaylightingCostOptions.to_csv(os.path.join(self.ProjectPath, "CostData","Equipment-Daylighting.csv"),index=False)
-        self.EconomizerCostOptions.to_csv(os.path.join(self.ProjectPath, "CostData","System-Economizer.csv"),index=False)
-        self.OccupancySensorCostOptions.to_csv(os.path.join(self.ProjectPath, "CostData","Equipment-OccupancySensor.csv"),index=False)
         self.LEDCostOptions.to_csv(os.path.join(self.ProjectPath, "CostData","Equipment-LEDLighting.csv"),index=False)
-        self.CoolingEffCostOptions.to_csv(os.path.join(self.ProjectPath, "CostData","System-"+self.CoolingEqp.currentText().replace(" ","")+".csv"),index=False)
+        self.CoolingEqpOptionsTable.to_csv(os.path.join(self.ProjectPath, "CostData","System-"+self.ECMCoolingEqpCostOptions.currentText().replace(" ","")+".csv"),index=False)
         self.HeatingEqpOptionsTable.to_csv(os.path.join(self.ProjectPath, "CostData","System-"+self.ECMHeatingEqpCostOptions.currentText().replace(" ","")+".csv"),index=False)
         
-
         self.SetECMBaseProperty()
 
     def SetResetCostData(self):
@@ -1096,324 +1371,419 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
     def GetHeatingSystemOptions(self,HeatingEqp):
         self.HeatingEqpOptionsTable = pd.read_csv(os.path.join(self.ProjectPath,"CostData","System-"+HeatingEqp+".csv"))
 
-   
-    def ShowECMTableResults(self,ECMTabIndex,EEMResults):
-        # self.GetECMBaseline()
-        # Calculate the percentage change in electricity and natural gas consumption with respect to the specified baseline
-        
-        
-        # ECM Evaluation table
-        i = ECMTabIndex
-        self.ECMEval.setItem(i,3,QTableWidgetItem(str(round(EEMResults["PctkWhSavings"],2))+"%"))
-        self.ECMEval.setItem(i,4,QTableWidgetItem(str(round(EEMResults["PctThermSavings"],2))+"%"))
-        self.ECMEval.setItem(i,5,QTableWidgetItem(str(round(EEMResults["TIC"]))))
-        self.ECMEval.setItem(i,6,QTableWidgetItem(str(round(EEMResults["EEMLCC"]))))
+    def GetCoolingSystemOptions(self,CoolingEqp):
+        self.CoolingEqpOptionsTable = pd.read_csv(os.path.join(self.ProjectPath,"CostData","System-"+CoolingEqp+".csv"))
+
+    def SetECMWallInsCheck(self):
+        self.ECMWallInsulation.setEnabled(self.ECMWallInsCheck.isChecked())
+        if not self.ECMWallInsCheck.isChecked():
+            self.ECMMeasurePackage.PackageID["WallInsOptions"] = 0
+            self.ECMWallInsulation.blockSignals(True)
+            self.ECMWallInsulation.setCurrentText(self.WallInsulation.currentText())
+            self.ECMWallInsulation.blockSignals(False)
     
+    def SetECMInfiltrationCheck(self):
+        self.ECMInfiltration.setEnabled(self.ECMInfiltrationCheck.isChecked())
+        if not self.ECMInfiltrationCheck.isChecked():
+            self.ECMMeasurePackage.PackageID["InfilOptions"] = 0
+            self.ECMInfiltration.blockSignals(True)
+            self.ECMInfiltration.setCurrentText(self.ACH50.currentText())
+            self.ECMInfiltration.blockSignals(False)
+
+    def SetECMCeilInsCheck(self):
+        self.ECMCeilingInsulation.setEnabled(self.ECMCeilInsCheck.isChecked())
+        if not self.ECMCeilInsCheck.isChecked():
+            self.ECMMeasurePackage.PackageID["CeilInsOptions"] = 0
+            self.ECMCeilingInsulation.blockSignals(True)
+            self.ECMCeilingInsulation.setCurrentText(self.CeilingInsulation.currentText())
+            self.ECMCeilingInsulation.blockSignals(False)
+        
+
+    def SetECMWindowMatCheck(self):
+        self.ECMWindowMaterial.setEnabled(self.ECMWindowMatCheck.isChecked())
+        if not self.ECMWindowMatCheck.isChecked():
+            self.ECMMeasurePackage.PackageID["WindowMatOptions"] = 0
+            self.ECMWindowMaterial.blockSignals(True)
+            self.ECMWindowMaterial.setCurrentText(self.WindowMaterial.currentItem().text())
+            self.ECMWindowMaterial.blockSignals(False)
+
+    def SetECMNightSetbackCheck(self):
+        self.ECMNightSetback.setEnabled(self.ECMNightSetbackCheck.isChecked())
+        if not self.ECMNightSetbackCheck.isChecked():
+            self.ECMMeasurePackage.PackageID["NightSetbackOptions"] = 0
+            self.ECMNightSetback.blockSignals(True)
+            self.ECMNightSetback.setCurrentText(self.NightSetback.currentText())
+            self.ECMNightSetback.blockSignals(False)
+
+    def SetECMHoursNightSetbackCheck(self):
+        self.ECMHoursNightSetback.setEnabled(self.ECMHoursNightSetbackCheck.isChecked())
+        if not self.ECMHoursNightSetbackCheck.isChecked():
+            self.ECMMeasurePackage.PackageID["HoursNightSetbackOptions"] = 0
+            self.ECMHoursNightSetback.blockSignals(True)
+            self.ECMHoursNightSetback.setCurrentText(self.nNightSetbackHours.text())
+            self.ECMHoursNightSetback.blockSignals(False)
+
+    def SetECMDaylightingCheck(self):
+        self.ECMDaylighting.setEnabled(self.ECMDaylightingCheck.isChecked())
+        if not self.ECMDaylightingCheck.isChecked():
+            self.ECMMeasurePackage.PackageID["DaylightingOptions"] = 0
+            self.ECMDaylighting.blockSignals(True)
+            self.ECMDaylighting.setCurrentText(self.Daylighting.currentText())
+            self.ECMDaylighting.blockSignals(False)
+
+    def SetECMEconomizerCheck(self):
+        self.ECMEconomizer.setEnabled(self.ECMEconomizerCheck.isChecked())
+        if not self.ECMEconomizerCheck.isChecked():
+            self.ECMMeasurePackage.PackageID["EconomizerOptions"] = 0
+            self.ECMEconomizer.blockSignals(True)
+            self.ECMEconomizer.setCurrentText(self.Economizer.currentText())
+            self.ECMEconomizer.blockSignals(False)
+
+    def SetECMOccSensorCheck(self):
+        self.ECMOccSensor.setEnabled(self.ECMOccSensorCheck.isChecked())
+        if not self.ECMOccSensorCheck.isChecked():
+           self.ECMMeasurePackage.PackageID["OccSensorOptions"] = 0
+           self.ECMOccSensor.blockSignals(True)
+           self.ECMOccSensor.setCurrentText("No")
+           self.ECMOccSensor.blockSignals(False)
+
+    def SetECMPctLEDCheck(self):
+        self.ECMPctLED.setEnabled(self.ECMPctLEDCheck.isChecked())
+        if not self.ECMPctLEDCheck.isChecked():
+           self.ECMMeasurePackage.PackageID["PercentageLEDOptions"] = 0
+           self.ECMPctLED.blockSignals(True)
+           self.ECMPctLED.setCurrentText(self.LED.currentText())
+           self.ECMPctLED.blockSignals(False)
+
+    def SetECMReduceEqpLoadCheck(self):
+        self.ECMReduceEqpLoad.setEnabled(self.ECMReduceEqpLoadCheck.isChecked())
+        if not self.ECMReduceEqpLoadCheck.isChecked():
+           self.ECMMeasurePackage.PackageID["ReduceEquipLoadOptions"] = 0
+           self.ECMReduceEqpLoad.blockSignals(True)
+           self.ECMReduceEqpLoad.setCurrentText("0")    
+           self.ECMReduceEqpLoad.blockSignals(False)
+
+    def SetECMHeatingEqpCheck(self):
+        self.ECMHeatingEquipment.setEnabled(self.ECMHeatingEqpCheck.isChecked())
+        if not self.ECMHeatingEqpCheck.isChecked():
+            self.ECMMeasurePackage.PackageID["HeatingEqpOptions"] = 0
+            self.ECMHeatingEquipment.blockSignals(True)
+            self.ECMHeatingEquipment.setCurrentText(self.HeatingEqp.currentText())
+            self.ECMHeatingEquipment.blockSignals(False)
+
+    def SetECMCoolingEqpCheck(self):
+        self.ECMCoolingEquipment.setEnabled(self.ECMCoolingEqpCheck.isChecked())
+        if not self.ECMCoolingEqpCheck.isChecked():
+            self.ECMMeasurePackage.PackageID["CoolingEqpOptions"] = 0
+            self.ECMCoolingEquipment.blockSignals(True)
+            self.ECMCoolingEquipment.setCurrentText(self.CoolingEqp.currentText())
+            self.ECMCoolingEquipment.blockSignals(False)
+
+    def GetECMHVACOptions(self):
+        dfHeatingEqpOptions = pd.read_csv(os.path.join(self.MainPath,"Measures","System-HeatingEquipment.csv"))
+        CurrentHeatingEqpIndex = dfHeatingEqpOptions.index[dfHeatingEqpOptions["System"] == self.df_input.loc[self.df_input["PropKey"] == "HeatingEquipment","PropValue"].item()].tolist()[0]
+        dfHeatingEqpOptions = dfHeatingEqpOptions.iloc[CurrentHeatingEqpIndex:,:].copy()
+        HeatingEqpItems = dfHeatingEqpOptions["System"].astype(str).values.tolist()
+        
+        self.HtgFullList = []
+        for eqp in HeatingEqpItems:
+            dfCurrentHeatingEqpOptions = pd.read_csv(os.path.join(self.MainPath,"Measures","System-"+eqp.replace(" ","")+".csv"))
+            HtgEffItems = dfCurrentHeatingEqpOptions["HeatingEff"].astype(str).values.tolist()
+            if eqp == self.df_input.loc[self.df_input["PropKey"] == "HeatingEquipment","PropValue"].item():
+                if self.df_input.loc[self.df_input["PropKey"] == "HeatingEff","PropValue"].item() != "Other..":
+                    CurrentHtgEff = self.df_input.loc[self.df_input["PropKey"] == "HeatingEff","PropValue"].item()
+                    HtgEffItems = [item for item in HtgEffItems if float(item) >= float(CurrentHtgEff)]
+                else:
+                    CurrentHtgEff = self.df_input.loc[self.df_input["PropKey"] == "HeatingEffCustom","PropValue"].item()
+                    HtgEffItems = [CurrentHtgEff] + [item for item in HtgEffItems if float(item) >= float(CurrentHtgEff)]
+
+                
+            # Append the appropriate unit to the heating efficiency values based on the equipment type
+            if "GasFurnace" in eqp.replace(" ",""):
+                HtgEffItems = [item + " (AFUE)" for item in HtgEffItems]
+            elif "Electric" in eqp.replace(" ",""):
+                HtgEffItems = [item + " (COP)" for item in HtgEffItems]
+            elif "HeatPump" in eqp.replace(" ",""):
+                HtgEffItems = [item + " (HSPF)" for item in HtgEffItems]
+            # Append the heating efficiency list either abridged or full to the main list
+            self.HtgFullList.append([eqp+" - "+eff for eff in HtgEffItems])
+
+
+        # print(self.HtgFullList)
+
+        dfCoolingEqpOptions = pd.read_csv(os.path.join(self.MainPath,"Measures","System-CoolingEquipment.csv"))
+        CurrentCoolingEqpIndex = dfCoolingEqpOptions.index[dfCoolingEqpOptions["System"] == self.df_input.loc[self.df_input["PropKey"] == "CoolingEquipment","PropValue"].item()].tolist()[0]
+        dfCoolingEqpOptions = dfCoolingEqpOptions.iloc[CurrentCoolingEqpIndex:,:].copy()
+        CoolingEqpItems = dfCoolingEqpOptions["System"].astype(str).values.tolist()
+        self.ClgFullList = []
+        for eqp in CoolingEqpItems:
+            dfCurrentCoolingEqpOptions = pd.read_csv(os.path.join(self.MainPath,"Measures","System-"+eqp.replace(" ","")+".csv"))
+            ClgEffItems = dfCurrentCoolingEqpOptions["SEER"].astype(str).values.tolist()
+            if eqp == self.df_input.loc[self.df_input["PropKey"] == "CoolingEquipment","PropValue"].item():
+                if self.df_input.loc[self.df_input["PropKey"] == "CoolingEff","PropValue"].item() != "Other..":
+                    CurrentClgEff = self.df_input.loc[self.df_input["PropKey"] == "CoolingEff","PropValue"].item()
+                    ClgEffItems = [item for item in ClgEffItems if float(item) >= float(CurrentClgEff)]
+                else:
+                    CurrentClgEff = self.df_input.loc[self.df_input["PropKey"] == "CoolingEffCustom","PropValue"].item()
+                    ClgEffItems = [CurrentClgEff] + [item for item in ClgEffItems if float(item) >= float(CurrentClgEff)]
+                # ClgEffItems = [item for item in ClgEffItems if float(item) >= float(CurrentClgEff)]
+            # Append the appropriate unit to the cooling efficiency values based on the equipment type
+            ClgEffItems = [item + " (SEER)" for item in ClgEffItems]
+            # Append the cooling efficiency list either abridged or full to the main list
+            self.ClgFullList.append([eqp+" - "+eff for eff in ClgEffItems])
+        # print(self.ClgFullList)
     
     def SetECMBaseProperty(self):
 
-        self.Measures = {}
+        # self.SetSetCostData()
+
+        MeasureOpt = MeasureOptions(self.ProjectPath)
+        
+        MeasuresReference = {
+            "WallInsOptions": MeasureOpt.WallInsulation, #1
+            "CeilInsOptions": MeasureOpt.CeilingInsulation, #2
+            "InfilOptions": MeasureOpt.Infiltration, #3
+            "WindowMatOptions": MeasureOpt.WindowMaterial, #4
+            "DaylightingOptions": MeasureOpt.DaylightingControls, #5
+            "OccSensorOptions": MeasureOpt.OccupancySensorControls, #6
+            "PercentageLEDOptions": MeasureOpt.PercentageLED, #7
+            "ReduceEquipLoadOptions": MeasureOpt.ReduceEquipmentLoad, #8
+            "EconomizerOptions": MeasureOpt.Economizer, #9
+            "NightSetbackOptions": MeasureOpt.NightSetback, #10
+            "HoursNightSetbackOptions": MeasureOpt.HoursNightSetback, #11
+            "HeatingEqpOptions": MeasureOpt.HeatingEquipment, #12
+            "CoolingEqpOptions": MeasureOpt.CoolingEquipment, #13
+            "DHWEqpOptions": MeasureOpt.DHWEquipment, #14
+        }
+        
+        self.MeasureTypes = {}
+        for name, func in MeasuresReference.items():
+            self.MeasureTypes[name] = VariableFilter(self.df_input, func())
+
+        for key, value in self.MeasureTypes.items():
+            self.MeasureTypes[key] = AddCurrentOptionasMeasure(self.df_input, MeasuresReference[key]()[0].PropName, value)
+
+        # for key, value in self.MeasureTypes.items():
+        #     print(f"{key}: {[measure.PropValue for measure in value]}")
+
+        self.ECMMeasurePackage = MeasurePackage()
+        self.ECMMeasurePackage.PackageID = {}
+        for key in self.MeasureTypes.keys():
+            self.ECMMeasurePackage.PackageID[key] = 0
         
 
-        for i in range(0,9):
-            for j in range(3,7):
-                self.ECMEval.setItem(i,j,QTableWidgetItem(""))
+        self.kWhPctChange.clear()
+        self.ThermsPctChange.clear()
+        self.TIC.clear()
+        self.LCC.clear()
 
-        self.BestModelParams["AnnualOperatingCost"] = self.BestModelParams["OrgTotalElectricity"]*float(self.kWhCost.text()) + self.BestModelParams["OrgTotalNaturalGas"]*float(self.ThermCost.text())
-        self.BestModelParams["TOC"] = self.BestModelParams["AnnualOperatingCost"]*self.CostData["USPW"]
+        self.GetECMHVACOptions()
+        self.BaselineSumRes = pd.read_csv(os.path.join(self.ProjectPath,"SummaryResults.csv"))
         
-        self.ECMBaselineMetrics.setItem(0,0,QTableWidgetItem(str(round(self.BestModelParams["OrgTotalElectricity"]))))
-        self.ECMBaselineMetrics.setItem(0,1,QTableWidgetItem(str(round(self.BestModelParams["OrgTotalNaturalGas"]))))
-        self.ECMBaselineMetrics.setItem(0,2,QTableWidgetItem(str(round(self.BestModelParams["AnnualOperatingCost"]))))
-        self.ECMBaselineMetrics.setItem(0,3,QTableWidgetItem(str(round(self.BestModelParams["TOC"]))))
+        self.BaselinekWhConsumption.setText(str(round(self.BaselineSumRes["Electricity"].iloc[0])))
+        self.BaselineThermConsumption.setText(str(round(self.BaselineSumRes["NaturalGas"].iloc[0])))
+        self.BaselineAnnualOperatingCost.setText(str(round(self.BaselineSumRes["AnnualOperatingCost"].iloc[0])))
+        self.BaselineLCC.setText(str(round(self.BaselineSumRes["TOC"].iloc[0])))
 
-        self.ECMWallInsOptions.setCurrentText(self.WallInsulation.currentText())
-        self.ECMInfilOptions.setCurrentText(self.ACH50.currentText())
-        self.ECMCeilInsOptions.setCurrentText(self.CeilingInsulation.currentText())
-        self.ECMWindowMatOptions.setCurrentText(self.WindowMaterial.currentItem().text())
-        self.ECMNightSetbackOptions.setCurrentText(self.NightSetback.currentText())
-        self.ECMHoursofNightSetbackOptions.setText(self.nNightSetbackHours.text())
-        self.ECMDaylightingOptions.setCurrentText(self.Daylighting.currentText())
-        self.ECMEconOptions.setCurrentText(self.Economizer.currentText())
-        self.ECMLEDOptions.setCurrentText(self.LED.currentText())
-        self.ECMOccSensorOptions.setCurrentText(self.df_input.loc[self.df_input["PropKey"] == "OccupancySensor","PropValue"].item())
-        self.ECMReduceEquipmentLoadOptions.setCurrentText(self.df_input.loc[self.df_input["PropKey"] == "EquipLoadRed","PropValue"].item())
-        if "No" not in self.CoolingEqp.currentText():
-            self.ECMCoolingEffOptions.addItems(self.CoolingEffCostOptions["SEER"].astype(str).tolist())
-            self.ECMCoolingEffOptions.setCurrentText(self.CoolingEff.currentText())
-        self.ECMHeatingEqpOptions.setCurrentText(self.HeatingEqp.currentText())
-        if "Gas" in self.ECMHeatingEqpOptions.currentText():
-            self.GetHeatingSystemOptions(self.ECMHeatingEqpOptions.currentText().replace(" ",""))
-            self.ECMHeatingEffOptions.addItems(self.HeatingEqpOptionsTable["HeatingEff"].astype(str).tolist())
-            if self.HeatingEqp.currentText() == self.ECMHeatingEqpOptions.currentText():
-                self.ECMHeatingEffOptions.setCurrentText(self.HeatingEff.currentText())
-                
+        self.ECMWallInsulation.blockSignals(True)
+        self.ECMInfiltration.blockSignals(True)
+        self.ECMCeilingInsulation.blockSignals(True)
+        self.ECMWindowMaterial.blockSignals(True)
+        self.ECMNightSetback.blockSignals(True)
+        self.ECMHoursNightSetback.blockSignals(True)
+        self.ECMDaylighting.blockSignals(True)
+        self.ECMEconomizer.blockSignals(True)
+        self.ECMHeatingEquipment.blockSignals(True)
+        self.ECMCoolingEquipment.blockSignals(True)
+        self.ECMOccSensor.blockSignals(True)
 
+        self.ECMWallInsulation.setCurrentText(self.WallInsulation.currentText())
+        self.ECMInfiltration.setCurrentText(self.ACH50.currentText())
+        self.ECMCeilingInsulation.setCurrentText(self.CeilingInsulation.currentText())
+        self.ECMWindowMaterial.setCurrentText(self.WindowMaterial.currentItem().text())
+        self.ECMNightSetback.setCurrentText(self.NightSetback.currentText())
+        self.ECMHoursNightSetback.setCurrentText(self.nNightSetbackHours.text())
+        self.ECMDaylighting.setCurrentText(self.Daylighting.currentText())
+        self.ECMEconomizer.setCurrentText(self.Economizer.currentText())
+        self.ECMHeatingEquipment.addItems([item for sublist in self.HtgFullList for item in sublist])
+        self.ECMCoolingEquipment.addItems([item for sublist in self.ClgFullList for item in sublist])
 
-        self.ECMEval.setItem(0,1,QTableWidgetItem(self.WallInsulation.currentText()))
-        self.ECMEval.setItem(1,1,QTableWidgetItem(self.ACH50.currentText()))
-        self.ECMEval.setItem(2,1,QTableWidgetItem(self.CeilingInsulation.currentText()))
-        self.ECMEval.setItem(3,1,QTableWidgetItem(self.WindowMaterial.currentItem().text()))
-        self.ECMEval.setItem(4,1,QTableWidgetItem(self.NightSetback.currentText()))
-        self.ECMEval.setItem(5,1,QTableWidgetItem(self.nNightSetbackHours.text()))
-        self.ECMEval.setItem(6,1,QTableWidgetItem(self.Daylighting.currentText()))
-        self.ECMEval.setItem(7,1,QTableWidgetItem(self.Economizer.currentText()))
-        self.ECMEval.setItem(8,1,QTableWidgetItem(self.df_input.loc[self.df_input["PropKey"] == "OccupancySensor","PropValue"].item()))
-        self.ECMEval.setItem(9,1,QTableWidgetItem(self.LED.currentText()))
-        self.ECMEval.setItem(10,1,QTableWidgetItem(self.df_input.loc[self.df_input["PropKey"] == "EquipLoadRed","PropValue"].item()))
-        self.ECMEval.setItem(11,1,QTableWidgetItem(self.CoolingEff.currentText()))
-        self.ECMEval.setItem(12,1,QTableWidgetItem(self.HeatingEqp.currentText()))
-        self.ECMEval.setItem(13,1,QTableWidgetItem(self.HeatingEff.currentText()))
+        self.ECMPctLED.blockSignals(True) # Prevent signals from being emitted while we modify the list
+        AllLEDItems = [self.ECMPctLED.itemText(i) for i in range(self.ECMPctLED.count())]
+        CurrentLEDItems = [item for item in AllLEDItems if float(item) >= float(self.LED.currentText())]
+        self.ECMPctLED.clear()
+        self.ECMPctLED.addItems(CurrentLEDItems)
+        self.ECMPctLED.blockSignals(False)
+
+        self.ECMOccSensor.setCurrentText(self.df_input.loc[self.df_input["PropKey"] == "OccupancySensor","PropValue"].item())
         
+        self.ECMWallInsulation.blockSignals(False)
+        self.ECMInfiltration.blockSignals(False)
+        self.ECMCeilingInsulation.blockSignals(False)
+        self.ECMWindowMaterial.blockSignals(False)
+        self.ECMNightSetback.blockSignals(False)
+        self.ECMHoursNightSetback.blockSignals(False)
+        self.ECMDaylighting.blockSignals(False)
+        self.ECMEconomizer.blockSignals(False)
+        self.ECMHeatingEquipment.blockSignals(False)
+        self.ECMCoolingEquipment.blockSignals(False)
+        self.ECMOccSensor.blockSignals(False)
 
-        self.Measures["WallInsChange"] = False
-        self.Measures["CeilInsChange"] = False
-        self.Measures["InfilChange"] = False
-        self.Measures["WindowMatChange"] = False
-        self.Measures["NightSetbackChange"] = False
-        self.Measures["HoursofNightSetbackChange"] = False
-        self.Measures["DaylightingChange"] = False
-        self.Measures["EconomizerChange"] = False
-        self.Measures["OccupancySensorChange"] = False
-        self.Measures["LEDChange"] = False
-        self.Measures["ReduceEquipmentLoadChange"] = False
-        self.Measures["CoolingEffChange"] = False
-        self.Measures["HeatingEffChange"] = False
-        self.Measures["HeatingEqpChange"] = False
 
-        # Declare an empty df to store all results for every ECM
-        self.dfIndECMResults = pd.DataFrame()
-        self.npackages = 0
+
+        self.ECMEval.setItem(0,2,QTableWidgetItem(self.WallInsulation.currentText()))
+        self.ECMEval.setItem(1,2,QTableWidgetItem(self.ACH50.currentText()))
+        self.ECMEval.setItem(2,2,QTableWidgetItem(self.CeilingInsulation.currentText()))
+        self.ECMEval.setItem(3,2,QTableWidgetItem(self.WindowMaterial.currentItem().text()))
+        self.ECMEval.setItem(4,2,QTableWidgetItem(self.NightSetback.currentText()))
+        self.ECMEval.setItem(5,2,QTableWidgetItem(self.nNightSetbackHours.text()))
+        self.ECMEval.setItem(6,2,QTableWidgetItem(self.Daylighting.currentText()))
+        self.ECMEval.setItem(7,2,QTableWidgetItem(self.Economizer.currentText()))
+        self.ECMEval.setItem(8,2,QTableWidgetItem(self.df_input.loc[self.df_input["PropKey"] == "OccupancySensor","PropValue"].item()))
+        self.ECMEval.setItem(9,2,QTableWidgetItem(self.LED.currentText()))
+        self.ECMEval.setItem(10,2,QTableWidgetItem(self.df_input.loc[self.df_input["PropKey"] == "EquipLoadRed","PropValue"].item()))
+        if self.HeatingEff.currentText() != "Other..":
+            CurrentHtgEff = self.HeatingEff.currentText()
+        else:
+            CurrentHtgEff = self.HeatingEffCustom.text()
+
+        if "Gas Furnace" in self.HeatingEqp.currentText():
+            self.ECMEval.setItem(11,2,QTableWidgetItem(self.HeatingEqp.currentText()+" - "+CurrentHtgEff+" (AFUE)"))
+        elif "Electric Heater" in self.HeatingEqp.currentText():
+            self.ECMEval.setItem(11,2,QTableWidgetItem(self.HeatingEqp.currentText()+" - "+CurrentHtgEff+" (COP)"))
+        elif "Air Source Heat Pump" in self.HeatingEqp.currentText():
+            self.ECMEval.setItem(11,2,QTableWidgetItem(self.HeatingEqp.currentText()+" - "+CurrentHtgEff+" (HSPF)"))
+        
+        if self.CoolingEff.currentText() != "Other..":
+            CurrentClgEff = self.CoolingEff.currentText()
+        else:
+            CurrentClgEff = self.CoolingEffCustom.text()
+        self.ECMEval.setItem(12,2,QTableWidgetItem(self.CoolingEqp.currentText()+" - "+CurrentClgEff+" (SEER)"))
+
+
 
     def SetWallInsChange(self):
-        self.Measures["WallInsChange"] = True
-        self.SetWallInsulation(self.ECMWallInsOptions.currentText())
-    
+        for i,measure in enumerate(self.MeasureTypes["WallInsOptions"]):
+            if measure.PropValue == self.ECMWallInsulation.currentText():
+                self.ECMMeasurePackage.PackageID["WallInsOptions"] = i
+                break
+
     def SetInfilChange(self):
-        self.Measures["InfilChange"] = True
-        self.SetInfiltration(self.ECMInfilOptions.currentText())
+        for i,measure in enumerate(self.MeasureTypes["InfilOptions"]):
+            if measure.PropValue == float(self.ECMInfiltration.currentText()):
+                self.ECMMeasurePackage.PackageID["InfilOptions"] = i
+                break
 
     def SetCeilInsChange(self):
-        self.Measures["CeilInsChange"] = True
-        self.SetCeilingInsulation(self.ECMCeilInsOptions.currentText())
+        for i,measure in enumerate(self.MeasureTypes["CeilInsOptions"]):
+            if measure.PropValue == self.ECMCeilingInsulation.currentText():
+                self.ECMMeasurePackage.PackageID["CeilInsOptions"] = i
+                break
 
     def SetWindowMatChange(self):
-        self.Measures["WindowMatChange"] = True
-        self.SetWindowMaterial(self.ECMWindowMatOptions.currentText())
+        for i,measure in enumerate(self.MeasureTypes["WindowMatOptions"]):
+            if measure.PropValue == self.ECMWindowMaterial.currentText():
+                self.ECMMeasurePackage.PackageID["WindowMatOptions"] = i
+                break
 
     def SetNightSetbackChange(self):
-        self.Measures["NightSetbackChange"] = True
-        self.SetNightSetback(self.ECMNightSetbackOptions.currentText())
-
-    def SetHoursofNightSetbackChange(self):
-        self.Measures["HoursofNightSetbackChange"] = True
-        self.SetNightSetbackHours(self.ECMHoursofNightSetbackOptions.text())
+        for i,measure in enumerate(self.MeasureTypes["NightSetbackOptions"]):
+            if float(measure.PropValue) == float(self.ECMNightSetback.currentText()):
+                self.ECMMeasurePackage.PackageID["NightSetbackOptions"] = i
+                break
+    
+    def SetHoursNightSetbackChange(self):
+        for i,measure in enumerate(self.MeasureTypes["HoursNightSetbackOptions"]):
+            if float(measure.PropValue) == float(self.ECMHoursNightSetback.currentText()):
+                self.ECMMeasurePackage.PackageID["HoursNightSetbackOptions"] = i
+                break
 
     def SetDaylightingChange(self):
-        self.Measures["DaylightingChange"] = True
-        self.SetDaylighting(self.ECMDaylightingOptions.currentText()) 
-
-    def SetEconomizerChange(self):
-        self.Measures["EconomizerChange"] = True
-        self.SetEconomizer(self.ECMEconOptions.currentText())
-
-    def SetOccupancySensorChange(self):
-        self.Measures["OccupancySensorChange"] = True
-        self.SetOccupancySensor(self.ECMOccSensorOptions.currentText())
-
-    def SetLEDChange(self):
-        self.Measures["LEDChange"] = True
-        self.SetLEDECM(self.ECMLEDOptions.currentText())    
+        for i,measure in enumerate(self.MeasureTypes["DaylightingOptions"]):
+            if measure.PropValue == self.ECMDaylighting.currentText():
+                self.ECMMeasurePackage.PackageID["DaylightingOptions"] = i
+                break
 
     def SetReduceEquipmentLoadChange(self):
-        self.Measures["ReduceEquipmentLoadChange"] = True
-        self.SetReduceEquipmentLoad(self.ECMReduceEquipmentLoadOptions.currentText())  
+        for i,measure in enumerate(self.MeasureTypes["ReduceEquipLoadOptions"]):
+            print(measure.PropValue, self.ECMReduceEqpLoad.currentText())
+            if measure.PropValue == float(self.ECMReduceEqpLoad.currentText()):
+                self.ECMMeasurePackage.PackageID["ReduceEquipLoadOptions"] = i
+                break
 
-    def SetCoolingEffChange(self):
-        self.Measures["CoolingEffChange"] = True
-        self.SetCoolingEff(self.ECMCoolingEffOptions.currentText())   
+    def SetEconomizerChange(self):
+        for i,measure in enumerate(self.MeasureTypes["EconomizerOptions"]):
+            if measure.PropValue == self.ECMEconomizer.currentText():
+                self.ECMMeasurePackage.PackageID["EconomizerOptions"] = i
+                break
 
-    def SetHeatingEffChange(self):
-        self.Measures["HeatingEffChange"] = True
-        self.SetHeatingEff(self.ECMHeatingEffOptions.currentText())                        
-    
+    def SetOccupancySensorChange(self):
+        for i,measure in enumerate(self.MeasureTypes["OccSensorOptions"]):
+            if measure.PropValue == self.ECMOccSensor.currentText():
+                self.ECMMeasurePackage.PackageID["OccSensorOptions"] = i
+                break
+
+    def SetLEDChange(self):
+        for i,measure in enumerate(self.MeasureTypes["PercentageLEDOptions"]):
+            if measure.PropValue == float(self.ECMPctLED.currentText()):
+                self.ECMMeasurePackage.PackageID["PercentageLEDOptions"] = i
+                break
+
     def SetHeatingEqpChange(self):
-        self.Measures["HeatingEqpChange"] = True
-        self.SetHeatingEqp(self.ECMHeatingEqpOptions.currentText())
-        self.GetHeatingSystemOptions(self.ECMHeatingEqpOptions.currentText().replace(" ",""))
-        self.ECMHeatingEffOptions.blockSignals(True)
-        self.ECMHeatingEffOptions.clear()
-        self.ECMHeatingEffOptions.addItems(self.HeatingEqpOptionsTable["HeatingEff"].astype(str).tolist())
-        self.ECMHeatingEffOptions.blockSignals(False)
+        HeatingEqpSplit = self.ECMHeatingEquipment.currentText().split(" - ")
+        for i,measure in enumerate(self.MeasureTypes["HeatingEqpOptions"]):
+            if HeatingEqpSplit[0].replace(" ","") in measure.PropName:
+                if float(HeatingEqpSplit[1].replace(" (AFUE)","").replace(" (COP)","").replace(" (HSPF)","")) == float(measure.PropValue):
+                    self.ECMMeasurePackage.PackageID["HeatingEqpOptions"] = i
+                    break
+        # self.SetHeatingEqp(HeatingEqpSplit[0])
+        # if "Gas Furnace" in HeatingEqpSplit[0]:
+        #     self.SetHeatingEff(HeatingEqpSplit[1].replace(" (AFUE)",""))
+        # elif "Electric Heater" in HeatingEqpSplit[0]:
+        #     self.SetHeatingEff(HeatingEqpSplit[1].replace(" (COP)",""))
+        # elif "Air Source Heat Pump" in HeatingEqpSplit[0]:
+        #     self.SetHeatingEff(HeatingEqpSplit[1].replace(" (HSPF)",""))
+    
+    def SetCoolingEqpChange(self):
+        CoolingEqpSplit = self.ECMCoolingEquipment.currentText().split(" - ")
+        for i,measure in enumerate(self.MeasureTypes["CoolingEqpOptions"]):
+            if CoolingEqpSplit[0].replace(" ","") in measure.PropName:
+                if float(CoolingEqpSplit[1].replace(" (SEER)","")) == float(measure.PropValue):
+                    self.ECMMeasurePackage.PackageID["CoolingEqpOptions"] = i
+                    break
+        # self.SetCoolingEqp(CoolingEqpSplit[0])
+        # self.SetCoolingEff(CoolingEqpSplit[1].replace(" (SEER)",""))
 
         
     #%%
-    def SetEvaluateIndMeasure(self):
-        self.df_input.to_pickle(os.path.join(self.ProjectPath,"BldgPropInputsFile.pkl"))
-
-        IndEEMResults = MeasurePackageAnalysis(self.Measures,self.df_MonthlyEndUse,self.BestModelParams,self.CostData,self.MainPath,self.ProjectPath,self.df_weather)
-        
-        IndEEMResults["OperatingCostChange"] = IndEEMResults["OrgAOC"] - IndEEMResults["EEMAOC"]
-        if IndEEMResults["OperatingCostChange"] == 0:
-            IndEEMResults["SPP"] = "NA"
-        else:
-            IndEEMResults["SPP"] = IndEEMResults["TIC"]/IndEEMResults["OperatingCostChange"]
-        IndEEMResults["NPV"] = -IndEEMResults["TIC"]  + IndEEMResults["OrgTOC"] - IndEEMResults["EEMTOC"] # difference in annual operating cost times the USPW minus the total inital cost of the project
-        if IndEEMResults["TIC"] == 0:
-            IndEEMResults["ROI"] = 0
-        else:
-            IndEEMResults["ROI"] = 100*(IndEEMResults["OrgTOC"] - IndEEMResults["EEMTOC"] - IndEEMResults["TIC"])/IndEEMResults["TIC"]
-
-        self.dfIndECMResults = pd.concat([self.dfIndECMResults,pd.DataFrame([IndEEMResults])],axis=0)
-
-
-        if self.Measures["WallInsChange"]:
-
-            self.ShowECMTableResults(0,IndEEMResults)
-        
-        if self.Measures["InfilChange"]:
-            self.ShowECMTableResults(1,IndEEMResults)
-        
-        if self.Measures["CeilInsChange"]:
-            self.ShowECMTableResults(2,IndEEMResults)
-        
-        if self.Measures["WindowMatChange"]:
-            self.ShowECMTableResults(3,IndEEMResults)
-        
-        if self.Measures["NightSetbackChange"]:
-            self.ShowECMTableResults(4,IndEEMResults)
-
-        if self.Measures["HoursofNightSetbackChange"]:
-            self.ShowECMTableResults(5,IndEEMResults)
-        
-        if self.Measures["DaylightingChange"]:
-            self.ShowECMTableResults(6,IndEEMResults)
-        
-        if self.Measures["EconomizerChange"]:
-            self.ShowECMTableResults(7,IndEEMResults)
-        
-        if self.Measures["OccupancySensorChange"]:
-            self.ShowECMTableResults(8,IndEEMResults)
-        
-        if self.Measures["LEDChange"]:
-            self.ShowECMTableResults(9,IndEEMResults)
-
-        if self.Measures["ReduceEquipmentLoadChange"]:
-            self.ShowECMTableResults(10,IndEEMResults)    
-
-        if self.Measures["CoolingEffChange"]:
-            self.ShowECMTableResults(11,IndEEMResults)   
-
-        if self.Measures["HeatingEffChange"]:
-            self.ShowECMTableResults(13,IndEEMResults)        
-
-        # if self.Measures["HeatingEqpChange"]:
-        #     self.ShowECMTableResults(12,IndEEMResults)
-
-        for i in self.Measures.keys():
-            self.Measures[i] = False
-        
+    def SetEvaluateMeasures(self):
+        PackageUtil = MeasurePackageUtilities(self.MeasureTypes)
         self.df_input = pd.read_pickle(os.path.join(self.ProjectPath,"BldgPropInputFile-Baseline.pkl"))
+        self.ECMMeasurePackage = PackageUtil.CreateRunDirectory(self.ECMMeasurePackage,self.df_input,self.ProjectPath)
+        PackageUtil.RunPackage(self.ECMMeasurePackage,self.CostData,self.df_weather)
+        MeasureSumRes = PackageUtil.UpdatePackageResults(self.ECMMeasurePackage,self.BaselineSumRes)
+
+        self.kWhPctChange.setText(str(round(MeasureSumRes["PctkWhChange"].iloc[0],2))+"%")
+        self.ThermsPctChange.setText(str(round(MeasureSumRes["PctThermsChange"].iloc[0],2))+"%")
+        self.TIC.setText(str(round(MeasureSumRes["TIC"].iloc[0],2)))
+        self.LCC.setText(str(round(MeasureSumRes["LCC"].iloc[0],2)))
+        # self.GetECMBaseline()
+
+        df_MonthlyEndUse_EEM = pd.read_csv(os.path.join(self.ECMMeasurePackage.OutputDir, "MonthlyEndUseBreakdown.csv"))
+        PltRes = PlotResults(True,self.ProjectPath)
+        PltRes.PlotEEMEndUseComparison(self.ECMMeasurePackage.OutputDir,df_MonthlyEndUse_EEM) 
         self.ShowEEMResults()
-
-    def SetEvaluateMeasurePackage(self):
-        self.npackages += 1
-        
-        if self.df_input.loc[self.df_input["PropKey"] == "R-WallInsulation","PropValue"].item() != self.ECMWallInsOptions.currentText():
-            self.SetWallInsChange()
-
-        if self.df_input.loc[self.df_input["PropKey"] == "ACH50","PropValue"].astype(float).iloc[0] != float(self.ECMInfilOptions.currentText()):
-            self.SetInfilChange()
-
-        if self.df_input.loc[self.df_input["PropKey"] == "R-CeilingInsulation","PropValue"].item() != self.ECMCeilInsOptions.currentText():
-            self.SetCeilInsChange()
-
-        if self.df_input.loc[self.df_input["PropKey"] == "WindowMaterial","PropValue"].item() != self.ECMWindowMatOptions.currentText():
-            self.SetWindowMatChange()
-        
-        #print(self.nNightSetbackHours.text())
-        #print(self.ECMHoursofNightSetbackOptions.text())
-        if float(self.NightSetback.currentText()) != float(self.ECMNightSetbackOptions.currentText()):
-            self.SetNightSetbackChange()
-
-        if float(self.nNightSetbackHours.text()) != float(self.ECMHoursofNightSetbackOptions.text()):
-            self.SetHoursofNightSetbackChange()    
-
-        if self.df_input.loc[self.df_input["PropKey"] == "Daylighting","PropValue"].item() != self.ECMDaylightingOptions.currentText():
-            self.SetDaylightingChange()   
-        
-        if self.df_input.loc[self.df_input["PropKey"] == "Economizer","PropValue"].item() != self.ECMEconOptions.currentText():
-            self.SetEconomizerChange()
-
-        if self.df_input.loc[self.df_input["PropKey"] == "OccupancySensor","PropValue"].item() != self.ECMOccSensorOptions.currentText():
-            self.SetOccupancySensorChange() 
-
-        if (self.df_input.loc[self.df_input["PropKey"] == "LEDCurrent","PropValue"].item() != self.ECMLEDOptions.currentText()) and (self.df_input.loc[self.df_input["PropKey"] == "LEDCurrent","PropValue"].item() < float(self.ECMLED.currentText())):
-            self.SetLEDChange()  
-
-        if self.df_input.loc[self.df_input["PropKey"] == "EquipLoadRed","PropValue"].astype(float).iloc[0] != float(self.ECMReduceEquipmentLoadOptions.currentText()):
-            self.SetReduceEquipmentLoadChange()  
-
-        # if self.df_input.loc[self.df_input["PropKey"] == "CoolingEff","PropValue"].item() != self.ECMCoolingEffOptions.currentText():
-        #     self.SetCoolingEffChange()   
-
-        # if self.df_input.loc[self.df_input["PropKey"] == "HeatingEff","PropValue"].item() != self.ECMHeatingEffOptions.currentText():
-        #     self.SetHeatingEffChange()                                   
-        # if (self.df_input.loc[self.df_input["PropKey"] == "LEDCurrent","PropValue"].item() != self.ECMLEDOptions.currentText()) and (self.df_input.loc[self.df_input["PropKey"] == "LEDCurrent","PropValue"].astype(float).iloc[0] < float(self.ECMLED.currentText())):
-        #     self.SetLEDChange()                          
-
-        self.df_input.to_pickle(os.path.join(self.ProjectPath,"BldgPropInputsFile.pkl"))
-        self.runkey = "EvaluateMeasurePackage" + str(self.npackages)
-        
-        PackageEEMResults = MeasurePackageAnalysis(self.Measures,self.df_MonthlyEndUse,self.BestModelParams,self.CostData,self.MainPath,self.ProjectPath,self.df_weather)
-        #print(PackageEEMResults)
-        PackageEEMResults["OperatingCostChange"] = PackageEEMResults["OrgAOC"] - PackageEEMResults["EEMAOC"]
-        if PackageEEMResults["OperatingCostChange"] == 0:
-            PackageEEMResults["SPP"] = "NA"
-        else:
-            PackageEEMResults["SPP"] = PackageEEMResults["TIC"]/PackageEEMResults["OperatingCostChange"]
-        PackageEEMResults["NPV"] = -PackageEEMResults["TIC"]  + PackageEEMResults["OrgTOC"] - PackageEEMResults["EEMTOC"] # difference in annual operating cost times the USPW minus the total inital cost of the project
-        if PackageEEMResults["TIC"] == 0:
-            PackageEEMResults["ROI"] = 0
-        else:
-            PackageEEMResults["ROI"] = 100*(PackageEEMResults["OrgTOC"] - PackageEEMResults["EEMTOC"] - PackageEEMResults["TIC"])/PackageEEMResults["TIC"]
-
-        self.dfECMPackageResults = pd.DataFrame([PackageEEMResults])
-        self.runkey = "EvaluateMeasurePackage" + str(self.npackages)
-
-        self.PackagekWhPctChange.setText(str(round(PackageEEMResults["PctkWhSavings"],2))+"%")
-        self.PackageThermsPctChange.setText(str(round(PackageEEMResults["PctThermSavings"],2))+"%")
-        self.PackageTIC.setText(str(round(PackageEEMResults["TIC"])))
-        self.PackageLCC.setText(str(round(PackageEEMResults["EEMLCC"])))
-
-        for i in self.Measures.keys():
-            self.Measures[i] = False
-        self.df_input = pd.read_pickle(os.path.join(self.ProjectPath,"BldgPropInputFile-Baseline.pkl"))
-
-        self.ShowEEMResults()
-
-
-    def SetSaveIndECMResults(self):
-        self.dfIndECMResults = self.dfIndECMResults.dropna(how="all")
-        os.makedirs(os.path.join(self.ProjectPath,"Results","EvaluateMeasure"),exist_ok=True)
-        self.dfIndECMResults.to_csv(os.path.join(self.ProjectPath,"Results","EvaluateMeasure","IndividualECMResults"+".csv"),index=False)
-    
-    
-    def SetSaveECMPackageResults(self):
-        self.dfECMPackageResults = self.dfECMPackageResults.dropna()
-        os.makedirs(os.path.join(self.ProjectPath,"Results",self.runkey),exist_ok=True)
-        self.dfECMPackageResults.to_csv(os.path.join(self.ProjectPath,"Results",self.runkey,"ECMPackageResults"+".csv"),index=False)
 
     def ShowEEMResults(self):
         self.scenekWhEEMCompPlot = QGraphicsScene(self)
         self.kWhEEMCompPlot.setScene(self.scenekWhEEMCompPlot)
-        imagePath = os.path.join(self.ProjectPath,f"ElectricityMonthlyEEMComp.png")
-        self.ShowGUIImage(self.scenekWhEEMCompPlot,self.kWhEEMCompPlot,imagePath)
+        imagePath = os.path.join(self.ECMMeasurePackage.OutputDir, "ElectricityMonthlyEEMComp.png")
+        self.ShowGUIImage(self.scenekWhEEMCompPlot, self.kWhEEMCompPlot, imagePath)
 
         self.sceneThermEEMCompPlot = QGraphicsScene(self)
         self.ThermEEMCompPlot.setScene(self.sceneThermEEMCompPlot)
-        imagePath = os.path.join(self.ProjectPath,f"NaturalGasMonthlyEEMComp.png")
-        self.ShowGUIImage(self.sceneThermEEMCompPlot,self.ThermEEMCompPlot,imagePath)
+        imagePath = os.path.join(self.ECMMeasurePackage.OutputDir, "NaturalGasMonthlyEEMComp.png")
+        self.ShowGUIImage(self.sceneThermEEMCompPlot, self.ThermEEMCompPlot, imagePath)
 
 class UtilityDataWindow(QWidget,Ui_Form):
     def __init__(self,ProjectPath,ProjectName):
@@ -1430,13 +1800,31 @@ class UtilityDataWindow(QWidget,Ui_Form):
         self.Year3.addItems(np.arange(CurrentYear,CurrentYear-10,-1).astype(str))
     
     def SetUtilityDataFile(self):
+        errors = []
+        for row in range(12):
+            month_name = calendar.month_name[row + 1]
+            for col in range(6):
+                item = self.UtilityDataTable.item(row, col)
+                text = item.text().strip() if item and item.text() else ""
+                if not text:
+                    col_names = ["Year 1 kWh", "Year 1 Therms", "Year 2 kWh", "Year 2 Therms", "Year 3 kWh", "Year 3 Therms"]
+                    errors.append(f"Utility data: {month_name} - {col_names[col]} is blank.")
+                else:
+                    try:
+                        float(text)
+                    except ValueError:
+                        errors.append(f"Utility data: {month_name} - column {col + 1} must be a number (got '{text}').")
+        if errors:
+            QMessageBox.critical(self, "Utility Data Error", "Please fill in all utility data cells with valid numbers:\n\n• " + "\n• ".join(errors[:15]) + ("\n..." if len(errors) > 15 else ""))
+            return
+
         df = pd.DataFrame(index=range(1,13),columns=["Year 1 - kWh","Year 1 - Therms","Year 2 - kWh","Year 2 - Therms","Year 3 - kWh","Year 3 - Therms"])
         df["BillDays"] = [calendar.monthrange(int(self.Year1.currentText()), month)[1] for month in range(1, 13)]
 
         for row in range(12):
             for col in range(6):
                 item = self.UtilityDataTable.item(row, col)
-                if item:  
+                if item:
                     df.iloc[row, col] = item.text()
         
         df = df.rename(columns={"Year 1 - kWh":"Year 1 - kWh"+str(self.Year1.currentText()),"Year 1 - Therms":"Year 1 - Therms"+str(self.Year1.currentText())})

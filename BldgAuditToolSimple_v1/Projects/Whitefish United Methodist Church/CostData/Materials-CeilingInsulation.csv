@@ -1,9 +1,9 @@
-﻿InsulationName,Rvalue_IP,Thickness_inch,Lifetime,Costpersft,FixedCost
+InsulationName,Rvalue_IP,Thickness_inch,Lifetime,Costpersft,FixedCost
 Uninsulated,0.0001,6.5,999,0.001,0
-R7 Fiberglass,7,6.5,999,0.37,0
-R13 Fiberglass,13,6.5,999,0.6,0
-R19 Fiberglass,19,6.5,999,0.84,0
-R30 Fiberglass,30,6.5,999,1.29,0
-R38 Fiberglass,38,6.5,999,1.61,0
-R49 Fiberglass,49,6.5,999,2.05,0
-R60 Fiberglass,60,6.5,999,2.49,0
+R7 Fiberglass,7.0,6.5,999,0.37,0
+R13 Fiberglass,13.0,6.5,999,0.6,0
+R19 Fiberglass,19.0,6.5,999,0.84,0
+R30 Fiberglass,30.0,6.5,999,1.29,0
+R38 Fiberglass,38.0,6.5,999,1.61,0
+R49 Fiberglass,49.0,6.5,999,2.05,0
+R60 Fiberglass,60.0,6.5,999,2.49,0

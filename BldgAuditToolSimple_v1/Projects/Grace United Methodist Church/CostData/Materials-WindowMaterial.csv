@@ -1,11 +1,11 @@
-WindowMaterial,Uvalue,SHGC,Lifetime,Costpersft,FixedCost
-Single Pane Clear,1.1,0.76,30,15.0,0
-Double Pane Clear,0.76,0.67,30,20.5,0
-Low e Double Pane Medium SHGC Air filled,0.38,0.44,30,22.88,0
-Low e Double Pane Medium SHGC Argon filled,0.35,0.44,30,25.61,0
-Low e Double Pane Medium SHGC Air filled Insulated,0.3,0.46,30,32.87,0
-Low e Double Pane Medium SHGC Argon filled Insulated,0.27,0.46,30,35.6,0
-Low e Triple Pane Low SHGC Air filled,0.29,0.26,30,33.69,0
-Low e Triple Pane Low SHGC Argon filled,0.27,0.26,30,35.27,0
-Low e Triple Pane Low SHGC Air filled Insulated,0.19,0.27,30,43.68,0
-Low e Triple Pane Low SHGC Argon filled Insulated,0.17,0.27,30,45.26,0
+﻿WindowMaterial,Uvalue,SHGC,Lifetime,Costpersft,FixedCost
+Single Pane Clear,5.67,0.76,30,15,0
+Double Pane Clear,2.782,0.56,30,20.5,0
+Low e Double Pane Medium SHGC Air filled,2.101,0.3,30,22.88,0
+Low e Double Pane Medium SHGC Argon filled,1.9827,0.44,30,25.61,0
+Low e Double Pane Medium SHGC Air filled Insulated,1.703,0.46,30,32.87,0
+Low e Double Pane Medium SHGC Argon filled Insulated,1.533,0.46,30,35.6,0
+Low e Triple Pane Low SHGC Air filled,1.647,0.26,30,33.69,0
+Low e Triple Pane Low SHGC Argon filled,1.533,0.26,30,35.27,0
+Low e Triple Pane Low SHGC Air filled Insulated,1.079,0.27,30,43.68,0
+Low e Triple Pane Low SHGC Argon filled Insulated,0.9653,0.27,30,45.26,0

@@ -76,6 +76,12 @@ BLDG_AUDIT_DIR = os.path.normpath(os.path.join(BASE_DIR, "../BldgAuditToolSimple
 PROJECTS_DIR = os.path.join(BLDG_AUDIT_DIR, "Projects")
 sys.path.insert(0, BLDG_AUDIT_DIR)
 
+# The measure-evaluation code (MeasureClass / MeasureOptions) loads the cost/option
+# CSVs with paths relative to the working directory, e.g. os.path.join("Measures", ...).
+# The desktop GUI runs with its working directory at the package root, so mirror that
+# here. The baseline analysis pipeline uses only absolute paths, so this is safe.
+os.chdir(BLDG_AUDIT_DIR)
+
 # ── InverseModel safety patches ────────────────────────────────────────────────
 # Bug 1: model.py fit() swallows curve_fit failures but leaves self.p unset;
 #        fit_model() then crashes with AttributeError at `self.p_init = self.p`.
@@ -168,7 +174,8 @@ PROP_KEY_MAP: dict[str, str] = {
     "Tspc":               "tspc",
     "DHWSystemType":      "dhwSystemType",
     "DHWTankVol":         "dhwTankVol",
-    "EquipPowerDensity":  "epd",
+    "EPD":                "epd",
+    "GPD":                "gpd",
     "LPD":                "lpd",
     "HeatingEquipment":   "heatingEqp",
     "CoolingEquipment":   "coolingEqp",
@@ -373,8 +380,8 @@ def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None
     from BldgAuditToolPackage.AnalyzeUtilityData import (
         GetWeather,
         BuildChangePointModel,
-        GetMonthlyEndUseBreakdown,
     )
+    from BldgAuditToolPackage.RunSimulationCase import GetMonthlyEndUseBreakdown
     from BldgAuditToolPackage.PostProcessing import PlotResults
 
     if df_input is None:
@@ -384,8 +391,23 @@ def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None
     if not bldg_location:
         raise ValueError("Building location is missing from the PKL file.")
 
+    # EnergyAnalysis reads PropKey == "EPD"/"GPD" via .iloc[0]; a missing row raises
+    # IndexError. PKLs/forms post-migration include them, but guard against older
+    # PKLs that predate the EPD/GPD migration. EPD defaults to 1.0 W/ft²; GPD stays
+    # empty (treated as "no gas cooking", which skips NG disaggregation).
+    for _pk, _default in (("EPD", "1.0"), ("GPD", None)):
+        if not (df_input["PropKey"] == _pk).any():
+            df_input = pd.concat(
+                [df_input, pd.DataFrame([{"PropKey": _pk, "PropValue": _default}])],
+                ignore_index=True,
+            )
+
     # All file I/O happens inside a temp directory that is deleted when done
     tmp = tempfile.mkdtemp()
+    # The package writes every plot into a "Results" subfolder of the run dir
+    # (e.g. graph.py / PostProcessing.py savefig to <ProjectPath>/Results/...).
+    results_dir = os.path.join(tmp, "Results")
+    os.makedirs(results_dir, exist_ok=True)
     try:
         util_path = os.path.join(tmp, f"{project_name}_UtilityData.csv")
 
@@ -414,7 +436,7 @@ def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None
                     w.writerow([i, 0, 0, bd])
             has_utility_data = False
 
-        # CostData: symlink or copy from an existing project (needed by EvaluateMeasure)
+        # CostData: copy from an existing project so any cost-data lookups during the run resolve
         cost_sources = glob_module.glob(os.path.join(PROJECTS_DIR, "*", "CostData"))
         if cost_sources:
             shutil.copytree(cost_sources[0], os.path.join(tmp, "CostData"))
@@ -429,32 +451,37 @@ def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None
         dd_results, dfutil_sorted = cpm.BuildDegreeDayBasedModel(
             model_type_cooling, model_params_cooling, model_type_heating, model_params_heating
         )
-        best_model = cpm.ChooseBestModel(dd_results, model_params_heating, model_params_cooling)
+        best_model = cpm.ChooseBestModel(dd_results, model_params_heating, model_params_cooling, tmp)
 
-        # 3. Monthly end-use breakdown
-        df_monthly = GetMonthlyEndUseBreakdown(best_model, df_weather, df_input, False)
+        # 3. Monthly end-use breakdown. GetMonthlyEndUseBreakdown writes
+        #    MonthlyEndUseBreakdown.csv (and BestModelParams.csv) into the run dir
+        #    and mutates best_model in place (adds BLC_Heating_*/BLC_Cooling_EL,
+        #    nHours*, EPD). It no longer returns the DataFrame, so read it back.
+        GetMonthlyEndUseBreakdown(best_model, df_weather, df_input, tmp)
+        df_monthly = pd.read_csv(os.path.join(tmp, "MonthlyEndUseBreakdown.csv"))
 
-        # 4. Generate plots into tmp
+        # 4. Generate plots. PlotResults reads MonthlyEndUseBreakdown.csv from the
+        #    run dir and writes every PNG into <run_dir>/Results/.
         plotter = PlotResults(True, tmp)
         plotter.PlotWeather(df_weather, weather_station_name)
-        plotter.PlotEndUseBreakdown(df_monthly.clip(lower=0))
+        plotter.PlotEndUseBreakdown(tmp)
         if has_utility_data:
-            plotter.PlotInverseModelComparison(df_monthly, dfutil_sorted)
+            plotter.PlotInverseModelComparison(tmp, dfutil_sorted)
 
-        # 5. Encode each PNG as base64 (files stay in tmp and are deleted below)
+        # 5. Encode each PNG as base64 (files stay in tmp/Results and are deleted below)
         def _b64(name: str) -> str | None:
-            path = os.path.join(tmp, name)
+            path = os.path.join(results_dir, name)
             if not os.path.exists(path):
                 return None
             with open(path, "rb") as f:
                 return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
 
-        all_pngs = [os.path.basename(p) for p in glob_module.glob(os.path.join(tmp, "*.png"))]
+        all_pngs = [os.path.basename(p) for p in glob_module.glob(os.path.join(results_dir, "*.png"))]
         weather_plot = f"WeatherPlot_{weather_station_name}.png"
         elec_temp = next((f for f in all_pngs if f.startswith("Electricity_") and f.endswith("_TempBasedChngPtModel.png")), None)
         ff_temp   = next((f for f in all_pngs if f.startswith("Fossil Fuel_")  and f.endswith("_TempBasedChngPtModel.png")), None)
         elec_dd   = next((f for f in ["Electricity_Cooling_DDBasedChngPtModel.png", "Electricity_Heating_DDBasedChngPtModel.png"]
-                          if os.path.exists(os.path.join(tmp, f))), None)
+                          if os.path.exists(os.path.join(results_dir, f))), None)
 
         plots = {
             "weather":         _b64(weather_plot),
@@ -467,14 +494,13 @@ def _run_analysis_sync(project_name: str, df_input: "pd.DataFrame | None" = None
             "elec_monthly":    _b64("ElectricityMonthlyBreakdown.png"),
         }
 
-        # 6. Cache in-memory results for ECM evaluation
+        # 6. Cache in-memory results for ECM evaluation.
         # Use "EL-" / "NG-" to match only end-use columns (e.g. "EL-Space Cooling"),
-        # not BLC coefficients ("BLC_Heat_EL") or degree-day columns ("HDD_EL").
+        # not degree-day columns ("HDD_EL"). The BLC coefficients needed by the ECM
+        # measures (BLC_Heating_NG/BLC_Heating_EL/BLC_Cooling_EL) were already added to
+        # best_model in place by GetMonthlyEndUseBreakdown → GetAllModelParams.
         best_model["OrgTotalElectricity"] = df_monthly.loc[:, df_monthly.columns.str.contains("EL-")].sum().sum() / 3.412
         best_model["OrgTotalNaturalGas"]  = df_monthly.loc[:, df_monthly.columns.str.contains("NG-")].sum().sum() / 100
-        best_model["BLC_Heat_EL"] = float(df_monthly["BLC_Heat_EL"].mean())
-        best_model["BLC_Heat_NG"] = float(df_monthly["BLC_Heat_NG"].mean())
-        best_model["BLC_Cool_EL"] = float(df_monthly["BLC_Cool_EL"].mean())
 
         _analysis_cache[project_name] = {
             "df_weather": df_weather,
@@ -524,230 +550,230 @@ class EcmRequest(BaseModel):
     form_data: dict = {}
 
 
+# Maps each frontend ECM request field to the MeasurePackage option group plus the
+# label the frontend's results table expects (see ECMStep.tsx MEASURE_LABELS).
+_ECM_MEASURE_GROUPS = {
+    "WallInsOptions":         "WallInsulation",
+    "InfilOptions":           "Infiltration",
+    "CeilInsOptions":         "CeilingInsulation",
+    "WindowMatOptions":       "WindowMaterial",
+    "DaylightingOptions":     "DaylightingSensor",
+    "OccSensorOptions":       "OccupancySensor",
+    "PercentageLEDOptions":   "LEDLighting",
+    "ReduceEquipLoadOptions": "ReduceEquipmentLoad",
+    "EconomizerOptions":      "Economizer",
+    "CoolingEqpOptions":      "CoolingEff",
+    "HeatingEqpOptions":      "HeatingEff",
+}
+
+
+def _build_measure_types(df_input: "pd.DataFrame", project_path: str) -> dict:
+    """Build the MeasureTypes option lists exactly as GUI_Functionality.SetECMBaseProperty
+    does: filter each option list against the current building, then prepend the current
+    value as index 0. Reads SummaryResults.csv from project_path and the option CSVs from
+    the package's Measures/ directory (relative to the working dir, which is BLDG_AUDIT_DIR)."""
+    from BldgAuditToolPackage.MeasureClass import MeasureOptions
+    from BldgAuditToolPackage.MeasureSort import VariableFilter, AddCurrentOptionasMeasure
+
+    opt = MeasureOptions(project_path)
+    refs = {
+        "WallInsOptions":         opt.WallInsulation,
+        "CeilInsOptions":         opt.CeilingInsulation,
+        "InfilOptions":           opt.Infiltration,
+        "WindowMatOptions":       opt.WindowMaterial,
+        "DaylightingOptions":     opt.DaylightingControls,
+        "OccSensorOptions":       opt.OccupancySensorControls,
+        "PercentageLEDOptions":   opt.PercentageLED,
+        "ReduceEquipLoadOptions": opt.ReduceEquipmentLoad,
+        "EconomizerOptions":      opt.Economizer,
+        "NightSetbackOptions":    opt.NightSetback,
+        "HoursNightSetbackOptions": opt.HoursNightSetback,
+        "HeatingEqpOptions":      opt.HeatingEquipment,
+        "CoolingEqpOptions":      opt.CoolingEquipment,
+        "DHWEqpOptions":          opt.DHWEquipment,
+    }
+    measure_types: dict = {}
+    for name, func in refs.items():
+        # Build each group independently so an option set that can't be built for this
+        # building (e.g. HVAC with incomplete equipment data) doesn't block the others.
+        try:
+            filtered = VariableFilter(df_input, func())
+            measure_types[name] = AddCurrentOptionasMeasure(df_input, func()[0].PropName, filtered)
+        except Exception:
+            measure_types[name] = None
+    return measure_types
+
+
 def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
-    from BldgAuditToolPackage.EEMIndMeasureAnalysisObject import EvaluateMeasure
+    import tempfile, shutil as _shutil, base64, copy
+    from BldgAuditToolPackage.RunSimulationCase import GetSummaryResults
+    from BldgAuditToolPackage.MeasurePackageClass import MeasurePackage, MeasurePackageUtilities
     from BldgAuditToolPackage.PostProcessing import PlotResults
-    import copy
 
     if project_name not in _analysis_cache:
-        raise RuntimeError("Baseline analysis not found — please upload the PKL file first.")
+        raise RuntimeError("Baseline analysis not found — please re-generate results first.")
 
     cache = _analysis_cache[project_name]
     df_weather = cache["df_weather"]
-    df_input_org = cache["df_input"]
-    df_monthly_org = cache["df_monthly"]
-    best_model_orig = cache["best_model"]
+    df_input   = cache["df_input"].copy().reset_index(drop=True)
+    df_monthly = cache["df_monthly"]
+    best_model = copy.deepcopy(cache["best_model"])
 
-    # ECM evaluation uses a temp directory — nothing saved locally
-    import tempfile, shutil as _shutil
-    tmp_ecm = tempfile.mkdtemp()
-    cost_sources = glob_module.glob(os.path.join(PROJECTS_DIR, "*", "CostData"))
-    if cost_sources:
-        _shutil.copytree(cost_sources[0], os.path.join(tmp_ecm, "CostData"))
-    project_path = tmp_ecm
+    # Cost metrics drive the operating-cost / LCC math inside the package flow.
+    r_disc = req.discount_rate / 100.0
+    uspw = (1 - (1 + r_disc) ** (-req.lifetime)) / r_disc if r_disc != 0 else float(req.lifetime)
+    cost_metrics = {"kWhRate": req.kwh_rate, "ThermRate": req.therm_rate, "USPW": uspw}
 
-    # Ensure geometry fields required by EvaluateMeasure.__init__ are present and valid
-    def _patch_df(df: "pd.DataFrame") -> "pd.DataFrame":
-        df = df.copy()
-        _GEO_DEFAULTS = {
-            "Shape":       "Rectangle",
-            "x1": "10", "x2": "0", "y1": "10", "y2": "0",
-            "WallHeight":  "10",
-            "WindowHeight": "3",
-            "FloorArea":   "1000",
-            "FloorQty":    "1",
-        }
-        for prop_key, default in _GEO_DEFAULTS.items():
-            mask = df["PropKey"] == prop_key
-            if not mask.any():
-                df = pd.concat([df, pd.DataFrame([{"PropKey": prop_key, "PropValue": default}])], ignore_index=True)
-            elif df.loc[mask, "PropValue"].iloc[0] in (None, ""):
-                df.loc[mask, "PropValue"] = default
-        # Force Shape to Rectangle (package only supports Rectangle for ECM)
-        df.loc[df["PropKey"] == "Shape", "PropValue"] = "Rectangle"
-        # nHoursLighting is hours/day (not hours/year). PKL stores the correct value;
-        # inject 6 hrs/day as a fallback only when the key is absent or empty.
-        _nh = df.loc[df["PropKey"] == "nHoursLighting", "PropValue"]
-        if _nh.empty or str(_nh.iloc[0]) in ("", "nan", "None"):
-            df = df[df["PropKey"] != "nHoursLighting"]
-            df = pd.concat([df, pd.DataFrame([{"PropKey": "nHoursLighting", "PropValue": "6"}])], ignore_index=True)
-        # CeilingConst not in the form — inject the only value that exists in Construction-Floor.csv
-        if not (df["PropKey"] == "CeilingConst").any():
-            df = pd.concat([df, pd.DataFrame([{"PropKey": "CeilingConst", "PropValue": "Floor construction Reversed"}])], ignore_index=True)
-        # Ensure WWR dict row exists
-        if not (df["PropKey"] == "WWR").any():
-            def _gv(key):
-                rows = df.loc[df["PropKey"] == key, "PropValue"]
-                v = rows.iloc[0] if not rows.empty else None
-                try: return float(v) if v not in (None, "") else 0.0
-                except: return 0.0
-            df = pd.concat([df, pd.DataFrame([{"PropKey": "WWR", "PropValue": {
-                "Front": _gv("WWR_Front"), "Left": _gv("WWR_Left"),
-                "Back":  _gv("WWR_Back"),  "Right": _gv("WWR_Right"),
-            }}])], ignore_index=True)
-        return df
-
-    df_input_org = _patch_df(df_input_org)
-
-    # Build df_input_EEM: copy with ECM values substituted
-    df_input_eem = df_input_org.copy()
-
-    def _set_prop(key: str, val: str) -> None:
-        mask = df_input_eem["PropKey"] == key
-        if mask.any():
-            df_input_eem.loc[mask, "PropValue"] = val
-
-    if req.ecm_wall_insulation:
-        _set_prop("R-WallInsulation", req.ecm_wall_insulation)
-    if req.ecm_infiltration:
-        _set_prop("ACH50", req.ecm_infiltration)
-    if req.ecm_ceiling_insulation:
-        _set_prop("R-CeilingInsulation", req.ecm_ceiling_insulation)
-    if req.ecm_window_material:
-        _set_prop("WindowMaterial", req.ecm_window_material)
-    if req.ecm_daylighting == "Yes":
-        _set_prop("Daylighting", "Yes")
-    if req.ecm_economizer == "Yes":
-        _set_prop("Economizer", "Yes")
-    if req.ecm_occupancy_sensor == "Yes":
-        _set_prop("OccupancySensor", "Yes")
-    if req.ecm_led:
-        _set_prop("LEDECM", req.ecm_led)
-
-    # Deep-copy best_model so cache stays clean
-    best_model = copy.deepcopy(best_model_orig)
-
-    eval_measure = EvaluateMeasure(df_input_eem, df_weather, BLDG_AUDIT_DIR, project_path, best_model)
-
-    dfMeasure = pd.DataFrame()
-    df_eem_last = df_monthly_org.copy()
-
-    def _run_measure(fn, *args):
-        nonlocal df_eem_last
-        df_eem, results = fn(*args)
-        df_eem_last = df_eem
-        return results
-
-    # Run selected measures
-    if req.ecm_wall_insulation:
-        ext_wall = _val(df_input_org, "ExtWallConst")
-        wall_org = _val(df_input_org, "R-WallInsulation") or "Uninsulated"
-        if not ext_wall:
-            raise RuntimeError("Wall Construction Type is required to evaluate the Wall Insulation ECM — please set it in the Envelope step.")
-        r = _run_measure(eval_measure.WallInsulation, ext_wall, wall_org, req.ecm_wall_insulation)
-        dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
-
-    if req.ecm_infiltration:
-        ach_org = float(_val(df_input_org, "ACH50") or 0)
-        ach_eem = float(req.ecm_infiltration)
-        r = _run_measure(eval_measure.Infiltration, ach_org, ach_eem)
-        dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
-
-    if req.ecm_ceiling_insulation:
-        ext_roof = _val(df_input_org, "ExtRoofConst") or "Asphalt Shingles"
-        ceil_const_rows = df_input_org.loc[df_input_org["PropKey"] == "CeilingConst", "PropValue"]
-        ceil_const = str(ceil_const_rows.iloc[0]) if not ceil_const_rows.empty else "Floor construction Reversed"
-        ceil_org = _val(df_input_org, "R-CeilingInsulation") or "Uninsulated"
-        _ceil_csv = pd.read_csv(os.path.join(BLDG_AUDIT_DIR, "Projects", os.listdir(os.path.join(BLDG_AUDIT_DIR, "Projects"))[0], "CostData", "Materials-CeilingInsulation.csv"))
-        _valid_ceil = set(_ceil_csv["InsulationName"].tolist())
-        if req.ecm_ceiling_insulation not in _valid_ceil:
-            raise RuntimeError(
-                f"Ceiling insulation '{req.ecm_ceiling_insulation}' is not in the cost database. "
-                f"Valid options: {sorted(_valid_ceil)}"
-            )
-        r = _run_measure(eval_measure.CeilingInsulation, ext_roof, ceil_const, ceil_org, req.ecm_ceiling_insulation)
-        dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
-
-    if req.ecm_window_material:
-        win_org = _WIN_MAT_MAP.get(_val(df_input_org, "WindowMaterial"), _val(df_input_org, "WindowMaterial"))
-        win_eem = _WIN_MAT_MAP.get(req.ecm_window_material, req.ecm_window_material)
-        try:
-            r = _run_measure(eval_measure.WindowMaterial, win_org, win_eem)
-            dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
-        except (IndexError, KeyError) as exc:
-            raise RuntimeError(
-                f"Window material '{win_eem}' was not found in the cost database. "
-                f"Verify that the selected ECM window material matches an available option."
-            ) from exc
-
-    if req.ecm_occupancy_sensor == "Yes":
-        r = _run_measure(eval_measure.OccupancySensor)
-        dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
-
-    if req.ecm_led:
-        led_org = float(_val(df_input_org, "LEDCurrent") or 0)
-        led_eem = float(req.ecm_led)
-        r = _run_measure(eval_measure.ReplaceLighting, led_org, led_eem)
-        dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
-
-    if req.ecm_daylighting == "Yes":
-        r = _run_measure(eval_measure.DaylightingSensor)
-        dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
-
-    if req.ecm_economizer == "Yes":
-        bldg_address = _val(df_input_org, "Location")
-        r = _run_measure(eval_measure.Economizer, bldg_address)
-        dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
-
-    if req.ecm_cooling_eff:
-        cooling_eqp_raw = _val(df_input_org, "CoolingEquipment")
-        cooling_eqp_csv = cooling_eqp_raw.replace(" ", "")  # "Air Conditioner" → "AirConditioner"
-        cooling_eff_org_str = _normalize_eff(_val(df_input_org, "CoolingEff") or "1")
-        cooling_eff_eem_str = _normalize_eff(req.ecm_cooling_eff)
-        try:
-            cooling_eff_org = float(cooling_eff_org_str or "1")
-            cooling_eff_eem = float(cooling_eff_eem_str)
-            if cooling_eqp_csv and cooling_eff_eem and cooling_eqp_csv not in ("NoCooling",):
-                r = _run_measure(eval_measure.CoolingEff, cooling_eqp_csv, cooling_eff_org, cooling_eff_eem)
-                dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
-        except Exception:
-            pass  # skip if equipment/efficiency data not available
-
-    if req.ecm_heating_eff:
-        heating_eqp_raw = _val(df_input_org, "HeatingEquipment")
-        heating_eqp_csv = heating_eqp_raw.replace(" ", "")  # "Gas Furnace" → "GasFurnace"
-        heating_eff_org_str = _normalize_eff(_val(df_input_org, "HeatingEff") or "1")
-        heating_eff_eem_str = _normalize_eff(req.ecm_heating_eff)
-        try:
-            heating_eff_org = float(heating_eff_org_str or "1")
-            heating_eff_eem = float(heating_eff_eem_str)
-            if heating_eqp_csv and heating_eff_eem and heating_eqp_csv not in ("NoHeating",):
-                r = _run_measure(eval_measure.HeatingEff, heating_eqp_csv, heating_eff_org, heating_eff_eem)
-                dfMeasure = pd.concat([dfMeasure, pd.DataFrame([r])], ignore_index=True)
-        except Exception:
-            pass  # skip if equipment/efficiency data not available
-
-    # Generate comparison plots (use baseline for both when no measures selected)
-    plotter = PlotResults(True, project_path)
-    plotter.PlotEEMEndUseComparison(df_monthly_org, df_eem_last)
-
-    # Compute package metrics
-    tic = float(dfMeasure["InitFixedCost"].sum() + dfMeasure["InitVarCost"].sum()) if not dfMeasure.empty else 0.0
-    org_kwh = float(best_model_orig["OrgTotalElectricity"])
-    org_therms = float(best_model_orig["OrgTotalNaturalGas"])
-    eem_kwh = float(df_eem_last.loc[:, df_eem_last.columns.str.contains("EL-")].sum().sum() / 3.412)
-    eem_therms = float(df_eem_last.loc[:, df_eem_last.columns.str.contains("NG-")].sum().sum() / 100)
-
-    r_discount = req.discount_rate / 100.0
-    uspw = (1 - (1 + r_discount) ** (-req.lifetime)) / r_discount if r_discount != 0 else req.lifetime
-    aoc_org = req.kwh_rate * org_kwh + req.therm_rate * org_therms
-    aoc_eem = req.kwh_rate * eem_kwh + req.therm_rate * eem_therms
-    org_lcc = uspw * aoc_org
-    lcc = tic + uspw * aoc_eem
-
-    kwh_pct = 100.0 * (org_kwh - eem_kwh) / org_kwh if org_kwh else 0.0
-    therms_pct = 100.0 * (org_therms - eem_therms) / org_therms if org_therms else 0.0
-
-    import base64
-
-    def _b64_ecm(name: str) -> str | None:
-        path = os.path.join(tmp_ecm, name)
-        if not os.path.exists(path):
-            return None
-        with open(path, "rb") as f:
-            return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
-
+    project_path = tempfile.mkdtemp()
     try:
+        # 1. Recreate the baseline artifacts the measure-package flow reads from ProjectPath:
+        #    MonthlyEndUseBreakdown.csv + BestModelParams.csv come straight from the cached
+        #    baseline; SummaryResults.csv is derived from them (adds Electricity/NaturalGas/TOC).
+        df_monthly.to_csv(os.path.join(project_path, "MonthlyEndUseBreakdown.csv"), index=False)
+        pd.DataFrame([best_model]).to_csv(os.path.join(project_path, "BestModelParams.csv"), index=False)
+        GetSummaryResults(project_path, cost_metrics)
+
+        baseline_sum = pd.read_csv(os.path.join(project_path, "SummaryResults.csv"))
+        org_kwh    = float(baseline_sum["Electricity"].iloc[0])
+        org_therms = float(baseline_sum["NaturalGas"].iloc[0])
+        org_lcc    = float(baseline_sum["TOC"].iloc[0])
+
+        # 2. Build the option lists, then map each selected ECM request to a PackageID index.
+        measure_types = _build_measure_types(df_input, project_path)
+
+        def _find(group: str, predicate) -> "int | None":
+            options = measure_types.get(group)
+            if not options:
+                return None
+            for i, m in enumerate(options):
+                try:
+                    if predicate(m):
+                        return i
+                except (ValueError, TypeError):
+                    continue
+            return None
+
+        def _num(v):
+            try:
+                return float(v)
+            except (ValueError, TypeError):
+                return None
+
+        # (group, predicate) for every selectable measure the frontend exposes.
+        selections: list[tuple[str, int]] = []
+        skipped: list[str] = []
+
+        def _select(group: str, predicate, what: str):
+            idx = _find(group, predicate)
+            # idx 0 is the current/baseline option. idx None means the package filtered the
+            # selection out because it isn't an upgrade over the building's current value
+            # (the package's VariableFilter only keeps options better than the baseline).
+            # Either way there is nothing to run, so skip the measure instead of failing the
+            # whole package — and record it so the response can explain what was ignored.
+            if idx is None:
+                skipped.append(what)
+                return
+            if idx == 0:
+                return
+            selections.append((group, idx))
+
+        if req.ecm_wall_insulation:
+            _select("WallInsOptions", lambda m: str(m.PropValue) == req.ecm_wall_insulation, "wall insulation")
+        if req.ecm_infiltration and _num(req.ecm_infiltration) is not None:
+            _select("InfilOptions", lambda m: _num(m.PropValue) == _num(req.ecm_infiltration), "infiltration")
+        if req.ecm_ceiling_insulation:
+            _select("CeilInsOptions", lambda m: str(m.PropValue) == req.ecm_ceiling_insulation, "ceiling insulation")
+        if req.ecm_window_material:
+            win = _WIN_MAT_MAP.get(req.ecm_window_material, req.ecm_window_material)
+            _select("WindowMatOptions", lambda m: str(m.PropValue) == win, "window material")
+        if req.ecm_daylighting == "Yes":
+            _select("DaylightingOptions", lambda m: str(m.PropValue) == "Yes", "daylighting controls")
+        if req.ecm_occupancy_sensor == "Yes":
+            _select("OccSensorOptions", lambda m: str(m.PropValue) == "Yes", "occupancy sensors")
+        if req.ecm_economizer == "Yes":
+            _select("EconomizerOptions", lambda m: str(m.PropValue) == "Yes", "economizer")
+        if req.ecm_led and _num(req.ecm_led) is not None:
+            _select("PercentageLEDOptions", lambda m: _num(m.PropValue) == _num(req.ecm_led), "LED fraction")
+
+        if req.ecm_cooling_eff:
+            clg_eqp = _val(df_input, "CoolingEquipment").replace(" ", "")
+            clg_eff = _num(_normalize_eff(req.ecm_cooling_eff))
+            if clg_eqp and clg_eqp != "NoCooling" and clg_eff:
+                _select("CoolingEqpOptions",
+                        lambda m: clg_eqp in m.PropName.replace(" ", "") and _num(m.PropValue) == clg_eff,
+                        "cooling efficiency")
+        if req.ecm_heating_eff:
+            htg_eqp = _val(df_input, "HeatingEquipment").replace(" ", "")
+            htg_eff = _num(_normalize_eff(req.ecm_heating_eff))
+            if htg_eqp and htg_eqp != "NoHeating" and htg_eff:
+                _select("HeatingEqpOptions",
+                        lambda m: htg_eqp in m.PropName.replace(" ", "") and _num(m.PropValue) == htg_eff,
+                        "heating efficiency")
+
+        util = MeasurePackageUtilities(measure_types)
+
+        def _run_package(selected: list[tuple[str, int]]) -> tuple["MeasurePackage", "pd.DataFrame"]:
+            pkg = MeasurePackage()
+            pkg.PackageID = {name: 0 for name in measure_types}
+            for grp, idx in selected:
+                pkg.PackageID[grp] = idx
+            util.CreateRunDirectory(pkg, df_input.copy(), project_path)
+            util.RunPackage(pkg, cost_metrics, df_weather)
+            results = util.UpdatePackageResults(pkg, baseline_sum)
+            return pkg, results
+
+        # 3. Per-measure rows: run each selected measure on its own so the frontend can show
+        #    its individual cost and energy savings against the baseline.
+        measures_rows = []
+        for grp, idx in selections:
+            single_pkg, single_res = _run_package([(grp, idx)])
+            option = measure_types[grp][idx]
+            current = measure_types[grp][0]
+            unit_value = (
+                0.0 if (isinstance(option.UnitValue, str) and "autosize" in option.UnitValue)
+                else float(option.UnitValue)
+            )
+            measures_rows.append({
+                "Measure":             _ECM_MEASURE_GROUPS.get(grp, grp),
+                "OrgPropValue":        current.PropValue,
+                "NewPropValue":        option.PropValue,
+                "InitFixedCost":       float(option.FixedCost),
+                "InitVarCost":         float(option.UnitVarCost) * unit_value,
+                "OrgTotalElectricity": org_kwh,
+                "EEMTotalElectricity": float(single_res["Electricity"].iloc[0]),
+                "OrgTotalNaturalGas":  org_therms,
+                "EEMTotalNaturalGas":  float(single_res["NaturalGas"].iloc[0]),
+            })
+
+        # 4. Combined package: headline metrics + the monthly comparison the frontend plots.
+        if selections:
+            combined_pkg, combined_res = _run_package(selections)
+            eem_kwh    = float(combined_res["Electricity"].iloc[0])
+            eem_therms = float(combined_res["NaturalGas"].iloc[0])
+            tic        = float(combined_res["TIC"].iloc[0])
+            lcc        = float(combined_res["LCC"].iloc[0])
+            comp_dir   = combined_pkg.OutputDir
+            df_eem_monthly = pd.read_csv(os.path.join(comp_dir, "MonthlyEndUseBreakdown.csv"))
+        else:
+            # Nothing selected → no savings; compare baseline against itself for the plots.
+            eem_kwh, eem_therms = org_kwh, org_therms
+            tic, lcc = 0.0, org_lcc
+            comp_dir = project_path
+            df_eem_monthly = df_monthly.copy()
+
+        plotter = PlotResults(True, project_path)
+        plotter.PlotEEMEndUseComparison(comp_dir, df_eem_monthly)
+
+        kwh_pct    = 100.0 * (org_kwh - eem_kwh) / org_kwh if org_kwh else 0.0
+        therms_pct = 100.0 * (org_therms - eem_therms) / org_therms if org_therms else 0.0
+
+        def _b64_ecm(name: str) -> "str | None":
+            path = os.path.join(comp_dir, name)
+            if not os.path.exists(path):
+                return None
+            with open(path, "rb") as f:
+                return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+
         return {
             "status": "success",
             "metrics": {
@@ -765,10 +791,11 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
                 "elec_monthly_comp": _b64_ecm("ElectricityMonthlyEEMComp.png"),
                 "ng_monthly_comp":   _b64_ecm("NaturalGasMonthlyEEMComp.png"),
             },
-            "measures": dfMeasure.to_dict(orient="records"),
+            "measures": measures_rows,
+            "skipped": skipped,
         }
     finally:
-        _shutil.rmtree(tmp_ecm, ignore_errors=True)  # delete temp dir
+        _shutil.rmtree(project_path, ignore_errors=True)  # delete temp dir
 
 
 @app.post("/run-ecm/{project_name}")
@@ -871,7 +898,7 @@ async def run_analysis_manual(project_name: str, req: ManualAnalysisRequest):
         "WindowHeight":      "3",
         "FloorArea":         "1000",
         "FloorQty":          "1",
-        "EquipPowerDensity": "1.0",
+        "EPD":               "1.0",
     }
     for i, row in enumerate(rows):
         if row["PropKey"] in _DEFAULTS and row["PropValue"] in (None, ""):
