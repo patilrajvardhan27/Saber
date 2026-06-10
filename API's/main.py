@@ -680,7 +680,14 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
         if req.ecm_wall_insulation:
             _select("WallInsOptions", lambda m: str(m.PropValue) == req.ecm_wall_insulation, "wall insulation")
         if req.ecm_infiltration and _num(req.ecm_infiltration) is not None:
-            _select("InfilOptions", lambda m: _num(m.PropValue) == _num(req.ecm_infiltration), "infiltration")
+            # ACH50 only improves when it goes DOWN; a higher value is leakier, not an upgrade.
+            # The package can't filter numeric options reliably, so reject non-improvements here.
+            base_ach = _num(_val(df_input, "ACH50"))
+            sel_ach  = _num(req.ecm_infiltration)
+            if base_ach is not None and sel_ach >= base_ach:
+                skipped.append("infiltration")
+            else:
+                _select("InfilOptions", lambda m: _num(m.PropValue) == sel_ach, "infiltration")
         if req.ecm_ceiling_insulation:
             _select("CeilInsOptions", lambda m: str(m.PropValue) == req.ecm_ceiling_insulation, "ceiling insulation")
         if req.ecm_window_material:
@@ -693,7 +700,13 @@ def _run_ecm_sync(project_name: str, req: EcmRequest) -> dict:
         if req.ecm_economizer == "Yes":
             _select("EconomizerOptions", lambda m: str(m.PropValue) == "Yes", "economizer")
         if req.ecm_led and _num(req.ecm_led) is not None:
-            _select("PercentageLEDOptions", lambda m: _num(m.PropValue) == _num(req.ecm_led), "LED fraction")
+            # LED fraction only improves when it goes UP (more LEDs = less lighting energy).
+            base_led = _num(_val(df_input, "LEDCurrent")) or 0.0
+            sel_led  = _num(req.ecm_led)
+            if sel_led <= base_led:
+                skipped.append("LED fraction")
+            else:
+                _select("PercentageLEDOptions", lambda m: _num(m.PropValue) == sel_led, "LED fraction")
 
         if req.ecm_cooling_eff:
             clg_eqp = _val(df_input, "CoolingEquipment").replace(" ", "")

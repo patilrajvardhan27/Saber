@@ -9,8 +9,40 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Card } from "@/components/ui/Card";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { ECM_MEASURES, ECM_MEASURE_OPTIONS, COOLING_EFF_OPTIONS, HEATING_EFF_OPTIONS } from "@/data/options";
-import type { FormField as FormFieldType } from "@/types/form";
+import {
+  ECM_MEASURES, ECM_MEASURE_OPTIONS, COOLING_EFF_OPTIONS, HEATING_EFF_OPTIONS,
+  WALL_INSULATIONS, CEILING_INSULATIONS, WINDOW_MATERIALS,
+} from "@/data/options";
+import type { FormField as FormFieldType, FormState } from "@/types/form";
+
+// A retrofit option should only be offered when it actually improves on the building's
+// current value. The analysis engine can't reliably filter numeric options, so the UI
+// hides non-improvements (e.g. a higher ACH50 than baseline, which is leakier, not better).
+function upgradeOptions(key: string, options: string[], state: FormState): string[] {
+  const afterInList = (list: string[], baseline: string) => {
+    const bi = list.indexOf(baseline);
+    return bi < 0 ? options : options.filter((o) => list.indexOf(o) > bi);
+  };
+  const greaterThan = (baseline: string) => {
+    const b = parseFloat(baseline);
+    return Number.isNaN(b) ? options : options.filter((o) => parseFloat(o) > b);
+  };
+  const lessThan = (baseline: string) => {
+    const b = parseFloat(baseline);
+    return Number.isNaN(b) ? options : options.filter((o) => parseFloat(o) < b);
+  };
+  switch (key) {
+    case "ecmWallInsulation":    return afterInList(WALL_INSULATIONS, state.wallInsulation);
+    case "ecmCeilingInsulation": return afterInList(CEILING_INSULATIONS, state.ceilingInsulation);
+    case "ecmWindowMaterial":    return afterInList(WINDOW_MATERIALS, state.windowMaterial?.[0] ?? "");
+    case "ecmInfiltration":      return lessThan(state.ach50);                 // lower ACH50 is tighter
+    case "ecmLED":               return greaterThan(state.led || "0");         // more LEDs is better
+    case "ecmNightSetback":      return greaterThan(state.nightSetback || "0");
+    case "ecmNightSetbackHours": return greaterThan(state.nNightSetbackHours || "0");
+    case "ecmReduceEquipLoad":   return greaterThan("0");                      // baseline is always 0%
+    default:                     return options;
+  }
+}
 import { ExportDropdown } from "@/components/ExportDropdown";
 import { API } from "@/utils/api";
 
@@ -220,6 +252,9 @@ export function ECMSelectionStep() {
                   options = (COOLING_EFF_OPTIONS[state.coolingEqp] ?? []).filter((o) => o !== "Other..");
                 } else if (measure.key === "ecmHeatingEff") {
                   options = (HEATING_EFF_OPTIONS[state.heatingEqp] ?? []).filter((o) => o !== "Other..");
+                } else {
+                  // Only offer options that improve on the building's current value.
+                  options = upgradeOptions(measure.key, options, state);
                 }
                 return (
                   <tr key={measure.key} className={i % 2 === 0 ? "bg-bg-card" : "bg-bg-muted"}>

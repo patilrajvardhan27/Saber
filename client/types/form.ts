@@ -210,13 +210,14 @@ export interface SubStepConfig {
 }
 
 export const SECTIONS: SectionConfig[] = [
-  { id: 1, label: "Utility Data",          shortLabel: "Utility",   firstStep: 1,  lastStep: 1  },
-  { id: 2, label: "Building Shape",       shortLabel: "Shape",     firstStep: 2,  lastStep: 3  },
-  { id: 3, label: "Building Envelope",    shortLabel: "Envelope",  firstStep: 4,  lastStep: 6  },
-  { id: 4, label: "Equipment & Lighting", shortLabel: "Equipment", firstStep: 7,  lastStep: 8  },
-  { id: 5, label: "HVAC Systems",         shortLabel: "HVAC",      firstStep: 9,  lastStep: 10 },
-  { id: 6, label: "Post Retrofit Analysis", shortLabel: "Results",   firstStep: 11, lastStep: 11 },
-  { id: 7, label: "Retrofit Analysis",     shortLabel: "Retrofit",  firstStep: 12, lastStep: 15 },
+  { id: 1, label: "Utility Data",           shortLabel: "Utility",   firstStep: 1,  lastStep: 1  },
+  { id: 2, label: "Building Shape",         shortLabel: "Shape",     firstStep: 2,  lastStep: 3  },
+  { id: 3, label: "Building Envelope",      shortLabel: "Envelope",  firstStep: 4,  lastStep: 6  },
+  { id: 4, label: "Equipment",              shortLabel: "Equipment", firstStep: 7,  lastStep: 7  },
+  { id: 5, label: "Lighting & Plug Loads",  shortLabel: "Lighting",  firstStep: 8,  lastStep: 8  },
+  { id: 6, label: "HVAC Systems",           shortLabel: "HVAC",      firstStep: 9,  lastStep: 10 },
+  { id: 7, label: "Post Retrofit Analysis", shortLabel: "Results",   firstStep: 11, lastStep: 11 },
+  { id: 8, label: "Retrofit Analysis",      shortLabel: "Retrofit",  firstStep: 12, lastStep: 15 },
 ];
 
 export const SUB_STEPS: SubStepConfig[] = [
@@ -226,15 +227,15 @@ export const SUB_STEPS: SubStepConfig[] = [
   { id: 4,  section: 3, label: "Walls & Roof"             },
   { id: 5,  section: 3, label: "Foundation & Infiltration"},
   { id: 6,  section: 3, label: "Windows & Shading"        },
-  { id: 7,  section: 4, label: "Appliances"               },
-  { id: 8,  section: 4, label: "Lighting & Plug Loads"    },
-  { id: 9,  section: 5, label: "Heating & Cooling"        },
-  { id: 10, section: 5, label: "Hot Water & Other"        },
-  { id: 11, section: 6, label: "Post Retrofit Analysis"   },
-  { id: 12, section: 7, label: "Financials & Costs"       },
-  { id: 13, section: 7, label: "Retrofit Analysis"        },
-  { id: 14, section: 7, label: "Options & Cost"           },
-  { id: 15, section: 7, label: "Results Summary"          },
+  { id: 7,  section: 4, label: "Equipment Power Density"  },
+  { id: 8,  section: 5, label: "Lighting & Plug Loads"    },
+  { id: 9,  section: 6, label: "Heating & Cooling"        },
+  { id: 10, section: 6, label: "Hot Water & Other"        },
+  { id: 11, section: 7, label: "Post Retrofit Analysis"   },
+  { id: 12, section: 8, label: "Financials & Costs"       },
+  { id: 13, section: 8, label: "Retrofit Analysis"        },
+  { id: 14, section: 8, label: "Options & Cost"           },
+  { id: 15, section: 8, label: "Results Summary"          },
 ];
 
 export const TOTAL_STEPS = 15;
