@@ -208,7 +208,13 @@ Expected: JSON like `{"projects":["LakewoodTestCase", ...]}`. Press `Ctrl+C` to 
 ```bash
 sudo mkdir -p /opt/saber/uploads
 sudo useradd --system --no-create-home --shell /bin/false saberapp
-sudo chown -R saberapp:saberapp /opt/saber
+# Ownership model: rapa4019 owns the tree (so future `rsync` deploys can write it),
+# group saberapp + group-write + setgid so the service (User=saberapp) can still create
+# its output files. See "Update backend after a code change" — keep this model on every
+# deploy; do NOT chown the tree to saberapp:saberapp or `rsync` will fail with EACCES.
+sudo chown -R rapa4019:saberapp /opt/saber
+sudo chmod -R g+w /opt/saber
+sudo find /opt/saber -type d -exec chmod g+s {} \;
 ```
 
 ---
@@ -430,20 +436,44 @@ Click **Deploy**. Vercel will build and deploy in ~2 minutes. You'll get a URL l
 
 ## Update backend after a code change
 
-From your Mac:
+> **Ownership model.** `/opt/saber` is owned by **`rapa4019`** (so your `rsync` can write
+> it) with group **`saberapp`** and group-write + setgid on directories (so the service,
+> which runs as `saberapp`, can still create its output files — `Projects/.../Results/`,
+> etc.). Do **not** `chown` the tree to `saberapp:saberapp` — that locks `rapa4019` out of
+> the next `rsync`. The post-rsync command below re-applies this model and is idempotent.
+
+**1. From your Mac** — sync the backend (excludes deps, build output, git history, and the
+frontend, which deploys separately via Vercel):
 ```bash
 rsync -avz --progress \
-  --exclude 'node_modules' --exclude '.next' --exclude 'venv' --exclude '__pycache__' \
+  --exclude 'node_modules' --exclude '.next' --exclude 'venv' \
+  --exclude '__pycache__' --exclude '.git' --exclude 'client' \
   /Users/raj/CUB/Saber/ \
   rapa4019@saber-backend.colorado.edu:/opt/saber/
 ```
+`rsync` has no `--delete`, so it only adds/updates files — nothing server-side is removed.
 
-On the server:
+**2. On the server** — re-apply ownership/perms, restart, and confirm it came back up
+(`-t` lets `sudo` prompt for its password):
 ```bash
-sudo chown -R saberapp:saberapp /opt/saber
-sudo systemctl restart saber-backend
-sudo systemctl status saber-backend
+ssh -t rapa4019@saber-backend.colorado.edu '
+  sudo chown -R rapa4019:saberapp /opt/saber &&
+  sudo chmod -R g+w /opt/saber &&
+  sudo find /opt/saber -type d -exec chmod g+s {} \; &&
+  sudo systemctl restart saber-backend &&
+  sudo systemctl status saber-backend --no-pager
+'
 ```
+Look for `Active: active (running)`. Then watch a request go through with
+`sudo journalctl -u saber-backend -f` while you exercise the app.
+
+> **First time only / if `rsync` reports `Permission denied`.** The tree is currently owned
+> by `rapa4019`. If it ever reverts to `saberapp` (or another user), take ownership before
+> the first sync: `ssh -t rapa4019@saber-backend.colorado.edu 'sudo chown -R rapa4019:saberapp /opt/saber'`.
+
+> **Note on `saberapp` group membership.** The group-write model only works if the service
+> user `saberapp` is a member of the `saberapp` group. Verify with `id saberapp` (the
+> `groups=` list must contain `saberapp`). If not: `sudo usermod -aG saberapp saberapp`.
 
 ## Update frontend after a code change
 

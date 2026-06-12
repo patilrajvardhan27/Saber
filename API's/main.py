@@ -297,6 +297,93 @@ _WIN_MAT_MAP: dict[str, str] = {
 }
 
 
+# ── WindowMaterial baseline-name patch ─────────────────────────────────────────
+# The EEM window option always comes from Materials-WindowMaterial.csv (canonical
+# names), and the ECM selection already maps the chosen upgrade through _WIN_MAT_MAP
+# above. The building's CURRENT window material, however, is stored straight from the
+# frontend form, where the low-e options use friendlier display labels (e.g.
+# "Low-e Double Pane Clear Air Filled"). Those labels aren't in the CSV, so the
+# package's ImplementMeasures.WindowMaterial() baseline lookup
+#   WindowConstOptions.loc[WindowConstOptions.WindowMaterial==WindowConstOrg,"Uvalue"].iloc[0]
+# returns an empty Series and raises "single positional indexer is out-of-bounds",
+# 500-ing the whole ECM run. ("Single Pane Clear"/"Double Pane Clear" map 1:1 to the
+# CSV, which is why only low-e baselines hit this.)
+#
+# Fix: canonicalise both the original and EEM names through _WIN_MAT_MAP before the
+# lookup so a display-name baseline resolves to its CSV row. Mapping is idempotent —
+# already-canonical names pass straight through — so this also covers cached df_input
+# and any -Baseline.pkl already saved with display names.
+try:
+    from BldgAuditToolPackage.EEMIndMeasureAnalysisObject import ImplementMeasures as _ImplementMeasures
+
+    _orig_window_material = _ImplementMeasures.WindowMaterial
+
+    def _safe_window_material(self, WindowConstOrg, WindowConstEEM):
+        return _orig_window_material(
+            self,
+            _WIN_MAT_MAP.get(WindowConstOrg, WindowConstOrg),
+            _WIN_MAT_MAP.get(WindowConstEEM, WindowConstEEM),
+        )
+
+    _ImplementMeasures.WindowMaterial = _safe_window_material
+except Exception:
+    pass
+
+
+# ── Weather-download writable-directory patch ──────────────────────────────────
+# NOAAData.download_weather_NOAA() saves NOAA station files to the *current working
+# directory* using bare relative names (NOAA_Data.py: open('<station>-<year>.gz','wb'),
+# gzip.open(...), os.remove(...)). At runtime cwd is BLDG_AUDIT_DIR
+# (/opt/saber/BldgAuditToolSimple_v1), which the service user can't reliably write, so the
+# download fails with "[Errno 13] Permission denied: '…-….gz'" and 500s the analysis/ECM.
+#
+# Fix: run the whole download inside a private temp dir (under /tmp, always writable by the
+# service) so the transient .gz/.csv land there and are cleaned up — independent of
+# /opt/saber permissions. os.chdir is process-global, so a module lock serialises
+# downloads and cwd is restored in finally, keeping the steady-state working directory
+# (needed for the package's relative Measures/Inputs reads) unchanged. download_weather_NOAA
+# does no other relative-path I/O, so redirecting only its cwd is safe.
+try:
+    import tempfile as _tempfile_w, shutil as _shutil_w, threading as _threading_w
+    from BldgAuditToolPackage.NOAA_Data import NOAAData as _NOAAData
+
+    _weather_cwd_lock = _threading_w.Lock()
+    _orig_download_weather = _NOAAData.download_weather_NOAA
+
+    def _safe_download_weather(self):
+        with _weather_cwd_lock:
+            prev_cwd = os.getcwd()
+            tmpdir = _tempfile_w.mkdtemp(prefix="noaa_weather_")
+            try:
+                os.chdir(tmpdir)
+                return _orig_download_weather(self)
+            finally:
+                os.chdir(prev_cwd)
+                _shutil_w.rmtree(tmpdir, ignore_errors=True)
+
+    _NOAAData.download_weather_NOAA = _safe_download_weather
+except Exception:
+    pass
+
+
+def _default_ceiling_const() -> str:
+    """The floor-construction name the CeilingInsulation measure expects in df_input.
+
+    CeilingConst is a fixed construction (the single row in
+    Inputs/InputCSVData/Construction-Floor.csv) that PKL-based projects always carry,
+    but the manual entry form never collects it. MeasureClass.SetMeasure reads it for
+    the ceiling ECM (df_input[PropKey=="CeilingConst"]), so a form-built df_input
+    without it raises "single positional indexer is out-of-bounds" at the .iloc[0].
+    Read the value the package itself will look up (positionally, so a BOM/renamed
+    header can't break it) so the two never drift; fall back to the known constant.
+    """
+    try:
+        fc = pd.read_csv(os.path.join(BLDG_AUDIT_DIR, "Inputs", "InputCSVData", "Construction-Floor.csv"))
+        return str(fc.iloc[0, 0])
+    except Exception:
+        return "Floor construction Reversed"
+
+
 def _normalize_eff(value: str) -> str:
     """Convert display efficiency labels to the numeric strings the analysis package expects.
 
@@ -945,6 +1032,17 @@ async def export_pkl_handler(project_name: str, req: ExportPklRequest):
             value = value[0] if value else ""
         rows.append({"PropKey": prop_key, "PropValue": value if value != "" else None})
 
+    # Match real PKL projects, which always carry the CeilingConst constant the
+    # CeilingInsulation ECM measure reads (the form doesn't collect it).
+    if not any(r["PropKey"] == "CeilingConst" for r in rows):
+        rows.append({"PropKey": "CeilingConst", "PropValue": _default_ceiling_const()})
+
+    # Baseline EquipLoadRed is always 0% (see run_analysis_manual); never persist the
+    # ECM field's "%"-suffixed value into the baseline PKL or it won't parse on reload.
+    for _i, _r in enumerate(rows):
+        if _r["PropKey"] == "EquipLoadRed":
+            rows[_i] = {**_r, "PropValue": "0"}
+
     df = pd.DataFrame(rows, columns=["PropKey", "PropValue"])
 
     buf = io.BytesIO()
@@ -1006,6 +1104,22 @@ async def run_analysis_manual(project_name: str, req: ManualAnalysisRequest):
     if not _nh_rows or str(_nh_rows[0].get("PropValue", "")) in ("", "nan", "None"):
         rows = [r for r in rows if r["PropKey"] != "nHoursLighting"]
         rows.append({"PropKey": "nHoursLighting", "PropValue": "6"})
+
+    # CeilingConst isn't a form field; PKL projects store it as a constant. Inject it
+    # when absent so the CeilingInsulation ECM measure can read it (see
+    # _default_ceiling_const) instead of crashing on an empty .iloc[0].
+    if not any(r["PropKey"] == "CeilingConst" for r in rows):
+        rows.append({"PropKey": "CeilingConst", "PropValue": _default_ceiling_const()})
+
+    # "Reduce Equipment Load" is an ECM-only measure; a building's CURRENT equipment-load
+    # reduction is always 0% (the frontend enforces "baseline is always 0%"). But
+    # PROP_KEY_MAP maps the baseline prop EquipLoadRed to the ECM field, so the ECM
+    # selection (e.g. "10%") would otherwise land in the baseline prop and crash
+    # EnergyAnalysis' `.astype(float)` on the trailing "%". Pin the baseline to a plain
+    # "0"; the ECM run sets its own value when that measure is evaluated.
+    for _i, _r in enumerate(rows):
+        if _r["PropKey"] == "EquipLoadRed":
+            rows[_i] = {**_r, "PropValue": "0"}
 
     # Build the combined WWR dict row expected by EEMIndMeasureAnalysisObject
     def _get_row(key: str):
