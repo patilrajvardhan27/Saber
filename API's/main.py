@@ -85,8 +85,11 @@ os.chdir(BLDG_AUDIT_DIR)
 # ── InverseModel safety patches ────────────────────────────────────────────────
 # Bug 1: model.py fit() swallows curve_fit failures but leaves self.p unset;
 #        fit_model() then crashes with AttributeError at `self.p_init = self.p`.
-# Bug 2: fit_model() returns bare False (not a tuple) when R² < threshold, but
-#        BuildTemperatureBasedModel always unpacks 3 values from the result.
+# Bug 2: fit_model() can return a bare False / short tuple (not a tuple, or fewer
+#        than 4 items) when curve_fit fails, but the current package always unpacks
+#        4 values from it (has_fit, model_type, model_parameters, model_r2 — the R²
+#        was added by the "Edited to make the R2 value correct" changes). A short
+#        return then raises "not enough values to unpack (expected 4, got 3)".
 try:
     import numpy as _np_patch
     from BldgAuditToolPackage.model import InverseModel as _InverseModel
@@ -116,16 +119,96 @@ try:
 
     _orig_inv_fit_model = _InverseModel.fit_model
 
+    # Always hand back a 4-tuple (has_fit, model_type, model_parameters, model_r2)
+    # so BuildTemperatureBasedModel's `a, b, c, d = fit_model()` never crashes.
     def _safe_inv_fit_model(self, has_fit=False, threshold=0.1):
+        no_fit = (False, "No fit", getattr(self, 'p', _np_patch.zeros(5)), 0.0)
         try:
             result = _orig_inv_fit_model(self, has_fit, threshold)
             if not isinstance(result, tuple):
-                return (False, "No fit", getattr(self, 'p', _np_patch.zeros(5)))
-            return result
+                return no_fit
+            if len(result) == 4:
+                return result
+            if len(result) == 3:
+                # Older 3-value return shape — append a zero R² to make it 4.
+                return (result[0], result[1], result[2], 0.0)
+            return no_fit
         except Exception:
-            return (False, "No fit", getattr(self, 'p', _np_patch.zeros(5)))
+            return no_fit
 
     _InverseModel.fit_model = _safe_inv_fit_model
+except Exception:
+    pass
+
+# Bug 3: when the model comes back as "No fit", BuildTemperatureBasedModel still
+#        calls Plot_Matplotlib(...).plot_graph_cp(). In graph.py "No fit" matches no
+#        model-type branch, so eui_values stays None and r_squared is never assigned,
+#        making the title line raise NameError and 500 the whole analysis. The change-
+#        point PNG is optional (main.py's _b64 already returns None for a missing
+#        file), so a plotting failure must not abort the run — swallow it.
+try:
+    from BldgAuditToolPackage.graph import Plot_Matplotlib as _PlotMatplotlib
+
+    _orig_plot_cp = _PlotMatplotlib.plot_graph_cp
+
+    def _safe_plot_cp(self, *args, **kwargs):
+        try:
+            return _orig_plot_cp(self, *args, **kwargs)
+        except Exception:
+            return 0.0  # caller discards the return; just don't crash the analysis
+
+    _PlotMatplotlib.plot_graph_cp = _safe_plot_cp
+except Exception:
+    pass
+# ──────────────────────────────────────────────────────────────────────────────
+
+# ── BuildChangePointModel weather-alignment patch ──────────────────────────────
+# AnalyzeUtilityData builds self.df_month = df_weather.resample("M").mean() and then
+# treats it positionally: BuildTemperatureBasedModel pairs df_month["Temp_F"] with
+# the utility records for the change-point fit/scatter, and BuildDegreeDayBasedModel
+# derives its temperature masks from df_month too. All of this assumes df_month has
+# exactly one row per utility record, in the same order.
+#
+# The weather coverage NOAA returns is not guaranteed to land on whole calendar
+# months, so resample("M") can produce an extra (or missing) monthly bucket. The
+# resulting length mismatch makes matplotlib's scatter raise
+# "x and y must be the same size", which surfaces as an HTTP 500 ("Analysis failed:
+# x and y must be the same size") on /run-analysis and /run-analysis-manual.
+#
+# Fix: after the model is constructed, rebuild self.df_month["Temp_F"] by looking up
+# the monthly mean temperature for each utility record's (Year, Month). Months with
+# no weather match fall back to the overall mean so every utility row keeps a
+# temperature and all downstream arrays stay the same length. Inside this class
+# df_month is only ever read as ["Temp_F"].values, so replacing the frame is safe.
+try:
+    import numpy as _np_align
+    from BldgAuditToolPackage.AnalyzeUtilityData import BuildChangePointModel as _BCPM
+
+    _orig_bcpm_init = _BCPM.__init__
+
+    def _aligned_bcpm_init(self, *args, **kwargs):
+        _orig_bcpm_init(self, *args, **kwargs)
+        try:
+            monthly = self.df_month
+            temp_by_ym = pd.Series(
+                monthly["Temp_F"].values,
+                index=pd.MultiIndex.from_arrays(
+                    [monthly.index.year, monthly.index.month], names=["Year", "Month"]
+                ),
+            )
+            temp_by_ym = temp_by_ym[~temp_by_ym.index.duplicated()]
+            overall_mean = float(_np_align.nanmean(monthly["Temp_F"].values))
+            keys = zip(self.dfutilDataSorted["Year"].astype(int),
+                       self.dfutilDataSorted["Month"].astype(int))
+            aligned = [temp_by_ym.get(k, overall_mean) for k in keys]
+            # Guard against a present-but-NaN monthly mean so no row is left as NaN.
+            aligned = [overall_mean if v != v else float(v) for v in aligned]
+            self.df_month = pd.DataFrame({"Temp_F": aligned})
+        except Exception:
+            # If anything goes wrong, leave df_month untouched (original behaviour).
+            pass
+
+    _BCPM.__init__ = _aligned_bcpm_init
 except Exception:
     pass
 # ──────────────────────────────────────────────────────────────────────────────
