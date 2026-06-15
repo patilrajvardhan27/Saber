@@ -162,6 +162,61 @@ except Exception:
     pass
 # ──────────────────────────────────────────────────────────────────────────────
 
+# ── PlotInverseModelComparison shape-mismatch patch ─────────────────────────────
+# PlotInverseModelComparison compares MonthlyEndUseBreakdown.csv (one row per
+# distinct calendar month present in the downloaded NOAA weather data) against
+# dfutilDataSorted (one row per utility bill, normally 12). If the weather download
+# doesn't cover all 12 calendar months (e.g. the most recent months aren't published
+# by NOAA yet), df_MonthlyEndUse has fewer rows than dfutilDataSorted, and
+# `ThermPred - np.array(ThermMean)` raises "operands could not be broadcast together
+# with shapes (N,) (12,)", 500-ing /run-analysis and /run-analysis-manual.
+#
+# Fix: these utility-vs-model comparison plots (NaturalGasMonthlyBreakdown.png /
+# ElectricityMonthlyBreakdown.png) are optional — _b64() already returns None for a
+# missing file — so swallow any error here and skip them rather than failing the run.
+try:
+    from BldgAuditToolPackage.PostProcessing import PlotResults as _PlotResults
+
+    _orig_plot_inverse_cmp = _PlotResults.PlotInverseModelComparison
+
+    def _safe_plot_inverse_cmp(self, *args, **kwargs):
+        try:
+            return _orig_plot_inverse_cmp(self, *args, **kwargs)
+        except Exception:
+            return None
+
+    _PlotResults.PlotInverseModelComparison = _safe_plot_inverse_cmp
+except Exception:
+    pass
+# ──────────────────────────────────────────────────────────────────────────────
+
+# ── PlotEEMEndUseComparison shape-mismatch patch ────────────────────────────────
+# PlotEEMEndUseComparison (used by /run-ecm) compares the baseline's
+# MonthlyEndUseBreakdown.csv against the EEM package's MonthlyEndUseBreakdown.csv
+# row-for-row (ThermPred - ThermPred_EEM, ElecPred - ElecPred_EEM). If the two runs'
+# NOAA weather downloads cover a different number of calendar months, the two CSVs
+# have different row counts and this raises "operands could not be broadcast
+# together with shapes (M,) (N,)", 500-ing /run-ecm.
+#
+# Fix: these EEM-vs-baseline comparison plots (NaturalGasMonthlyEEMComp.png /
+# ElectricityMonthlyEEMComp.png) are optional — _b64_ecm() already returns None for
+# a missing file — so swallow any error here and skip them rather than failing the run.
+try:
+    from BldgAuditToolPackage.PostProcessing import PlotResults as _PlotResults2
+
+    _orig_plot_eem_cmp = _PlotResults2.PlotEEMEndUseComparison
+
+    def _safe_plot_eem_cmp(self, *args, **kwargs):
+        try:
+            return _orig_plot_eem_cmp(self, *args, **kwargs)
+        except Exception:
+            return None
+
+    _PlotResults2.PlotEEMEndUseComparison = _safe_plot_eem_cmp
+except Exception:
+    pass
+# ──────────────────────────────────────────────────────────────────────────────
+
 # ── BuildChangePointModel weather-alignment patch ──────────────────────────────
 # AnalyzeUtilityData builds self.df_month = df_weather.resample("M").mean() and then
 # treats it positionally: BuildTemperatureBasedModel pairs df_month["Temp_F"] with
