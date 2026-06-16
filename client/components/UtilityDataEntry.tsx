@@ -10,7 +10,7 @@ const MONTHS = [
 ];
 
 const THIS_YEAR = new Date().getFullYear();
-const YEAR_OPTIONS = Array.from({ length: 20 }, (_, i) => THIS_YEAR - 1 - i);
+const YEAR_OPTIONS = Array.from({ length: 20 }, (_, i) => THIS_YEAR - 2 - i);
 
 interface RowData {
   kwh1: string; therms1: string;
@@ -30,9 +30,9 @@ export function UtilityDataEntry() {
   // Use the same project key the analysis engine uses: PKL-derived name takes precedence.
   const projectName = pklProjectName || state.projectName.trim();
 
-  const [year1, setYear1] = useState(utilityData?.year1 ?? THIS_YEAR - 1);
-  const [year2, setYear2] = useState(utilityData?.year2 ?? THIS_YEAR - 1);
-  const [year3, setYear3] = useState(utilityData?.year3 ?? THIS_YEAR - 1);
+  const [year1, setYear1] = useState(utilityData?.year1 ?? THIS_YEAR - 2);
+  const [year2, setYear2] = useState(utilityData?.year2 ?? THIS_YEAR - 2);
+  const [year3, setYear3] = useState(utilityData?.year3 ?? THIS_YEAR - 2);
   const [rows, setRows] = useState<RowData[]>(() => utilityData?.rows ?? MONTHS.map(emptyRow));
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [errorMsg, setErrorMsg] = useState("");
