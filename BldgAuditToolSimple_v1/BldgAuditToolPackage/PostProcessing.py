@@ -103,93 +103,81 @@ class PlotResults:
                 ElecMean.append(df.loc[i, 'kWh'])  # For rows beyond 12, keep as is
         #%%
         ThermPred = ThermRes.sum(axis=1).values
-        ThermErr = 100*(ThermPred - np.array(ThermMean))/np.array(ThermMean)
+        ThermMean_arr = np.array(ThermMean)
+        _n = min(len(ThermPred), len(ThermMean_arr))
+        ThermPred, ThermMean_arr = ThermPred[:_n], ThermMean_arr[:_n]
+        ThermErr = 100*(ThermPred - ThermMean_arr)/ThermMean_arr
         ElecPred = ElecRes.sum(axis=1).values
-        ElecErr = 100*(ElecPred - np.array(ElecMean))/np.array(ElecMean)
+        ElecMean_arr = np.array(ElecMean)
+        _ne = min(len(ElecPred), len(ElecMean_arr))
+        ElecPred, ElecMean_arr = ElecPred[:_ne], ElecMean_arr[:_ne]
+        ElecErr = 100*(ElecPred - ElecMean_arr)/ElecMean_arr
         
         #%%
-        ThermPred = ThermRes.sum(axis=1).values
         print("ThermPred: ",ThermPred)
-        print("ThermAct: ",ThermMean)
-        ThermResidual = ThermMean - ThermPred
+        print("ThermAct: ",ThermMean_arr)
+        ThermResidual = ThermMean_arr - ThermPred
         ThermRMSE = np.sqrt(np.mean(ThermResidual**2))
-        ThermCVRMSE = ThermRMSE/np.mean(ThermMean)*100
+        ThermCVRMSE = ThermRMSE/np.mean(ThermMean_arr)*100
         print("Therm CVRMSE: ",ThermCVRMSE)
-        ThermNMBE = np.mean(ThermResidual)/np.mean(ThermMean)*100
+        ThermNMBE = np.mean(ThermResidual)/np.mean(ThermMean_arr)*100
         print("Therm NMBE: ",ThermNMBE)
         NGColorMap = {"Gas Equipment":"tab:green","DHW Heating":"tab:orange","Space Heating":"red"}
         abbreviated_months = [calendar.month_abbr[i] for i in range(1, 13)]
         fig, ax = plt.subplots(figsize=(8,4))
 
         # Plot the timeseries data
-        ax.plot(np.arange(0,len(ThermMean)), np.array(ThermMean), marker="s", color="k", label="Utility Data")  # Add label for clarity
+        ax.plot(np.arange(0,len(ThermMean_arr)), ThermMean_arr, marker="s", color="k", label="Utility Data")
 
         # Plot the stacked bar chart on the same axes
-        colors = [NGColorMap.get(col, "gray") for col in ThermRes.columns]  # Default to "gray" if not in NGColorMap
-        Thermbars = ThermRes.plot(kind='bar', stacked=True, ax=ax, color=colors,edgecolor='black')
+        colors = [NGColorMap.get(col, "gray") for col in ThermRes.columns]
+        Thermbars = ThermRes.iloc[:_n].plot(kind='bar', stacked=True, ax=ax, color=colors,edgecolor='black')
         ax.get_legend().remove()
-        
+
         for i, (height, err) in enumerate(zip(ThermPred, ThermErr)):
             ax.text(i,  height + ThermPred.max()/20, f'{err:.1f}%', ha='center', fontsize=10, color='black')
 
 
         ax.set_ylabel('Natural Gas (Therms)')
-        
 
-        # ax.legend(ncol=2, title="End Uses")
         ax.set_title("CV-RMSE: "+str(round(ThermCVRMSE,1))+"%, NMBE: "+str(round(ThermNMBE,1))+"%")
-        ax.set_xticks(range(len(ThermRes.index)))
-        ax.set_xticklabels(abbreviated_months, rotation=45)
+        ax.set_xticks(range(_n))
+        ax.set_xticklabels(abbreviated_months[:_n], rotation=45)
         ax.set_xlabel('')
-        ax.set_ylim([0,max(max(ThermMean),ThermPred.max())+max(max(ThermMean),ThermPred.max())/5])
-        # Adjust layout to prevent overlapping elements
+        ax.set_ylim([0,max(ThermMean_arr.max(),ThermPred.max())+max(ThermMean_arr.max(),ThermPred.max())/5])
         fig.tight_layout()
         if self.save:
             fig.savefig(os.path.join(self.ProjectPath,"Results","NaturalGasMonthlyBreakdown.png"),dpi=300)
         plt.close()
-        #### Print the legend box only
-        # Extract legend handles/labels before removing from axes
-        # handles, labels = ax.get_legend_handles_labels()
-        # ng_handles = handles[:len(ThermRes.columns)*2]
-        # ng_labels = labels[:len(ThermRes.columns)*2]
-        # fig_legend = plt.figure(figsize=(6, 0.7))
-        # fig_legend.legend(ng_handles, ng_labels, title="End Uses", ncol=4, loc='center', frameon=True)
-        # fig_legend.tight_layout()
-        # if self.save:
-        #     fig_legend.savefig(os.path.join(RunDir,"NaturalGasLegend.png"), dpi=150, bbox_inches='tight')
 
-        
         #%%
-        ElecPred = ElecRes.sum(axis=1).values
         print("ElecPred: ",ElecPred)
-        print("ElecAct: ",ElecMean)
-        ElecResidual = ElecMean - ElecPred
+        print("ElecAct: ",ElecMean_arr)
+        ElecResidual = ElecMean_arr - ElecPred
         ElecRMSE = np.sqrt(np.mean(ElecResidual**2))
-        ElecCVRMSE = ElecRMSE/np.mean(ElecMean)*100
+        ElecCVRMSE = ElecRMSE/np.mean(ElecMean_arr)*100
         print("Elec CVRMSE: ",ElecCVRMSE)
-        ElecNMBE = np.mean(ElecResidual)/np.mean(ElecMean)*100
+        ElecNMBE = np.mean(ElecResidual)/np.mean(ElecMean_arr)*100
         print("Elec NMBE: ",ElecNMBE)
         ElecColorMap = {"Electric Equipment":"tab:green","Lighting":"yellow","Space Cooling":"blue","Space Heating":"red","DHW Heating":"tab:orange"}
         abbreviated_months = [calendar.month_abbr[i] for i in range(1, 13)]
         fig, ax = plt.subplots(figsize=(8,4))
-        ax.plot(np.arange(0,len(ElecMean)),ElecMean,marker="s",color="k", label="Utility Data")
-        colors = [ElecColorMap.get(col, "gray") for col in ElecRes.columns]  # Default to "gray" if not in NGColorMap
-        Elecbars = ElecRes.plot(kind='bar', stacked=True, ax=ax, color=colors,edgecolor='black')
+        ax.plot(np.arange(0,len(ElecMean_arr)),ElecMean_arr,marker="s",color="k", label="Utility Data")
+        colors = [ElecColorMap.get(col, "gray") for col in ElecRes.columns]
+        Elecbars = ElecRes.iloc[:_ne].plot(kind='bar', stacked=True, ax=ax, color=colors,edgecolor='black')
         ax.get_legend().remove()
-        
+
         for i, (height, err) in enumerate(zip(ElecPred, ElecErr)):
             ax.text(i, height +  ElecPred.max()/20, f'{err:.1f}%', ha='center', fontsize=10, color='black')
-            
-        ax.set_ylabel('Electricity (kWh)')
-        # ax.legend(ncol=2, title="End Uses")
 
-        
+        ax.set_ylabel('Electricity (kWh)')
+
         ax.set_title("CV-RMSE: "+str(round(ElecCVRMSE,1))+"%, NMBE: "+str(round(ElecNMBE,1))+"%")
 
-        ax.set_xticks(range(len(ThermRes.index)))
-        ax.set_xticklabels(abbreviated_months, rotation=45)
+        ax.set_xticks(range(_ne))
+        ax.set_xticklabels(abbreviated_months[:_ne], rotation=45)
         ax.set_xlabel('')
-        ax.set_ylim([0,max(max(ElecMean),ElecPred.max())+max(max(ElecMean),ElecPred.max())/5])
+        ax.set_ylim([0,max(ElecMean_arr.max(),ElecPred.max())+max(ElecMean_arr.max(),ElecPred.max())/5])
         fig.tight_layout()
         if self.save:
             fig.savefig(os.path.join(self.ProjectPath,"Results","ElectricityMonthlyBreakdown.png"),dpi=300)
@@ -237,10 +225,14 @@ class PlotResults:
         #%%
         ThermPred = ThermRes.sum(axis=1).values
         ThermPred_EEM = ThermRes_EEM.sum(axis=1).values
+        _nt = min(len(ThermPred), len(ThermPred_EEM))
+        ThermPred, ThermPred_EEM = ThermPred[:_nt], ThermPred_EEM[:_nt]
         ThermErr = 100*(ThermPred - ThermPred_EEM)/ThermPred
         ElecPred = ElecRes.sum(axis=1).values
         ElecPred_EEM = ElecRes_EEM.sum(axis=1).values
-        ElecErr = 100*(ElecPred - ElecPred_EEM)/np.array(ElecPred)
+        _ne2 = min(len(ElecPred), len(ElecPred_EEM))
+        ElecPred, ElecPred_EEM = ElecPred[:_ne2], ElecPred_EEM[:_ne2]
+        ElecErr = 100*(ElecPred - ElecPred_EEM)/ElecPred
         
         #%%
         NGColorMap = {"Gas Equipment":"tab:green","DHW Heating":"tab:orange","Space Heating":"red"}

@@ -114,6 +114,10 @@ class InverseModel:
                 #print("fit success")
             except Exception as e:
                 print(f"Error in curve fitting: {e}")
+                avg_temp = float(np.nanmean(self.temperature)) if len(self.temperature) > 0 else 50.0
+                avg_eui  = float(np.nanmean(self.eui))         if len(self.eui)         > 0 else 0.0
+                self.p = np.array([avg_temp - 5.0, avg_temp + 5.0, avg_eui, 0.0, 0.0])
+                self.e = np.zeros((5, 5))
             #print("value of p", self.p)
             # Model coefficients
             self.hcp, self.ccp, self.base, self.hsl, self.csl = self.p

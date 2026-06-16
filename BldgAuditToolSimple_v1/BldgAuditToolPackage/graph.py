@@ -41,6 +41,7 @@ class Plot_Matplotlib:
         
 
         eui_values = None  # Placeholder for model-generated values
+        r_squared = self.model_r2  # default so title always has a value even for "No fit"
         # Create figure object
         fig = plt.figure(figsize=(5,4))
         ax = fig.add_subplot(111)

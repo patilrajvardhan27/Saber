@@ -118,8 +118,8 @@ class MeasureUtilities:
             df_input.loc[df_input["PropKey"] == "LPD", "PropValue"] = (1-pct_savings)*float(df_input.loc[df_input["PropKey"] == "LPD", "PropValue"].iloc[0])
 
         elif "LED" in Measure.PropName:
-            pctLEDOrg = df_input.loc[df_input["PropKey"] == "LEDCurrent","PropValue"].iloc[0]
-            pctLEDEEM = Measure.PropValue
+            pctLEDOrg = float(df_input.loc[df_input["PropKey"] == "LEDCurrent","PropValue"].iloc[0])
+            pctLEDEEM = float(Measure.PropValue)
             pct_savings = SetCurrentMeasure.ReplaceLighting(pctLEDOrg,pctLEDEEM)
             df_input.loc[df_input["PropKey"] == "LEDECM", "PropValue"] = pctLEDEEM
             df_input.loc[df_input["PropKey"] == "LPD", "PropValue"] = (1-pct_savings)*float(df_input.loc[df_input["PropKey"] == "LPD", "PropValue"].iloc[0])

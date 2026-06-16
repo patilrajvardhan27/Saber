@@ -113,7 +113,34 @@ class BuildChangePointModel:
 
         self.start_dates,self.end_dates,self.start_year,self.end_year = ParseUtilityData(self.ProjectPath,ProjectName)
 
-        return 
+        # Align df_month["Temp_F"] so it has exactly one entry per utility record,
+        # matched by (Year, Month). resample("M") can produce fewer or more buckets
+        # than the 12 utility bills when NOAA coverage doesn't span full calendar months.
+        try:
+            _temp_by_ym = pd.Series(
+                self.df_month["Temp_F"].values,
+                index=pd.MultiIndex.from_arrays(
+                    [self.df_month.index.year, self.df_month.index.month],
+                    names=["Year", "Month"],
+                ),
+            )
+            _temp_by_ym = _temp_by_ym[~_temp_by_ym.index.duplicated()]
+            _overall_mean = float(np.nanmean(self.df_month["Temp_F"].values))
+            _aligned = [
+                _overall_mean if v != v else float(v)
+                for v in (
+                    _temp_by_ym.get((int(yr), int(mo)), _overall_mean)
+                    for yr, mo in zip(
+                        self.dfutilDataSorted["Year"].astype(int),
+                        self.dfutilDataSorted["Month"].astype(int),
+                    )
+                )
+            ]
+            self.df_month = pd.DataFrame({"Temp_F": _aligned})
+        except Exception:
+            pass
+
+        return
 
     def BuildTemperatureBasedModel(self):
 
