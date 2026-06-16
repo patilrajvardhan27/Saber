@@ -220,16 +220,17 @@ except Exception:
 # ── ReplaceLighting str→float patch ─────────────────────────────────────────────
 # SetMeasure reads pctLEDOrg from df_input["PropValue"] which is always a string
 # column. ReplaceLighting then does pct_LED_EEM - pct_LED (float - str) and raises
-# TypeError. Patch ReplaceLighting to cast both args to float before subtracting.
+# TypeError. Patch ImplementMeasures.ReplaceLighting to cast both args to float.
+# (SetCurrentMeasure in MeasureClass.py is a local instance of ImplementMeasures.)
 try:
-    from BldgAuditToolPackage.EEMIndMeasureAnalysisObject import SetCurrentMeasure as _SetCurrentMeasure
+    from BldgAuditToolPackage.EEMIndMeasureAnalysisObject import ImplementMeasures as _ImplementMeasures
 
-    _orig_replace_lighting = _SetCurrentMeasure.ReplaceLighting
+    _orig_replace_lighting = _ImplementMeasures.ReplaceLighting
 
     def _safe_replace_lighting(self, pct_LED, pct_LED_EEM):
         return _orig_replace_lighting(self, float(pct_LED), float(pct_LED_EEM))
 
-    _SetCurrentMeasure.ReplaceLighting = _safe_replace_lighting
+    _ImplementMeasures.ReplaceLighting = _safe_replace_lighting
 except Exception:
     pass
 # ──────────────────────────────────────────────────────────────────────────────
