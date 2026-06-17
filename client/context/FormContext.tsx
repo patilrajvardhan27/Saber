@@ -87,9 +87,11 @@ interface FormContextValue {
   ecmPlots: EcmPlots | null;
   ecmMeasures: EcmMeasureRow[];
   ecmError: string;
+  ecmCostOverrides: Record<string, string>;
   setEcmRunning: () => void;
   setEcmDone: (metrics: EcmMetrics, plots: EcmPlots, measures: EcmMeasureRow[]) => void;
   setEcmError: (message: string) => void;
+  setEcmCostOverride: (measure: string, cost: string) => void;
   setField: (field: FormField, value: FormState[FormField]) => void;
   setFields: (fields: Partial<FormState>) => void;
   goToStep: (step: number) => void;
@@ -111,7 +113,8 @@ type Action =
   | { type: "SET_ANALYSIS_ERROR"; message: string }
   | { type: "SET_ECM_RUNNING" }
   | { type: "SET_ECM_DONE"; metrics: EcmMetrics; plots: EcmPlots; measures: EcmMeasureRow[] }
-  | { type: "SET_ECM_ERROR"; message: string };
+  | { type: "SET_ECM_ERROR"; message: string }
+  | { type: "SET_ECM_COST_OVERRIDE"; measure: string; cost: string };
 
 interface State {
   form: FormState;
@@ -131,6 +134,7 @@ interface State {
   ecmPlots: EcmPlots | null;
   ecmMeasures: EcmMeasureRow[];
   ecmError: string;
+  ecmCostOverrides: Record<string, string>;
 }
 
 function reducer(state: State, action: Action): State {
@@ -165,11 +169,13 @@ function reducer(state: State, action: Action): State {
     case "SET_ANALYSIS_ERROR":
       return { ...state, analysisStatus: "error", analysisError: action.message };
     case "SET_ECM_RUNNING":
-      return { ...state, ecmStatus: "running", ecmError: "" };
+      return { ...state, ecmStatus: "running", ecmError: "", ecmCostOverrides: {} };
     case "SET_ECM_DONE":
       return { ...state, ecmStatus: "done", ecmMetrics: action.metrics, ecmPlots: action.plots, ecmMeasures: action.measures, ecmError: "" };
     case "SET_ECM_ERROR":
       return { ...state, ecmStatus: "error", ecmError: action.message };
+    case "SET_ECM_COST_OVERRIDE":
+      return { ...state, ecmCostOverrides: { ...state.ecmCostOverrides, [action.measure]: action.cost } };
     default:
       return state;
   }
@@ -196,6 +202,7 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
     ecmPlots: null,
     ecmMeasures: [],
     ecmError: "",
+    ecmCostOverrides: {},
   });
 
   const setField = useCallback(
@@ -274,6 +281,12 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const setEcmCostOverride = useCallback(
+    (measure: string, cost: string) =>
+      dispatch({ type: "SET_ECM_COST_OVERRIDE", measure, cost }),
+    []
+  );
+
   const currentSection =
     SECTIONS.find(
       (s) => state.currentStep >= s.firstStep && state.currentStep <= s.lastStep
@@ -307,9 +320,11 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
         ecmPlots: state.ecmPlots,
         ecmMeasures: state.ecmMeasures,
         ecmError: state.ecmError,
+        ecmCostOverrides: state.ecmCostOverrides,
         setEcmRunning,
         setEcmDone,
         setEcmError,
+        setEcmCostOverride,
         setField,
         setFields,
         goToStep,

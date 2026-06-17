@@ -101,6 +101,31 @@ def GetGeometryParameters(df_input):
         for face in WallArea.keys():
             ExtWallArea[face] = WallArea[face] - WindowArea[face]
 
+    elif ShapeType == "L-Shape":
+        # L-shape: notch cut from one corner (x2 wide, y2 deep).
+        # The 6-face perimeter equals 2*(x1+y1) — same as the enclosing rectangle —
+        # so wall areas map to the same 4 faces as Rectangle.
+        # Only CeilingArea differs: use user-entered FloorArea (= x1*y1 - x2*y2).
+        CeilingArea = FloorArea
+        WallArea = {}
+        WallArea["Front"] = x1*WallHeight*FloorQty
+        WallArea["Left"]  = y1*WallHeight*FloorQty
+        WallArea["Right"] = y1*WallHeight*FloorQty
+        WallArea["Back"]  = x1*WallHeight*FloorQty
+
+        WindowArea = {}
+        WindowArea["Front"] = WWR["Front"]/100*WallArea["Front"]
+        WindowArea["Left"]  = WWR["Left"] /100*WallArea["Left"]
+        WindowArea["Right"] = WWR["Right"]/100*WallArea["Right"]
+        WindowArea["Back"]  = WWR["Back"] /100*WallArea["Back"]
+
+        ExtWallArea = {}
+        for face in WallArea.keys():
+            ExtWallArea[face] = WallArea[face] - WindowArea[face]
+
+    else:
+        raise ValueError(f"Unsupported ShapeType: {ShapeType!r}. Supported shapes: Rectangle, L-Shape.")
+
     return FloorArea, Volume, WallArea, sum(ExtWallArea.values()), sum(WindowArea.values()), CeilingArea
 
 class Energy:

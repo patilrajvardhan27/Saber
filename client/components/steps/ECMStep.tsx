@@ -300,7 +300,7 @@ const MEASURE_LABELS: Record<string, string> = {
 };
 
 export function ECMOptionCostStep() {
-  const { state, ecmStatus, ecmMeasures, ecmMetrics, ecmError, goToStep } = useForm();
+  const { state, ecmStatus, ecmMeasures, ecmMetrics, ecmError, ecmCostOverrides, setEcmCostOverride, goToStep } = useForm();
   const isDone = ecmStatus === "done";
   const isRunning = ecmStatus === "running";
 
@@ -378,7 +378,7 @@ export function ECMOptionCostStep() {
                     <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Measure</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Baseline</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Selected Option</th>
-                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Total Cost</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Total Cost ($)</th>
                     <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Elec. Savings (kWh/yr)</th>
                     <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Gas Savings (Therms/yr)</th>
                     <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Payback (yr)</th>
@@ -386,11 +386,13 @@ export function ECMOptionCostStep() {
                 </thead>
                 <tbody>
                   {ecmMeasures.map((row, i) => {
-                    const elecSavings  = row.OrgTotalElectricity - row.EEMTotalElectricity;
-                    const gasSavings   = row.OrgTotalNaturalGas  - row.EEMTotalNaturalGas;
-                    const totalCost    = row.InitFixedCost + row.InitVarCost;
+                    const elecSavings   = row.OrgTotalElectricity - row.EEMTotalElectricity;
+                    const gasSavings    = row.OrgTotalNaturalGas  - row.EEMTotalNaturalGas;
+                    const defaultCost   = row.InitFixedCost + row.InitVarCost;
+                    const overrideRaw   = ecmCostOverrides[row.Measure];
+                    const totalCost     = overrideRaw !== undefined ? (parseFloat(overrideRaw) || 0) : defaultCost;
                     const annualSavings = (elecSavings * kwhRate) + (gasSavings * thermRate);
-                    const payback      = totalCost > 0 && annualSavings > 0 ? totalCost / annualSavings : null;
+                    const payback       = totalCost > 0 && annualSavings > 0 ? totalCost / annualSavings : null;
                     return (
                       <tr key={i} className={i % 2 === 0 ? "bg-bg-card" : "bg-bg-muted"}>
                         <td className="px-4 py-2 font-medium text-app-text text-xs">
@@ -402,8 +404,16 @@ export function ECMOptionCostStep() {
                         <td className="px-4 py-2 text-xs text-primary font-medium">
                           {String(row.NewPropValue)}
                         </td>
-                        <td className="px-4 py-2 text-xs text-right font-mono font-semibold text-app-text">
-                          {fmtCost(totalCost)}
+                        <td className="px-3 py-1.5 text-right">
+                          <input
+                            type="number"
+                            min={0}
+                            step={100}
+                            value={overrideRaw !== undefined ? overrideRaw : defaultCost === 0 ? "" : String(Math.round(defaultCost))}
+                            placeholder={defaultCost === 0 ? "0" : String(Math.round(defaultCost))}
+                            onChange={(e) => setEcmCostOverride(row.Measure, e.target.value)}
+                            className="w-24 text-right text-xs font-mono font-semibold bg-white border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-400 text-app-text"
+                          />
                         </td>
                         <td className={`px-4 py-2 text-xs text-right font-mono ${elecSavings > 0 ? "text-success" : "text-app-text-muted"}`}>
                           {elecSavings > 0 ? fmt(elecSavings, 0) : "—"}
@@ -425,7 +435,13 @@ export function ECMOptionCostStep() {
                         Package Total
                       </td>
                       <td className="px-4 py-2.5 text-xs text-right font-mono font-bold text-warning">
-                        ${fmt(ecmMetrics.tic, 0)}
+                        {(() => {
+                          const pkgTIC = ecmMeasures.reduce((sum, r) => {
+                            const ov = ecmCostOverrides[r.Measure];
+                            return sum + (ov !== undefined ? (parseFloat(ov) || 0) : r.InitFixedCost + r.InitVarCost);
+                          }, 0);
+                          return `$${fmt(pkgTIC, 0)}`;
+                        })()}
                       </td>
                       <td className="px-4 py-2.5 text-xs text-right font-mono font-semibold text-success">
                         {fmt(ecmMetrics.org_kwh - ecmMetrics.eem_kwh, 0)}
@@ -435,9 +451,13 @@ export function ECMOptionCostStep() {
                       </td>
                       <td className="px-4 py-2.5 text-xs text-right font-mono text-app-text">
                         {(() => {
+                          const pkgTIC = ecmMeasures.reduce((sum, r) => {
+                            const ov = ecmCostOverrides[r.Measure];
+                            return sum + (ov !== undefined ? (parseFloat(ov) || 0) : r.InitFixedCost + r.InitVarCost);
+                          }, 0);
                           const pkgSavings = (ecmMetrics.org_kwh - ecmMetrics.eem_kwh) * kwhRate +
                                              (ecmMetrics.org_therms - ecmMetrics.eem_therms) * thermRate;
-                          return pkgSavings > 0 ? `${fmt(ecmMetrics.tic / pkgSavings, 1)} yr` : "—";
+                          return pkgSavings > 0 && pkgTIC > 0 ? `${fmt(pkgTIC / pkgSavings, 1)} yr` : "—";
                         })()}
                       </td>
                     </tr>
@@ -504,7 +524,7 @@ const ECM_DESCRIPTIONS: Record<string, (baseline: string, selected: string) => s
 };
 
 export function ECMResultsStep() {
-  const { state, pklProjectName, ecmStatus, ecmMetrics, ecmPlots, ecmError } = useForm();
+  const { state, pklProjectName, ecmStatus, ecmMetrics, ecmPlots, ecmMeasures, ecmError, ecmCostOverrides } = useForm();
   const isDone = ecmStatus === "done";
   const isRunning = ecmStatus === "running";
 
@@ -573,8 +593,15 @@ export function ECMResultsStep() {
             ? (ecmMetrics.org_kwh - ecmMetrics.eem_kwh) * kwhRate +
               (ecmMetrics.org_therms - ecmMetrics.eem_therms) * thermRate
             : 0;
-          const payback = ecmMetrics && ecmMetrics.tic > 0 && annualSavings > 0
-            ? ecmMetrics.tic / annualSavings : null;
+          // Use user-overridden costs when available, otherwise use backend TIC
+          const effectiveTIC = ecmMeasures.length > 0
+            ? ecmMeasures.reduce((sum, r) => {
+                const ov = ecmCostOverrides[r.Measure];
+                return sum + (ov !== undefined ? (parseFloat(ov) || 0) : r.InitFixedCost + r.InitVarCost);
+              }, 0)
+            : (ecmMetrics?.tic ?? 0);
+          const payback = ecmMetrics && effectiveTIC > 0 && annualSavings > 0
+            ? effectiveTIC / annualSavings : null;
           const npv = ecmMetrics ? ecmMetrics.org_lcc - ecmMetrics.lcc : null;
 
           const rows: { label: string; baseline: string; eem: string; note?: string }[] = ecmMetrics ? [
@@ -598,7 +625,7 @@ export function ECMResultsStep() {
             {
               label: "Total Installed Cost ($)",
               baseline: "—",
-              eem: `$${fmt(ecmMetrics.tic, 0)}`,
+              eem: `$${fmt(effectiveTIC, 0)}`,
             },
             {
               label: "Simple Payback Period (yr)",

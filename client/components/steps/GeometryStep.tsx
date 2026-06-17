@@ -25,7 +25,7 @@ function ShapeIcon({ shape, selected }: { shape: string; selected: boolean }) {
         ) : (
           <svg viewBox="0 0 40 40" className="w-10 h-10">
             <polygon
-              points="2,38 2,15 15,15 15,2 38,2 38,22 22,22 22,38"
+              points="2,38 2,2 28,2 28,18 38,18 38,38"
               fill="none"
               stroke="currentColor"
               strokeWidth="2.5"
