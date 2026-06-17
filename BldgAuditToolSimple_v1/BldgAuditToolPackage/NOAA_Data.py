@@ -141,10 +141,13 @@ class NOAAData:
             download_sub_hourly_weather(weather_station_ID, year)
             save_as_csv(weather_station_ID, year)
             raw_csv = weather_station_ID + '-' + str(year) + '.csv'
+            with open(raw_csv, 'rb') as _f:
+                _lines = [_l.rstrip(b'\r\n').decode('latin-1') for _l in _f if _l.strip()]
+            df_year = pd.DataFrame({'Old': _lines})
             if (year == start_year):
-                df_raw = pd.read_csv(raw_csv, names=['Old'])
+                df_raw = df_year
             else:
-                df_raw = pd.concat([df_raw, pd.read_csv(raw_csv, names=['Old'])], ignore_index=True)
+                df_raw = pd.concat([df_raw, df_year], ignore_index=True)
             # Cleaning up
             os.remove(raw_csv)
         # Parse ish text data to readable weather data

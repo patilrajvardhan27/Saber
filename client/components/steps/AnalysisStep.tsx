@@ -91,7 +91,7 @@ function GenerateResultSection() {
   return (
     <Card>
       <SectionHeader
-        title="Generate Result"
+        title="Perform Analysis"
         description="Run the energy analysis using current field values — works whether inputs were loaded from a PKL file or entered manually."
       />
       <div className="space-y-4">
@@ -123,7 +123,7 @@ function GenerateResultSection() {
               <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4">
                 <path d="M5 3l14 9-14 9V3z" fill="currentColor" />
               </svg>
-              Generate Result
+              Perform Analysis
             </>
           )}
         </button>

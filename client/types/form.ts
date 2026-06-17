@@ -216,7 +216,7 @@ export const SECTIONS: SectionConfig[] = [
   { id: 4, label: "Equipment",              shortLabel: "Equipment", firstStep: 7,  lastStep: 7  },
   { id: 5, label: "Lighting & Plug Loads",  shortLabel: "Lighting",  firstStep: 8,  lastStep: 8  },
   { id: 6, label: "HVAC Systems",           shortLabel: "HVAC",      firstStep: 9,  lastStep: 10 },
-  { id: 7, label: "Post Retrofit Analysis", shortLabel: "Results",   firstStep: 11, lastStep: 11 },
+  { id: 7, label: "Post Retrofit Analysis", shortLabel: "Analysis",  firstStep: 11, lastStep: 11 },
   { id: 8, label: "Retrofit Analysis",      shortLabel: "Retrofit",  firstStep: 12, lastStep: 15 },
 ];
 

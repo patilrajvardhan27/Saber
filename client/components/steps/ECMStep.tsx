@@ -167,13 +167,13 @@ export function ECMSelectionStep() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: "Unknown error" }));
-        throw new Error(err.detail ?? "ECM evaluation failed");
+        throw new Error(err.detail ?? "EEM evaluation failed");
       }
       const data = await res.json();
       setEcmDone(data.metrics as EcmMetrics, data.plots as EcmPlots, (data.measures ?? []) as EcmMeasureRow[]);
       setTimeout(() => goToStep(14), 800);
     } catch (err: unknown) {
-      setEcmError(err instanceof Error ? err.message : "ECM evaluation failed");
+      setEcmError(err instanceof Error ? err.message : "EEM evaluation failed");
     }
   }
 
@@ -191,7 +191,7 @@ export function ECMSelectionStep() {
               type="button"
               onClick={resetSelections}
               disabled={isRunning}
-              title="Clear all ECM selections"
+              title="Clear all EEM selections"
               className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all border ${
                 isRunning
                   ? "bg-bg-muted text-app-text-muted cursor-not-allowed border-border"
@@ -240,7 +240,7 @@ export function ECMSelectionStep() {
               <tr className="bg-bg-muted border-b border-border">
                 <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs w-52">Measure</th>
                 <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Baseline</th>
-                <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">ECM Option</th>
+                <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">EEM Option</th>
               </tr>
             </thead>
             <tbody>
@@ -300,9 +300,12 @@ const MEASURE_LABELS: Record<string, string> = {
 };
 
 export function ECMOptionCostStep() {
-  const { ecmStatus, ecmMeasures, ecmMetrics, ecmError, goToStep } = useForm();
+  const { state, ecmStatus, ecmMeasures, ecmMetrics, ecmError, goToStep } = useForm();
   const isDone = ecmStatus === "done";
   const isRunning = ecmStatus === "running";
+
+  const kwhRate   = parseFloat(state.kWhCost)   || 0.12;
+  const thermRate = parseFloat(state.thermCost)  || 1.20;
 
   const fmt = (n: number, decimals = 0) =>
     n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
@@ -318,7 +321,7 @@ export function ECMOptionCostStep() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
           </svg>
-          Running ECM evaluation…
+          Running EEM evaluation…
         </div>
       )}
       {ecmStatus === "error" && (
@@ -331,8 +334,8 @@ export function ECMOptionCostStep() {
       <Card>
         <div className="flex items-start justify-between gap-4 mb-4">
           <SectionHeader
-            title="ECM Options & Cost Breakdown"
-            description="Per-measure cost and energy savings for the evaluated retrofit package."
+            title="Energy and Cost Benefit Analysis"
+            description="Evaluation of cost and energy benefits of all selected EEMs for the retrofit package."
             className="mb-0"
           />
           <button
@@ -355,7 +358,7 @@ export function ECMOptionCostStep() {
               <path d="M16 18h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
             <p className="text-sm text-app-text-muted">
-              No evaluation results yet. Select ECM options on the previous step and click{" "}
+              No evaluation results yet. Select EEM options on the previous step and click{" "}
               <span className="font-semibold text-app-text">Evaluate Package</span>.
             </p>
             <button
@@ -375,18 +378,19 @@ export function ECMOptionCostStep() {
                     <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Measure</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Baseline</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs">Selected Option</th>
-                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Fixed Cost</th>
-                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Var. Cost</th>
                     <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Total Cost</th>
-                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Elec. Savings</th>
-                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Gas Savings</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Elec. Savings (kWh/yr)</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Gas Savings (Therms/yr)</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Payback (yr)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {ecmMeasures.map((row, i) => {
-                    const elecSavings = row.OrgTotalElectricity - row.EEMTotalElectricity;
-                    const gasSavings  = row.OrgTotalNaturalGas  - row.EEMTotalNaturalGas;
-                    const totalCost   = row.InitFixedCost + row.InitVarCost;
+                    const elecSavings  = row.OrgTotalElectricity - row.EEMTotalElectricity;
+                    const gasSavings   = row.OrgTotalNaturalGas  - row.EEMTotalNaturalGas;
+                    const totalCost    = row.InitFixedCost + row.InitVarCost;
+                    const annualSavings = (elecSavings * kwhRate) + (gasSavings * thermRate);
+                    const payback      = totalCost > 0 && annualSavings > 0 ? totalCost / annualSavings : null;
                     return (
                       <tr key={i} className={i % 2 === 0 ? "bg-bg-card" : "bg-bg-muted"}>
                         <td className="px-4 py-2 font-medium text-app-text text-xs">
@@ -398,20 +402,17 @@ export function ECMOptionCostStep() {
                         <td className="px-4 py-2 text-xs text-primary font-medium">
                           {String(row.NewPropValue)}
                         </td>
-                        <td className="px-4 py-2 text-xs text-right font-mono text-app-text">
-                          {fmtCost(row.InitFixedCost)}
-                        </td>
-                        <td className="px-4 py-2 text-xs text-right font-mono text-app-text">
-                          {fmtCost(row.InitVarCost)}
-                        </td>
                         <td className="px-4 py-2 text-xs text-right font-mono font-semibold text-app-text">
                           {fmtCost(totalCost)}
                         </td>
                         <td className={`px-4 py-2 text-xs text-right font-mono ${elecSavings > 0 ? "text-success" : "text-app-text-muted"}`}>
-                          {elecSavings > 0 ? `${fmt(elecSavings, 0)} kWh` : "—"}
+                          {elecSavings > 0 ? fmt(elecSavings, 0) : "—"}
                         </td>
                         <td className={`px-4 py-2 text-xs text-right font-mono ${gasSavings > 0 ? "text-accent" : "text-app-text-muted"}`}>
-                          {gasSavings > 0 ? `${fmt(gasSavings, 1)} therms` : "—"}
+                          {gasSavings > 0 ? fmt(gasSavings, 1) : "—"}
+                        </td>
+                        <td className="px-4 py-2 text-xs text-right font-mono text-app-text">
+                          {payback !== null ? `${fmt(payback, 1)} yr` : "—"}
                         </td>
                       </tr>
                     );
@@ -420,17 +421,24 @@ export function ECMOptionCostStep() {
                 {ecmMeasures.length > 1 && ecmMetrics && (
                   <tfoot>
                     <tr className="border-t-2 border-border bg-bg-muted">
-                      <td colSpan={5} className="px-4 py-2.5 text-xs font-semibold text-app-text">
+                      <td colSpan={3} className="px-4 py-2.5 text-xs font-semibold text-app-text">
                         Package Total
                       </td>
                       <td className="px-4 py-2.5 text-xs text-right font-mono font-bold text-warning">
                         ${fmt(ecmMetrics.tic, 0)}
                       </td>
                       <td className="px-4 py-2.5 text-xs text-right font-mono font-semibold text-success">
-                        {fmt(ecmMetrics.org_kwh - ecmMetrics.eem_kwh, 0)} kWh
+                        {fmt(ecmMetrics.org_kwh - ecmMetrics.eem_kwh, 0)}
                       </td>
                       <td className="px-4 py-2.5 text-xs text-right font-mono font-semibold text-accent">
-                        {fmt(ecmMetrics.org_therms - ecmMetrics.eem_therms, 1)} therms
+                        {fmt(ecmMetrics.org_therms - ecmMetrics.eem_therms, 1)}
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-right font-mono text-app-text">
+                        {(() => {
+                          const pkgSavings = (ecmMetrics.org_kwh - ecmMetrics.eem_kwh) * kwhRate +
+                                             (ecmMetrics.org_therms - ecmMetrics.eem_therms) * thermRate;
+                          return pkgSavings > 0 ? `${fmt(ecmMetrics.tic / pkgSavings, 1)} yr` : "—";
+                        })()}
                       </td>
                     </tr>
                   </tfoot>
@@ -500,6 +508,9 @@ export function ECMResultsStep() {
   const isDone = ecmStatus === "done";
   const isRunning = ecmStatus === "running";
 
+  const kwhRate   = parseFloat(state.kWhCost)   || 0.12;
+  const thermRate = parseFloat(state.thermCost)  || 1.20;
+
   const fmt = (n: number, decimals = 0) =>
     n.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 
@@ -541,7 +552,7 @@ export function ECMResultsStep() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
           </svg>
-          Running ECM evaluation…
+          Running EEM evaluation…
         </div>
       )}
       {ecmStatus === "error" && (
@@ -555,66 +566,95 @@ export function ECMResultsStep() {
       <Card>
         <SectionHeader
           title="Package Performance Summary"
-          description="Life-cycle cost and energy savings for the selected ECM package."
+          description="Life-cycle cost and energy savings for the selected EEM package."
         />
-        {isDone && ecmMetrics ? (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
-              <MetricCard
-                label="Baseline Life-Cycle Cost"
-                value={`$${fmt(ecmMetrics.org_lcc)}`}
-                color="text-app-text-muted"
-              />
-              <MetricCard
-                label="ECM Package Life-Cycle Cost"
-                value={`$${fmt(ecmMetrics.lcc)}`}
-                color="text-primary"
-              />
-              <MetricCard
-                label="Total Installed Cost"
-                value={`$${fmt(ecmMetrics.tic)}`}
-                color="text-warning"
-              />
+        {(() => {
+          const annualSavings = ecmMetrics
+            ? (ecmMetrics.org_kwh - ecmMetrics.eem_kwh) * kwhRate +
+              (ecmMetrics.org_therms - ecmMetrics.eem_therms) * thermRate
+            : 0;
+          const payback = ecmMetrics && ecmMetrics.tic > 0 && annualSavings > 0
+            ? ecmMetrics.tic / annualSavings : null;
+          const npv = ecmMetrics ? ecmMetrics.org_lcc - ecmMetrics.lcc : null;
+
+          const rows: { label: string; baseline: string; eem: string; note?: string }[] = ecmMetrics ? [
+            {
+              label: "Annual Electricity Use (kWh/yr)",
+              baseline: fmt(ecmMetrics.org_kwh, 0),
+              eem: fmt(ecmMetrics.eem_kwh, 0),
+              note: `Savings: ${fmt(ecmMetrics.org_kwh - ecmMetrics.eem_kwh, 0)} kWh (${fmt(ecmMetrics.kwh_pct_savings, 1)}%)`,
+            },
+            {
+              label: "Annual Natural Gas Use (Therms/yr)",
+              baseline: fmt(ecmMetrics.org_therms, 1),
+              eem: fmt(ecmMetrics.eem_therms, 1),
+              note: `Savings: ${fmt(ecmMetrics.org_therms - ecmMetrics.eem_therms, 1)} therms (${fmt(ecmMetrics.therms_pct_savings, 1)}%)`,
+            },
+            {
+              label: "Life-Cycle Cost ($)",
+              baseline: `$${fmt(ecmMetrics.org_lcc, 0)}`,
+              eem: `$${fmt(ecmMetrics.lcc, 0)}`,
+            },
+            {
+              label: "Total Installed Cost ($)",
+              baseline: "—",
+              eem: `$${fmt(ecmMetrics.tic, 0)}`,
+            },
+            {
+              label: "Simple Payback Period (yr)",
+              baseline: "—",
+              eem: payback !== null ? `${fmt(payback, 1)} yr` : "—",
+            },
+            {
+              label: "Net Present Value ($)",
+              baseline: "—",
+              eem: npv !== null ? `$${fmt(npv, 0)}` : "—",
+              note: "Baseline LCC − EEM Package LCC",
+            },
+          ] : [];
+
+          return (
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-bg-muted border-b border-border">
+                    <th className="text-left px-4 py-2.5 font-semibold text-app-text text-xs w-1/2">Metric</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">Baseline</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-app-text text-xs">EEM Package</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isDone && ecmMetrics ? rows.map((r, i) => (
+                    <tr key={r.label} className={i % 2 === 0 ? "bg-bg-card" : "bg-bg-muted"}>
+                      <td className="px-4 py-2 text-xs text-app-text">
+                        {r.label}
+                        {r.note && <span className="block text-app-text-muted text-[10px]">{r.note}</span>}
+                      </td>
+                      <td className="px-4 py-2 text-xs text-right font-mono text-app-text-muted">{r.baseline}</td>
+                      <td className="px-4 py-2 text-xs text-right font-mono font-semibold text-primary">{r.eem}</td>
+                    </tr>
+                  )) : (
+                    ["Annual Electricity Use (kWh/yr)", "Annual Natural Gas Use (Therms/yr)",
+                     "Life-Cycle Cost ($)", "Total Installed Cost ($)", "Simple Payback Period (yr)", "Net Present Value ($)"].map((label, i) => (
+                      <tr key={label} className={i % 2 === 0 ? "bg-bg-card" : "bg-bg-muted"}>
+                        <td className="px-4 py-2 text-xs text-app-text">{label}</td>
+                        <td className="px-4 py-2 text-xs text-right font-mono text-app-text-light">—</td>
+                        <td className="px-4 py-2 text-xs text-right font-mono text-app-text-light">—</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-5">
-              <MetricCard
-                label="Electricity Savings"
-                value={`${fmt(ecmMetrics.kwh_pct_savings, 1)}%`}
-                sub={`${fmt(ecmMetrics.org_kwh)} → ${fmt(ecmMetrics.eem_kwh)} kWh`}
-                color="text-success"
-              />
-              <MetricCard
-                label="Natural Gas Savings"
-                value={`${fmt(ecmMetrics.therms_pct_savings, 1)}%`}
-                sub={`${fmt(ecmMetrics.org_therms)} → ${fmt(ecmMetrics.eem_therms)} therms`}
-                color="text-accent"
-              />
-            </div>
-          </>
-        ) : (
-          <><div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
-              {["Baseline Life-Cycle Cost", "ECM Package Life-Cycle Cost", "Total Installed Cost"].map((label) => (
-                <div key={label} className="rounded-2xl border border-border bg-bg-muted p-5 flex flex-col items-center text-center">
-                  <p className="text-2xl font-bold text-app-text-light">—</p>
-                  <p className="text-xs text-app-text-muted mt-2 leading-tight">{label}</p>
-                </div>
-              ))}
-            </div><div className="grid grid-cols-2 gap-4 mb-5">
-                {["Electricity Savings", "Natural Gas Savings"].map((label) => (
-                  <div key={label} className="rounded-2xl border border-border bg-bg-muted p-5 flex flex-col items-center text-center">
-                    <p className="text-2xl font-bold text-app-text-light">—</p>
-                    <p className="text-xs text-app-text-muted mt-2 leading-tight">{label}</p>
-                  </div>
-                ))}
-              </div></>
-        )}
+          );
+        })()}
       </Card>
 
       {/* Selected measures summary */}
       {activeMeasures.length > 0 && (
         <Card>
           <SectionHeader
-            title="Applied ECM Measures"
+            title="Applied EEM Measures"
             description="Summary of changes made relative to the baseline building."
           />
           <ul className="flex flex-col gap-2">
@@ -636,7 +676,7 @@ export function ECMResultsStep() {
         <Card>
           <SectionHeader
             title="Monthly Energy Comparison"
-            description="Baseline vs. ECM package monthly energy use by end use."
+            description="Baseline vs. EEM package monthly energy use by end use."
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {(isRunning || ecmPlots?.elec_monthly_comp) && (

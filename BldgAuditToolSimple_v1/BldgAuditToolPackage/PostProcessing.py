@@ -61,13 +61,21 @@ class PlotResults:
         labels = filtered.index.map(lambda x: str(x)[3:]).tolist()
         sizes = filtered.values.tolist()
 
-        fig, ax = plt.subplots(figsize=(5, 5))
-        print (sizes, labels)
-        ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=['red', 'blue', 'green', 'orange', 'purple','yellow'])
+        colors = ['red', 'blue', 'green', 'orange', 'purple', 'yellow'][:len(sizes)]
+        fig, ax = plt.subplots(figsize=(6, 5))
+        print(sizes, labels)
+        wedges, _, autotexts = ax.pie(
+            sizes, autopct='%1.1f%%', startangle=140, colors=colors,
+            pctdistance=0.75
+        )
+        for at in autotexts:
+            at.set_fontsize(8)
+        ax.legend(wedges, labels, title="End Uses", loc="lower center",
+                  bbox_to_anchor=(0.5, -0.15), ncol=2, fontsize=8, frameon=True)
         ax.set_title("Annual Energy End Use Breakdown (kBtu)")
         fig.tight_layout()
         if self.save:
-            fig.savefig(os.path.join(self.ProjectPath,"Results","EndUseBreakdown.png"),dpi=300)
+            fig.savefig(os.path.join(self.ProjectPath,"Results","EndUseBreakdown.png"),dpi=300, bbox_inches='tight')
         plt.close()
         return
 
@@ -131,8 +139,8 @@ class PlotResults:
 
         # Plot the stacked bar chart on the same axes
         colors = [NGColorMap.get(col, "gray") for col in ThermRes.columns]
-        Thermbars = ThermRes.iloc[:_n].plot(kind='bar', stacked=True, ax=ax, color=colors,edgecolor='black')
-        ax.get_legend().remove()
+        Thermbars = ThermRes.iloc[:_n].plot(kind='bar', stacked=True, ax=ax, color=colors, edgecolor='black')
+        ax.legend(loc="lower center", bbox_to_anchor=(0.5, -0.35), ncol=3, fontsize=8, frameon=True)
 
         for i, (height, err) in enumerate(zip(ThermPred, ThermErr)):
             ax.text(i,  height + ThermPred.max()/20, f'{err:.1f}%', ha='center', fontsize=10, color='black')
@@ -164,8 +172,8 @@ class PlotResults:
         fig, ax = plt.subplots(figsize=(8,4))
         ax.plot(np.arange(0,len(ElecMean_arr)),ElecMean_arr,marker="s",color="k", label="Utility Data")
         colors = [ElecColorMap.get(col, "gray") for col in ElecRes.columns]
-        Elecbars = ElecRes.iloc[:_ne].plot(kind='bar', stacked=True, ax=ax, color=colors,edgecolor='black')
-        ax.get_legend().remove()
+        Elecbars = ElecRes.iloc[:_ne].plot(kind='bar', stacked=True, ax=ax, color=colors, edgecolor='black')
+        ax.legend(loc="lower center", bbox_to_anchor=(0.5, -0.35), ncol=3, fontsize=8, frameon=True)
 
         for i, (height, err) in enumerate(zip(ElecPred, ElecErr)):
             ax.text(i, height +  ElecPred.max()/20, f'{err:.1f}%', ha='center', fontsize=10, color='black')
@@ -271,7 +279,7 @@ class PlotResults:
         # Labels and Titles
         ax.set_ylabel('Natural Gas (Therms)')
         ax.set_xticks(x)
-        ax.set_xticklabels(abbreviated_months, rotation=45)
+        ax.set_xticklabels(abbreviated_months[:len(x)], rotation=45)
         ax.set_xlabel('')
         ax.set_ylim([0, ThermPred.max() + ThermPred.max()/5])
         
@@ -329,7 +337,7 @@ class PlotResults:
         # Labels and Titles
         ax.set_ylabel('Electricity (kWh)')
         ax.set_xticks(x)
-        ax.set_xticklabels(abbreviated_months, rotation=45)
+        ax.set_xticklabels(abbreviated_months[:len(x)], rotation=45)
         ax.set_xlabel('')
         ax.set_ylim([0, max(ElecPred.max(),ElecPred_EEM.max()) + max(ElecPred.max(),ElecPred_EEM.max())/5])
         
