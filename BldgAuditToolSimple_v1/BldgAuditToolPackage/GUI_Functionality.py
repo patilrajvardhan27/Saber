@@ -32,6 +32,7 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         self.label_43.setPixmap(QPixmap(os.path.join(_legend_dir, 'Therm_Labels.png')))
         self.label_42.setPixmap(QPixmap(os.path.join(_legend_dir, 'EEM_kWhLabels.png')))
         self.label_44.setPixmap(QPixmap(os.path.join(_legend_dir, 'EEM_ThermLabels.png')))
+        self.PieChartLegend.setPixmap(QPixmap(os.path.join(_legend_dir, 'EndUseLegend.png')))
 
         self.df_input = pd.read_csv("Inputs/BldgPropInputsFileTemplate.csv")
         #%% Preferences

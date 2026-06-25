@@ -54,6 +54,17 @@ function PlotOrState({
   );
 }
 
+// Static legend image, shown under a plot (or group of plots) once analysis is done.
+function PlotLegend({ src, alt }: { src: string; alt: string }) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="w-full max-w-xl mx-auto mt-3 object-contain"
+    />
+  );
+}
+
 // ── Generate Result section (always shown on results page) ───────────────────
 function GenerateResultSection() {
   const {
@@ -275,6 +286,9 @@ export function AnalysisResultsStep() {
             label="End-Use Energy Breakdown"
             isRunning={isRunning}
           />
+          {isDone && analysisPlots?.end_use && (
+            <PlotLegend src="/legends/EndUseLegend.png" alt="End-use legend" />
+          )}
         </Card>
       )}
 
@@ -307,6 +321,9 @@ export function AnalysisResultsStep() {
               </div>
             )}
           </div>
+          {isDone && (analysisPlots?.elec_monthly || analysisPlots?.ng_monthly) && (
+            <PlotLegend src="/legends/Combined_Labels.png" alt="Monthly model vs. meter legend" />
+          )}
         </Card>
       )}
     </StepLayout>

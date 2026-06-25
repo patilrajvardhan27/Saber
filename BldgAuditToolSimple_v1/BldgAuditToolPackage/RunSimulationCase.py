@@ -60,7 +60,7 @@ def GetMonthlyEndUseBreakdown(BestModelParams,df_weather,df_input,RunDir):
     EnergyEndUse = Energy(BestModelParams,df_weather,df_input)
     #print("AnalyzedUtilityData.py line 74", df_weather.isna().any().any())
     
-    df_MonthlyEndUse = pd.DataFrame(columns=["NG-Space Heating","EL-Space Heating","NG-DHW Heating","NG-Gas Cooking","EL-Space Cooling","EL-Lighting","EL-Electric Equipment","EPD","HDD_EL","HDD_NG","CDD"])
+    df_MonthlyEndUse = pd.DataFrame(columns=["NG-Space Heating","EL-Space Heating","NG-Water Heating","NG-Gas Interior Equipment","EL-Space Cooling","EL-Lighting","EL-Electric Equipment","EPD","HDD_EL","HDD_NG","CDD"])
     for m in set(df_weather.index.month):
         df_day_i = df_weather.loc[df_weather.index.month == m].resample("24H").mean()
         #print("AnalyzedUtilityData.py line 78", df_day_i)

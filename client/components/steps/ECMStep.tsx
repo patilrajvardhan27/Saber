@@ -745,6 +745,13 @@ export function ECMResultsStep() {
               </div>
             )}
           </div>
+          {!isRunning && (ecmPlots?.elec_monthly_comp || ecmPlots?.ng_monthly_comp) && (
+            <img
+              src="/legends/Combined_EEM_Labels.png"
+              alt="Pre/post retrofit legend"
+              className="w-full max-w-2xl mx-auto mt-3 object-contain"
+            />
+          )}
         </Card>
       )}
 

@@ -84,7 +84,8 @@ os.chdir(BLDG_AUDIT_DIR)
 
 
 # UPLOADS_DIR is where user-uploaded utility CSVs and project folders are stored.
-# On Fly.io this is a persistent volume (/data/uploads); locally it falls back to PROJECTS_DIR.
+# On the CU server this is set to /opt/saber/uploads (see systemd unit); locally it
+# falls back to PROJECTS_DIR.
 UPLOADS_DIR = os.environ.get("UPLOADS_DIR", PROJECTS_DIR)
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
@@ -196,6 +197,58 @@ try:
         )
 
     _ImplementMeasures.WindowMaterial = _safe_window_material
+except Exception:
+    pass
+
+
+# ── L-Shape geometry patch ───────────────────────────────────────────────────────
+# EnergyAnalysis.GetGeometryParameters() dropped its "L-Shape" branch (and the
+# ValueError fallback for non-Rectangle shapes), leaving only the "Rectangle" branch
+# with a `return`. Picking L-Shape in the GeometryStep client (which still offers it,
+# with its own x2/y2 fields) now crashes with UnboundLocalError on WallArea/
+# ExtWallArea instead of computing wall/window areas.
+#
+# Fix: restore the prior L-shape math here rather than re-adding it to the package.
+# Geometry: an L-shape's 6-face perimeter equals 2*(x1+y1) — same as the enclosing
+# rectangle — so wall areas map to the same 4 faces as Rectangle; only CeilingArea
+# differs (uses the user-entered FloorArea = x1*y1 - x2*y2 instead of x1*y1).
+try:
+    from BldgAuditToolPackage import EnergyAnalysis as _EnergyAnalysis
+    from BldgAuditToolPackage import EEMIndMeasureAnalysisObject as _EEMObj
+
+    _orig_get_geometry = _EnergyAnalysis.GetGeometryParameters
+
+    def _get_geometry_with_lshape(df_input):
+        shape_type = df_input.loc[df_input.PropKey == "Shape"].PropValue.item()
+        if shape_type != "L-Shape":
+            return _orig_get_geometry(df_input)
+
+        FloorQty   = df_input.loc[df_input.PropKey == "FloorQty"].PropValue.astype(float).iloc[0]
+        FloorArea  = df_input.loc[df_input.PropKey == "FloorArea"].PropValue.astype(float).iloc[0]
+        WWR        = df_input.loc[df_input.PropKey == "WWR"].PropValue.iloc[0].copy()
+        WallHeight = df_input.loc[df_input.PropKey == "WallHeight"].PropValue.astype(float).iloc[0]
+        x1 = df_input.loc[df_input.PropKey == "x1"].PropValue.astype(float).iloc[0]
+        y1 = df_input.loc[df_input.PropKey == "y1"].PropValue.astype(float).iloc[0]
+
+        CeilingArea = FloorArea
+        WallArea = {
+            "Front": x1 * WallHeight * FloorQty,
+            "Left":  y1 * WallHeight * FloorQty,
+            "Right": y1 * WallHeight * FloorQty,
+            "Back":  x1 * WallHeight * FloorQty,
+        }
+        WindowArea = {face: WWR[face] / 100 * WallArea[face] for face in WallArea}
+        ExtWallArea = {face: WallArea[face] - WindowArea[face] for face in WallArea}
+        Volume = FloorArea * WallHeight * FloorQty
+
+        return FloorArea, Volume, WallArea, sum(ExtWallArea.values()), sum(WindowArea.values()), CeilingArea
+
+    # EEMIndMeasureAnalysisObject pulled in its own copy of GetGeometryParameters via
+    # `from .AnalyzeUtilityData import *` (which itself wildcard-imports EnergyAnalysis),
+    # so the module attribute must be patched there too — reassigning EnergyAnalysis's
+    # attribute alone wouldn't reach that already-bound name.
+    _EnergyAnalysis.GetGeometryParameters = _get_geometry_with_lshape
+    _EEMObj.GetGeometryParameters = _get_geometry_with_lshape
 except Exception:
     pass
 

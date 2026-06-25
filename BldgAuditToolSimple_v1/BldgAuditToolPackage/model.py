@@ -114,10 +114,9 @@ class InverseModel:
                 #print("fit success")
             except Exception as e:
                 print(f"Error in curve fitting: {e}")
-                avg_temp = float(np.nanmean(self.temperature)) if len(self.temperature) > 0 else 50.0
-                avg_eui  = float(np.nanmean(self.eui))         if len(self.eui)         > 0 else 0.0
-                self.p = np.array([avg_temp - 5.0, avg_temp + 5.0, avg_eui, 0.0, 0.0])
-                self.e = np.zeros((5, 5))
+                mean_eui = float(np.mean(self.eui))
+                self.p = np.array([self.hcp_min, self.ccp_max, mean_eui, 0.0, 0.0])
+                self.e = np.eye(5)
             #print("value of p", self.p)
             # Model coefficients
             self.hcp, self.ccp, self.base, self.hsl, self.csl = self.p
@@ -183,6 +182,10 @@ class InverseModel:
         #print("model fitting")
         ### Fit change-point model
         self.fit()  # Initial guess
+        if not hasattr(self, 'p'):
+            mean_eui = float(np.mean(self.eui))
+            self.has_fit = False
+            return (False, "No fit", np.array([0.0, 0.0, mean_eui, 0.0, 0.0]), 0.0)
         self.p_init = self.p
         #print("fit_model",self.p_init)
 
@@ -222,6 +225,10 @@ class InverseModel:
 
     def optimize_slopes(self):
         import math
+        if not hasattr(self, 'p_hsl'):
+            self.p_hsl = 1.0
+        if not hasattr(self, 'p_csl'):
+            self.p_csl = 1.0
         if (not (self.significant(self.p_hsl)) or math.isnan(self.p_hsl)):
             # print("--->Left slope is not significant! - P=",self.p_hsl)
             self.hsl_min = -10 ** -3
@@ -265,6 +272,10 @@ class InverseModel:
             #print("model_type", self.model_type_str)
             self.has_fit = False
             self.coeff_validation = {'base': False, 'csl': False, 'ccp': False, 'hsl': False, 'hcp': False}
+            mean_eui = float(np.mean(self.eui))
+            self.coeffs = {'base': mean_eui, 'csl': 0.0, 'ccp': 0.0, 'hsl': 0.0, 'hcp': 0.0}
+            self.model_p = np.array([0.0, 0.0, mean_eui, 0.0, 0.0])
+            return (self.model_type_str, self.model_p, 0.0)
         elif (self.hcp == self.ccp and self.hsl == 0):
             self.model_type_str = "3P Cooling"
             #print("model_type", self.model_type_str)
@@ -294,6 +305,10 @@ class InverseModel:
             self.cp_txt.append("(" + str(round(self.hcp, 1)) + ", " + str(round(self.base, 1)) + ")")
             self.cp_txt.append("(" + str(round(self.ccp, 1)) + ", " + str(round(self.base, 1)) + ")")
             self.coeff_validation = {'base': True, 'csl': True, 'ccp': True, 'hsl': True, 'hcp': True}
+        else:
+            self.model_type_str = "No fit"
+            self.has_fit = False
+            self.coeff_validation = {'base': False, 'csl': False, 'ccp': False, 'hsl': False, 'hcp': False}
         # Finally assign the model coefficients
         self.coeffs = {'base': self.base, 'csl': self.csl, 'ccp': self.ccp, 'hsl': abs(self.hsl), 'hcp': self.hcp}
         self.model_p = np.array([self.hcp, self.ccp, self.base, self.hsl, self.csl])
