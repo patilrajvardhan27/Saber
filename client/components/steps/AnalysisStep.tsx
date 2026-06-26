@@ -55,12 +55,12 @@ function PlotOrState({
 }
 
 // Static legend image, shown under a plot (or group of plots) once analysis is done.
-function PlotLegend({ src, alt }: { src: string; alt: string }) {
+function PlotLegend({ src, alt, className }: { src: string; alt: string; className?: string }) {
   return (
     <img
       src={src}
       alt={alt}
-      className="w-full max-w-xl mx-auto mt-3 object-contain"
+      className={className ?? "w-full max-w-xl mx-auto mt-3 object-contain"}
     />
   );
 }
@@ -287,7 +287,7 @@ export function AnalysisResultsStep() {
             isRunning={isRunning}
           />
           {isDone && analysisPlots?.end_use && (
-            <PlotLegend src="/legends/EndUseLegend.png" alt="End-use legend" />
+            <PlotLegend src="/legends/EndUseLegend.png" alt="End-use legend" className="w-auto max-w-[310px] mx-auto mt-3 object-contain" />
           )}
         </Card>
       )}
