@@ -456,12 +456,8 @@ rsync -avz --progress \
 **2. On the server** — re-apply ownership/perms, restart, and confirm it came back up
 (`-t` lets `sudo` prompt for its password):
 ```bash
-ssh -t rapa4019@saber-backend.colorado.edu '
-  sudo chown -R rapa4019:saberapp /opt/saber &&
-  sudo chmod -R g+w /opt/saber &&
-  sudo find /opt/saber -type d -exec chmod g+s {} \; &&
-  sudo systemctl restart saber-backend &&
-  sudo systemctl status saber-backend --no-pager
+
+
 '
 ```
 Look for `Active: active (running)`. Then watch a request go through with
