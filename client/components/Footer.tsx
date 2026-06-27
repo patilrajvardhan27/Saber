@@ -6,6 +6,9 @@ export function Footer() {
       <p className="text-xs font-bold text-app-text-muted">
         Best center product
       </p>
+      <p className="text-xs select-all" style={{ color: "white" }}>
+        Made by Phani Arvind Vadali and Rajvardhan Mohan Patil
+      </p>
     </footer>
   );
 }
