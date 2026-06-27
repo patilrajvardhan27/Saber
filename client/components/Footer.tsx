@@ -6,7 +6,7 @@ export function Footer() {
       <p className="text-sm font-bold tracking-wide text-brand-600 uppercase">
         Best center product
       </p>
-      <p className="text-xs select-all" style={{ color: "white" }}>
+      <p className="text-xs select-all" style={{ color: "#f8faf8" }}>
         Made by Phani Arvind Vadali and Rajvardhan Mohan Patil
       </p>
     </footer>
