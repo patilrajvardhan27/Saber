@@ -37,6 +37,11 @@ export function Footer() {
         <p className="text-[11px] text-app-text-light mt-0.5">
           &copy; {year} Larson Lab, University of Colorado Boulder. All rights reserved.
         </p>
+
+        {/* Best center product */}
+        <p className="text-[11px] text-app-text-light">
+          Best center product
+        </p>
       </div>
     </footer>
   );

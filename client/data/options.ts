@@ -122,6 +122,7 @@ export const HEATING_EFF_OPTIONS: Record<string, string[]> = {
   NoHeating: [],
   "Gas Furnace": [
     "AFUE 80%",
+    "AFUE 85%",
     "AFUE 90%",
     "AFUE 92.5%",
     "AFUE 95%",
