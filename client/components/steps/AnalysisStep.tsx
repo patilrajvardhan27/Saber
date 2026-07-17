@@ -281,14 +281,18 @@ export function AnalysisResultsStep() {
             title="Annual End-Use Energy Breakdown"
             description="Estimated annual energy breakdown (kBtu) from the calibrated energy model."
           />
-          <PlotOrState
-            filename={isDone ? analysisPlots?.end_use : null}
-            label="End-Use Energy Breakdown"
-            isRunning={isRunning}
-          />
-          {isDone && analysisPlots?.end_use && (
-            <PlotLegend src="/legends/EndUseLegend.png" alt="End-use legend" className="w-auto max-w-[310px] mx-auto mt-3 object-contain" />
-          )}
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex-1 w-full min-w-0">
+              <PlotOrState
+                filename={isDone ? analysisPlots?.end_use : null}
+                label="End-Use Energy Breakdown"
+                isRunning={isRunning}
+              />
+            </div>
+            {isDone && analysisPlots?.end_use && (
+              <PlotLegend src="/legends/EndUseLegend.png" alt="End-use legend" className="w-auto max-w-[220px] flex-shrink-0 object-contain" />
+            )}
+          </div>
         </Card>
       )}
 
