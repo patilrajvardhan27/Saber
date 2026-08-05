@@ -1,506 +1,253 @@
-# Saber Deployment Guide
+# Saber Deployment Guide — Azure
 
-Deploying the Saber BldgAuditTool:
-- **Backend** (`API's/` + `BldgAuditToolSimple_v1/`) → `saber-backend.colorado.edu`
-- **Frontend** (`client/`) → Vercel
+Deploying the Saber BldgAuditTool to the lab's Azure subscription:
+- **Backend** (`API's/` + `BldgAuditToolSimple_v1/`) → Azure Web App `saber-api` (Docker container)
+- **Frontend** (`client/`) → Azure Web App `saber-web` (Node 22)
 
----
+Both apps share one **B3 Linux App Service plan** (~$53/mo) plus an Azure Container
+Registry (Basic, ~$5/mo). The panel-sizer app can be added to the same plan later at
+no extra cost.
 
-## Directory Structure on Server
-
-```
-/opt/saber/
-├── API's/                      ← FastAPI app (main.py)
-├── BldgAuditToolSimple_v1/     ← Python analysis engine (imported by main.py)
-├── requirements.txt
-├── uploads/                    ← persistent user uploads (created manually)
-└── venv/                       ← Python virtual environment
-```
+App Service provides HTTPS automatically at `*.azurewebsites.net` — no nginx,
+certbot, systemd, or VPN needed.
 
 ---
 
-# Part A — Backend on saber-backend.colorado.edu
+## Prerequisites
 
-## Prerequisites — UCB VPN
+### Subscription access
 
-You must be on UCB VPN before you can SSH into the server.
+The subscription is `azucob0ceaelbslw`, created by CU Research Computing
+(rc-help@colorado.edu). Access is managed via Grouper groups:
 
-1. Download Cisco Secure Client for Mac:
-   ```
-   https://cuservices.colorado.edu/vpn/download/secureclient-macos.pkg
-   ```
-2. Open the `.pkg` and install it
-3. Open **Cisco Secure Client**
-4. Enter server address: `vpn.colorado.edu`
-5. Login with your **IdentiKey username and password**
-6. Approve the **Duo MFA** push on your phone
+- `azucob0ceaelbslw-OIT-SubscriptionContributor` — required to create/deploy resources
+- `azucob0ceaelbslw-OIT-SubscriptionReader` — view only
+- `azucob0ceaelbslw-OIT-SubscriptionBilling`
 
-VPN help: http://oit.colorado.edu/vpn  
-OIT support: 303-735-4357 or oithelp@colorado.edu
+Nick Clements (nicholas.clements@colorado.edu) manages membership at
+https://mygroups.colorado.edu. If `az group create` fails with an authorization
+error, you are not in the Contributor group yet — ask Nick to add your IdentiKey.
 
----
+Billing party: Kathleen.stutzman@colorado.edu.
 
-## Step A1 — SSH into the server
+### Azure CLI
 
 ```bash
-ssh rapa4019@saber-backend.colorado.edu
+brew install azure-cli          # if not installed
+az login                        # sign in with your CU Office 365 account
+az account show                 # must show name: azucob0ceaelbslw
 ```
 
-- First time: type `yes` when asked about the host fingerprint
-- Enter your IdentiKey password (cursor won't move — that's normal)
-
-You should land at `[rapa4019@saber-backend ~]$`
-
----
-
-## Step A2 — Get sudo access
-
-The server runs **Red Hat Enterprise Linux 9.7**. You need sudo to install packages.
-
-1. Go to https://mygroups.colorado.edu
-2. Login with your IdentiKey
-3. Under **Groups I manage**, click **CS-SG-VI CEAE SABER_SUDOERS**
-4. Click the **Members** tab
-5. Click **+ Add members** and add your IdentiKey
-6. Log out of the server and back in:
-   ```bash
-   exit
-   ssh rapa4019@saber-backend.colorado.edu
-   ```
-7. Test sudo works:
-   ```bash
-   sudo whoami
-   # should print: root
-   ```
-
-> **Note:** Group changes in mygroups.colorado.edu can take 15–30 minutes to sync to the server. If sudo still fails after re-logging in, wait and try again. If it still fails after 30 minutes, email Adam Zheng to grant sudo manually.
-
----
-
-## Step A3 — Install system packages
-
-> **Important:** This server uses `dnf` (Red Hat), not `apt` (Ubuntu/Debian).
-
+If you have multiple subscriptions:
 ```bash
-sudo dnf update -y
-```
-
-RHEL 9 does not include Python 3.12 by default. Enable EPEL + CRB repos first, then install:
-
-```bash
-sudo dnf install -y epel-release
-sudo dnf config-manager --set-enabled crb
-sudo dnf install -y python3.12 python3-pip nginx git rsync curl
-```
-
-> Note: `python3.12-venv` does not exist as a separate package on RHEL 9 — venv is bundled inside `python3.12`. Just use `python3.12 -m venv`.
-
-Verify:
-```bash
-python3.12 --version    # Python 3.12.x
-nginx -v                # nginx version
-```
-
-If Python 3.12 is still unavailable, use Python 3.11 (ships with RHEL 9 AppStream):
-```bash
-sudo dnf install -y python3.11 python3-pip nginx git rsync curl
-python3.11 --version
-```
-
-Then substitute `python3.11` for `python3.12` in all commands below.
-
----
-
-## Step A4 — Upload code from your Mac
-
-**Open a new terminal tab on your Mac** (keep the SSH session open in another tab).
-
-Run this rsync from your Mac — it uploads both the API and the analysis engine together:
-
-```bash
-rsync -avz --progress \
-  --exclude 'node_modules' \
-  --exclude '.next' \
-  --exclude 'venv' \
-  --exclude '__pycache__' \
-  --exclude '*.pyc' \
-  --exclude '.git' \
-  --exclude 'client' \
-  --exclude 'Projects/*/Results' \
-  /Users/raj/CUB/Saber/ \
-  rapa4019@saber-backend.colorado.edu:/opt/saber/
-```
-
-**Switch back to your SSH tab** and verify:
-```bash
-ls /opt/saber/
-```
-
-You must see both:
-```
-API's    BldgAuditToolSimple_v1    requirements.txt    start.sh ...
-```
-
-Verify the critical files:
-```bash
-ls "/opt/saber/API's/"
-ls /opt/saber/BldgAuditToolSimple_v1/BldgAuditToolPackage/
+az account set --subscription azucob0ceaelbslw
 ```
 
 ---
 
-## Step A5 — Create Python virtual environment
+# Part A — One-time infrastructure setup
 
 ```bash
-cd /opt/saber
-```
-```bash
-python3.12 -m venv venv    # venv module is built-in; no separate package needed
-```
-```bash
-source venv/bin/activate
+az group create -n saber-rg -l westus3
+az appservice plan create -n saber-plan -g saber-rg --sku B3 --is-linux
+az acr create -n saberacr -g saber-rg --sku Basic --admin-enabled true
 ```
 
-Your prompt now shows `(venv)`. Install dependencies:
-
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-This takes **3–8 minutes**. If you see build errors for `scipy` or `numpy`:
-```bash
-sudo dnf install -y python3-devel gcc gcc-gfortran openblas-devel
-pip install -r requirements.txt   # retry
-```
-
-Verify everything installed:
-```bash
-python3 -c "import fastapi, uvicorn, pandas, matplotlib, scipy, sklearn; print('all OK')"
-```
+> ACR names are globally unique. If `saberacr` is taken, pick another (e.g.
+> `saberacrcub`) and substitute it in every command below.
 
 ---
 
-## Step A6 — Test the app manually
+# Part B — Backend (`saber-api`)
+
+## Step B1 — Build the container image
+
+This uploads the repo and builds it **in the cloud** using the `Dockerfile` at
+the repo root (which already handles the apostrophe in the `API's` folder name).
+Run the whole command — `-r` is the registry, `-t` the image tag, and the final
+argument is the path to build:
 
 ```bash
-cd "/opt/saber/API's"
-uvicorn main:app --host 127.0.0.1 --port 8000
+az acr build -r saberacr -t saber-api:latest /Users/raj/CUB/Saber
 ```
 
-Expected output:
-```
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://127.0.0.1:8000
-```
+> If you named your registry something other than `saberacr`, check with
+> `az acr list -g saber-rg -o table` and substitute the name.
 
-In a **second SSH tab**, test:
+Takes ~5 minutes the first time (installs scipy/numpy/matplotlib).
+
+## Step B2 — Create the Web App
+
 ```bash
-curl http://127.0.0.1:8000/list-projects
+az webapp create -n saber-api -g saber-rg -p saber-plan --container-image-name saberacr.azurecr.io/saber-api:latest
 ```
 
-Expected: JSON like `{"projects":["LakewoodTestCase", ...]}`. Press `Ctrl+C` to stop.
+Then give the app credentials to pull from the registry — `az webapp create` does
+**not** set these up, and without them the app serves 503 because the image pull
+is rejected. Run these three lines separately:
+
+```bash
+ACR_USER=$(az acr credential show -n saberacr --query username -o tsv)
+ACR_PASS=$(az acr credential show -n saberacr --query "passwords[0].value" -o tsv)
+az webapp config container set -n saber-api -g saber-rg --container-image-name saberacr.azurecr.io/saber-api:latest --container-registry-url https://saberacr.azurecr.io --container-registry-user "$ACR_USER" --container-registry-password "$ACR_PASS"
+```
+
+Verify credentials took — the output must list `DOCKER_REGISTRY_SERVER_URL` and
+`DOCKER_REGISTRY_SERVER_USERNAME`:
+
+```bash
+az webapp config container show -n saber-api -g saber-rg
+```
+
+## Step B3 — Configure it
+
+Run this as **one line** — pasting backslash-continued commands into zsh can
+silently drop the values, leaving settings stored as `null`:
+
+```bash
+az webapp config appsettings set -n saber-api -g saber-rg --settings WEBSITES_PORT=8080 WEBSITES_ENABLE_APP_SERVICE_STORAGE=true UPLOADS_DIR=/home/uploads PYTHONUNBUFFERED=1
+```
+
+Verify every setting shows its value (not `null`):
+
+```bash
+az webapp config appsettings list -n saber-api -g saber-rg -o table
+```
+
+Then restart so the container picks them up:
+
+```bash
+az webapp restart -n saber-api -g saber-rg
+```
+
+- `WEBSITES_PORT=8080` — the port uvicorn listens on inside the container (see Dockerfile)
+- `WEBSITES_ENABLE_APP_SERVICE_STORAGE=true` — mounts persistent storage at `/home`.
+  A container's own filesystem is **wiped on every restart**; anything that must
+  survive (user uploads) has to live under `/home`.
+- `UPLOADS_DIR=/home/uploads` — same role as `/opt/saber/uploads` on the old server
+
+> **Request timeout:** App Service allows up to 230 s per request. Analysis runs
+> take 30–90 s, so no extra configuration is needed (the old nginx
+> `proxy_read_timeout` tuning has no Azure equivalent to worry about).
+
+## Step B4 — Test
+
+```bash
+curl https://saber-api.azurewebsites.net/list-projects
+```
+
+Expected: JSON like `{"projects":["LakewoodTestCase", ...]}`. The first request
+after a deploy is slow (container cold start) — give it ~1 minute.
 
 ---
 
-## Step A7 — Create uploads directory and service user
+# Part C — Frontend (`saber-web`)
+
+## Step C1 — Create the Web App
+
+Run each command as one line (replace `sk-ant-...` with the real value from `client/.env.local`, keeping the quotes so zsh doesn't treat `<`/`>` as redirection):
 
 ```bash
-sudo mkdir -p /opt/saber/uploads
-sudo useradd --system --no-create-home --shell /bin/false saberapp
-# Ownership model: rapa4019 owns the tree (so future `rsync` deploys can write it),
-# group saberapp + group-write + setgid so the service (User=saberapp) can still create
-# its output files. See "Update backend after a code change" — keep this model on every
-# deploy; do NOT chown the tree to saberapp:saberapp or `rsync` will fail with EACCES.
-sudo chown -R rapa4019:saberapp /opt/saber
-sudo chmod -R g+w /opt/saber
-sudo find /opt/saber -type d -exec chmod g+s {} \;
+az webapp create -n saber-web -g saber-rg -p saber-plan --runtime "NODE|22-lts"
+az webapp config appsettings set -n saber-web -g saber-rg --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true NEXT_PUBLIC_API_URL=https://saber-api.azurewebsites.net "ANTHROPIC_API_KEY=sk-ant-..."
+az webapp config set -n saber-web -g saber-rg --startup-file "npm start"
 ```
 
----
+- `SCM_DO_BUILD_DURING_DEPLOYMENT=true` — Azure's Oryx builder runs `npm install`
+  and `npm run build` on the server after each deploy, so you push source, not
+  `node_modules`
+- `NEXT_PUBLIC_API_URL` — **baked into the JS bundle at build time**, which is why
+  the remote build must have it set as an app setting *before* the first deploy.
+  If you ever change it, redeploy so the bundle is rebuilt.
+- `ANTHROPIC_API_KEY` — used server-side by the `/api/chat` route; never exposed
+  to the browser. `.env.local` stays local (it's in `.gitignore`).
 
-## Step A8 — Create the systemd service
+## Step C2 — Deploy
+
+From the repo root:
 
 ```bash
-sudo nano /etc/systemd/system/saber-backend.service
+cd /Users/raj/CUB/Saber/client
+zip -r /tmp/saber-web.zip . -x "node_modules/*" -x ".next/*" -x ".env.local"
+az webapp deploy -n saber-web -g saber-rg --src-path /tmp/saber-web.zip --type zip
 ```
 
-Paste **exactly**:
-
-```ini
-[Unit]
-Description=Saber BldgAuditTool FastAPI Backend
-After=network.target
-
-[Service]
-Type=simple
-User=saberapp
-Group=saberapp
-WorkingDirectory=/opt/saber/API's
-ExecStart=/opt/saber/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000 --workers 2
-Restart=always
-RestartSec=5
-StandardOutput=journal
-StandardError=journal
-Environment=UPLOADS_DIR=/opt/saber/uploads
-Environment=PYTHONUNBUFFERED=1
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Save: `Ctrl+O` → `Enter` → `Ctrl+X`
-
-Enable and start:
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable saber-backend
-sudo systemctl start saber-backend
-```
-
-Check it's running:
-```bash
-sudo systemctl status saber-backend
-# Must show: Active: active (running)
-```
-
-If it shows `failed`, check the logs:
-```bash
-sudo journalctl -u saber-backend -n 50 --no-pager
-```
-
-Test it's responding:
-```bash
-curl http://127.0.0.1:8000/list-projects
-```
-
----
-
-## Step A9 — Configure nginx as reverse proxy
+The remote build takes ~3–5 minutes. Watch it with:
 
 ```bash
-sudo nano /etc/nginx/conf.d/saber.conf
+az webapp log deployment show -n saber-web -g saber-rg
 ```
 
-> **Note:** Red Hat nginx uses `conf.d/`, not `sites-available/sites-enabled/`.
+## Step C3 — Test end-to-end
 
-Paste:
-
-```nginx
-server {
-    listen 80;
-    server_name saber-backend.colorado.edu;
-
-    # Allow pkl and CSV uploads up to 50MB
-    client_max_body_size 50M;
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Analysis runs take 30-90 seconds — prevent nginx timeout
-        proxy_read_timeout    300s;
-        proxy_connect_timeout  10s;
-        proxy_send_timeout    300s;
-    }
-}
-```
-
-Save: `Ctrl+O` → `Enter` → `Ctrl+X`
-
-Test config and start nginx:
-```bash
-sudo nginx -t
-# Must say: syntax is ok / test is successful
-```
-
-> **SELinux note (RHEL 9):** Files copied from your home directory retain the wrong SELinux context and nginx will refuse to read them with "Permission denied". Fix both the conf file and the service file after moving them:
-> ```bash
-> sudo restorecon /etc/nginx/conf.d/saber.conf
-> sudo restorecon /etc/systemd/system/saber-backend.service
-> ```
-> Also, SELinux blocks nginx from proxying to localhost by default. Enable it once:
-> ```bash
-> sudo setsebool -P httpd_can_network_connect 1
-> ```
-
-```bash
-sudo systemctl enable --now nginx
-```
-
-Open the firewall for HTTP/HTTPS:
-```bash
-sudo firewall-cmd --permanent --add-service=http
-sudo firewall-cmd --permanent --add-service=https
-sudo firewall-cmd --reload
-```
-
-Test from your Mac terminal (not SSH):
-```bash
-curl http://saber-backend.colorado.edu/list-projects
-```
-
----
-
-## Step A10 — Enable HTTPS (required for Vercel → backend calls)
-
-Browsers block HTTP calls from HTTPS pages. Since Vercel is HTTPS, the backend must also be HTTPS.
-
-```bash
-sudo dnf install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d saber-backend.colorado.edu
-```
-
-Certbot will ask:
-1. Your email — enter it
-2. Agree to terms — type `Y`
-3. Redirect HTTP → HTTPS — choose `2`
-
-Verify:
-```bash
-curl https://saber-backend.colorado.edu/list-projects
-```
-
-Check auto-renewal works:
-```bash
-sudo certbot renew --dry-run
-```
-
----
-
-# Part B — Frontend on Vercel
-
-## Step B1 — Push code to GitHub
-
-Check if a remote already exists:
-```bash
-git remote -v
-```
-
-If not, create a GitHub repo and push:
-```bash
-git remote add origin https://github.com/<your-username>/saber.git
-git branch -M main
-git push -u origin main
-```
-
-> `.env.local` is in `.gitignore` and will NOT be pushed — the API keys stay local and are added to Vercel separately.
-
----
-
-## Step B2 — Import project on Vercel
-
-1. Go to [vercel.com](https://vercel.com) → **Add New Project**
-2. Click **Import Git Repository** → select your GitHub repo
-3. **Change the Root Directory** to `client`
-   - Click **Edit** next to Root Directory → type `client` → **Continue**
-4. Framework Preset should auto-detect as **Next.js** — leave it
-
----
-
-## Step B3 — Set environment variables on Vercel
-
-Before clicking Deploy, add these under **Environment Variables**:
-
-| Name | Value |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | `https://saber-backend.colorado.edu` |
-| `ANTHROPIC_API_KEY` | *(copy from your local `client/.env.local`)* |
-
-- `NEXT_PUBLIC_API_URL` — used by the browser to call the FastAPI backend
-- `ANTHROPIC_API_KEY` — used server-side by the `/api/chat` route (Vercel keeps it secret)
-
----
-
-## Step B4 — Deploy
-
-Click **Deploy**. Vercel will build and deploy in ~2 minutes. You'll get a URL like `saber-xxxx.vercel.app`.
-
----
-
-## Step B5 — Test end-to-end
-
-1. Open your Vercel URL in the browser
-2. Step 1: Upload a `.pkl` file from `BldgAuditToolSimple_v1/Projects/LakewoodTestCase/`
-3. Check DevTools → Network: request should go to `https://saber-backend.colorado.edu/upload-pkl` and return 200
+1. Open `https://saber-web.azurewebsites.net`
+2. Step 1: upload a `.pkl` file from `BldgAuditToolSimple_v1/Projects/LakewoodTestCase/`
+3. DevTools → Network: the request should go to
+   `https://saber-api.azurewebsites.net/upload-pkl` and return 200
 4. Try the chatbot — it should stream a response
-5. Step 11 (Analysis): click Run Analysis — calls the UCB server, takes ~30 seconds
+5. Analysis step: click Run Analysis — takes ~30 seconds
 
 ---
 
-# Ongoing Maintenance
+# Ongoing maintenance
 
 ## Update backend after a code change
 
-> **Ownership model.** `/opt/saber` is owned by **`rapa4019`** (so your `rsync` can write
-> it) with group **`saberapp`** and group-write + setgid on directories (so the service,
-> which runs as `saberapp`, can still create its output files — `Projects/.../Results/`,
-> etc.). Do **not** `chown` the tree to `saberapp:saberapp` — that locks `rapa4019` out of
-> the next `rsync`. The post-rsync command below re-applies this model and is idempotent.
-
-**1. From your Mac** — sync the backend (excludes deps, build output, git history, and the
-frontend, which deploys separately via Vercel):
 ```bash
-rsync -avz --progress \
-  --exclude 'node_modules' --exclude '.next' --exclude 'venv' \
-  --exclude '__pycache__' --exclude '.git' --exclude 'client' \
-  /Users/raj/CUB/Saber/ \
-  rapa4019@saber-backend.colorado.edu:/opt/saber/
+az acr build -r saberacr -t saber-api:latest /Users/raj/CUB/Saber
+az webapp restart -n saber-api -g saber-rg
 ```
-`rsync` has no `--delete`, so it only adds/updates files — nothing server-side is removed.
 
-**2. On the server** — re-apply ownership/perms, restart, and confirm it came back up
-(`-t` lets `sudo` prompt for its password):
-```bash
-
-
-'
-```
-Look for `Active: active (running)`. Then watch a request go through with
-`sudo journalctl -u saber-backend -f` while you exercise the app.
-
-> **First time only / if `rsync` reports `Permission denied`.** The tree is currently owned
-> by `rapa4019`. If it ever reverts to `saberapp` (or another user), take ownership before
-> the first sync: `ssh -t rapa4019@saber-backend.colorado.edu 'sudo chown -R rapa4019:saberapp /opt/saber'`.
-
-> **Note on `saberapp` group membership.** The group-write model only works if the service
-> user `saberapp` is a member of the `saberapp` group. Verify with `id saberapp` (the
-> `groups=` list must contain `saberapp`). If not: `sudo usermod -aG saberapp saberapp`.
+The restart pulls the new `:latest` image.
 
 ## Update frontend after a code change
 
 ```bash
-git add .
-git commit -m "your message"
-git push origin main
-# Vercel auto-deploys on every push to main
+cd /Users/raj/CUB/Saber/client
+zip -r /tmp/saber-web.zip . -x "node_modules/*" -x ".next/*" -x ".env.local"
+az webapp deploy -n saber-web -g saber-rg --src-path /tmp/saber-web.zip --type zip
 ```
 
-## Useful server commands
+> **Optional upgrade:** wire a GitHub Action in the lab's GitHub org repo so
+> pushes to `main` auto-deploy both apps (replaces what Vercel used to do).
+> `az webapp deployment github-actions add` scaffolds this.
+
+## Useful commands
 
 ```bash
-# View live backend logs
-sudo journalctl -u saber-backend -f
+# Live backend logs (equivalent of journalctl -f)
+az webapp log tail -n saber-api -g saber-rg
 
-# Restart backend
-sudo systemctl restart saber-backend
+# Live frontend logs
+az webapp log tail -n saber-web -g saber-rg
 
-# Check backend status
-sudo systemctl status saber-backend
+# Restart an app
+az webapp restart -n saber-api -g saber-rg
 
-# Check disk usage of uploads
-du -sh /opt/saber/uploads/
+# Check app status
+az webapp show -n saber-api -g saber-rg --query state
 
-# Check what's using port 8000
-sudo ss -tlnp | grep 8000
+# Check uploads disk usage (opens a shell inside the container)
+az webapp ssh -n saber-api -g saber-rg
+du -sh /home/uploads/
 
-# Renew SSL certificate (runs automatically, but can be done manually)
-sudo certbot renew
+# Current month's spend
+az consumption usage list --query "[].{svc:instanceName,cost:pretaxCost}" -o table
 ```
+
+## Custom domain (optional, later)
+
+For `saber.colorado.edu` instead of `*.azurewebsites.net`:
+
+1. Ask OIT to create a CNAME from `saber.colorado.edu` → `saber-web.azurewebsites.net`
+2. ```bash
+   az webapp config hostname add -n saber-web -g saber-rg --hostname saber.colorado.edu
+   az webapp config ssl create -n saber-web -g saber-rg --hostname saber.colorado.edu
+   ```
+   App Service issues and renews a free managed certificate automatically.
+3. Rebuild/redeploy the frontend? Not needed for the frontend domain itself, but
+   if the **backend** gets a custom domain, update `NEXT_PUBLIC_API_URL` and
+   redeploy the frontend so the new URL is baked into the bundle.
 
 ---
 
@@ -508,12 +255,15 @@ sudo certbot renew
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| SSH hangs with no output | Not on UCB VPN | Connect to `vpn.colorado.edu` first |
-| `not in the sudoers file` | Group sync delay | Wait 15–30 min after adding to SABER_SUDOERS, then re-login |
-| `502 Bad Gateway` | uvicorn not running | `sudo systemctl restart saber-backend` |
-| `CORS` error in browser | Wrong API URL | Check `NEXT_PUBLIC_API_URL` on Vercel |
-| `413 Request Entity Too Large` | nginx size limit | Verify `client_max_body_size 50M` in nginx config |
-| Analysis request times out | nginx timeout too short | Verify `proxy_read_timeout 300s` in nginx config |
-| `ModuleNotFoundError: BldgAuditToolPackage` | Analysis engine missing | Re-run rsync, check `ls /opt/saber/BldgAuditToolSimple_v1/` |
-| Certbot fails | DNS not resolving | Wait for DNS to propagate, then retry |
-| Mixed content error in browser | Backend still on HTTP | Complete Step A10 (HTTPS/certbot) |
+| `az group create` → `AuthorizationFailed` | Not in Contributor Grouper group | Ask Nick to add you at mygroups.colorado.edu, wait ~30 min, `az logout && az login` |
+| Backend shows default "waiting for content" page | Container failed to start | `az webapp log tail -n saber-api -g saber-rg` and look for the uvicorn error |
+| 503 + `container show` lists no `DOCKER_REGISTRY_SERVER_*` | App has no registry pull credentials | Run the `az webapp config container set` credential step in Part B, then restart |
+| Terminal stuck at `cmdsubst dquote>` | Pasted command broke mid-line (unclosed `$(` or quote) | Ctrl+C, re-paste; run `$(...)` substitutions as separate variable assignments |
+| Backend 503 / "container didn't respond" | Wrong port | Verify `WEBSITES_PORT=8080` app setting |
+| App settings show `"value": null` | Backslash-continued command pasted badly | Re-run `appsettings set` as a single line, verify with `appsettings list -o table`, then restart the app |
+| Uploads disappear after restart | Persistent storage off | Verify `WEBSITES_ENABLE_APP_SERVICE_STORAGE=true` and `UPLOADS_DIR=/home/uploads` |
+| `CORS` error in browser | Wrong API URL baked in | Check `NEXT_PUBLIC_API_URL` app setting on `saber-web`, then redeploy frontend |
+| Frontend deploy succeeds but site broken | Oryx build failed | `az webapp log deployment show -n saber-web -g saber-rg` |
+| Chatbot returns 500 | Missing API key | Verify `ANTHROPIC_API_KEY` app setting on `saber-web` |
+| Analysis request times out | Run exceeds 230 s App Service limit | Investigate the run; 230 s is a hard platform limit |
+| First request very slow | Cold start after deploy/restart | Normal — B3 has Always On available: `az webapp config set -n saber-api -g saber-rg --always-on true` |
